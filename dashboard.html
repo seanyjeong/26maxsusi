@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>대시보드</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary: #4364f7;
+      --light-gray: #f8f9fa;
+      --medium-gray: #e9ecef;
+      --dark-gray: #495057;
+      --card-bg: #fff;
+      --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      --border-radius: 10px;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--light-gray);
+      margin: 0;
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      box-shadow: var(--box-shadow);
+      border-radius: var(--border-radius);
+      margin-bottom: 25px;
+      padding: 20px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: var(--dark-gray);
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--medium-gray);
+    }
+
+    li:last-child {
+      border-bottom: none;
+    }
+
+    .date {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .desc {
+      color: #555;
+    }
+
+    .highlight {
+      background: #f0f4ff;
+      padding: 10px;
+      border-left: 5px solid var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <h2> 대시보드</h2>
+
+  <div class="card">
+    <h3> 수시 원서접수 일정</h3>
+    <div class="highlight">
+      <div class="date">2025년 9월 10일(수) ~ 9월 14일(일)</div>
+      <div class="desc">공통 접수 기간 (수시모집 전체)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3> 우리 지점 실기일정 (가까운 순)</h3>
+    <ul>
+      <li>
+        <div class="date">8월 2일 (금)</div>
+        <div class="desc">고려대(세종) 실기 - 5명 예정</div>
+      </li>
+      <li>
+        <div class="date">8월 5일 (월)</div>
+        <div class="desc">단국대 실기 - 3명 예정</div>
+      </li>
+      <li>
+        <div class="date">8월 6일 (화)</div>
+        <div class="desc">경희대 실기 - 4명 예정</div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3> 합격자 발표일 (순서대로)</h3>
+    <ul>
+      <li>
+        <div class="date">10월 15일 (화)</div>
+        <div class="desc">한체대 1차 발표</div>
+      </li>
+      <li>
+        <div class="date">10월 22일 (화)</div>
+        <div class="desc">고려대(세종) 발표</div>
+      </li>
+      <li>
+        <div class="date">10월 25일 (금)</div>
+        <div class="desc">단국대 발표</div>
+      </li>
+    </ul>
+  </div>
+
+</body>
+</html>

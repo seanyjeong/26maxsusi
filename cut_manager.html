@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>예상컷 관리</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4364f7;
+            --secondary-color: #6a8eff;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #495057;
+            --border-radius: 6px;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            padding: 20px;
+            background-color: var(--light-gray);
+            color: #333;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 14px;
+            color: var(--dark-gray);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        th, td {
+            border: 1px solid var(--medium-gray);
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f9fafb;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        td {
+           text-align: center;
+        }
+        
+        td:nth-child(1), td:nth-child(2), td:nth-child(3) {
+            text-align: left;
+        }
+
+        input[type="text"] {
+            width: 95%;
+            padding: 8px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        input[readonly] {
+            background-color: #f1f1f1;
+            cursor: not-allowed;
+            color: #777;
+        }
+
+        .btn-save {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            margin-bottom: 20px;
+        }
+        
+        .btn-save:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .filter-container {
+            margin-bottom: 15px;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            border: 1px solid var(--medium-gray);
+            background-color: white;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        /* ✅ [CSS 수정] 로그인/로그아웃 상태 표시 영역 스타일 */
+        #user-status-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: var(--dark-gray);
+            display: flex;
+            align-items: center;
+        }
+        #user-status-container button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 13px;
+            background-color: #888;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #user-status-container button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="user-status-container"></div>
+
+    <h2>대학별 예상컷 관리</h2>
+    <p>맥스컷은 관리자만, 지점컷은 해당 지점 원장님만 수정 가능합니다.</p>
+    
+    <div class="filter-container">
+        <button id="btn-all" class="filter-btn active" onclick="filterAndRender('all')">전체 학교</button>
+        <button id="btn-practical" class="filter-btn" onclick="filterAndRender('practical')">실기 전형</button>
+    </div>
+    
+    <button class="btn-save" onclick="saveAllCuts()">전체 변경사항 저장</button>
+
+    <table id="cutTable">
+        <thead>
+            <tr>
+                <th style="width: 15%;">대학명</th>
+                <th style="width: 25%;">학과명</th>
+                <th style="width: 20%;">전형명</th>
+                <th style="width: 20%;">맥스 예상컷</th>
+                <th style="width: 20%;">지점 예상컷</th>
+            </tr>
+        </thead>
+        <tbody id="cutTbody"></tbody>
+    </table>
+
+    <script>
+        const SERVER = 'https://supermax.kr';
+        const token = localStorage.getItem('token');
+        
+        let initialData = [];
+        let currentUser = {};
+
+        // ✅ [함수 추가] 로그아웃 함수
+function logout() {
+    localStorage.removeItem('token');
+    // 로그아웃 후에도 이 페이지로 돌아오도록 next 파라미터를 추가
+    location.href = 'login.html?next=cut_manager.html';
+}
+
+        // ✅ [함수 추가] 로그인 상태에 따라 UI를 업데이트하는 함수
+        function updateUserStatus() {
+            const container = document.getElementById('user-status-container');
+            if (token && currentUser.userid) {
+                // 로그인 된 경우
+                let greeting = '';
+                if (currentUser.userid === 'admin') {
+                    greeting = `<strong>관리자님</strong> 환영합니다!`;
+                } else {
+                    greeting = `<strong>[${currentUser.branch}] ${currentUser.name}님</strong>`;
+                }
+                container.innerHTML = `${greeting} <button onclick="logout()">로그아웃</button>`;
+            } else {
+                // 로그아웃 된 경우
+                container.innerHTML = `<button onclick="location.href='login.html?next=cut_manager.html'">로그인</button>`;
+            }
+        }
+
+        async function loadCutData() {
+            if (!token) {
+                updateUserStatus(); // 로그인 버튼 표시
+                location.href = 'login.html?next=cut_manager.html';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${SERVER}/26susi_get_all_cuts`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.status === 401) {
+                    logout(); // 토큰이 유효하지 않으면 바로 로그아웃 처리
+                    return;
+                }
+                
+                const data = await res.json();
+                if (!data.success) {
+                    alert('데이터를 불러오는 데 실패했습니다.');
+                    return;
+                }
+
+                initialData = data.cuts;
+                currentUser = data.user;
+                
+                updateUserStatus(); // ✅ 사용자 정보로 UI 업데이트
+                filterAndRender('all');
+
+            } catch(e) {
+                console.error("데이터 로딩 중 에러:", e);
+                alert("서버와 통신 중 오류가 발생했습니다.");
+            }
+        }
+
+        function filterAndRender(filterType) {
+            const btnAll = document.getElementById('btn-all');
+            const btnPractical = document.getElementById('btn-practical');
+            
+            let filteredData;
+
+            if (filterType === 'practical') {
+                filteredData = initialData.filter(cut => cut.실기ID);
+                btnAll.classList.remove('active');
+                btnPractical.classList.add('active');
+            } else {
+                filteredData = initialData;
+                btnPractical.classList.remove('active');
+                btnAll.classList.add('active');
+            }
+            
+            renderTable(filteredData, currentUser);
+        }
+
+        function renderTable(cuts, user) {
+            const tbody = document.getElementById('cutTbody');
+            tbody.innerHTML = '';
+            const isAdmin = user && user.userid === 'admin';
+
+            cuts.forEach(cut => {
+                const row = document.createElement('tr');
+                row.dataset.collegeId = cut.대학ID;
+                row.dataset.initialMaxCut = cut['26맥스예상컷'] || '';
+                row.dataset.initialBranchCut = cut.지점예상컷 || '';
+
+                row.innerHTML = `
+                    <td>${cut.대학명}</td>
+                    <td>${cut.학과명}</td>
+                    <td>${cut.전형명}</td>
+                    <td><input type="text" class="max-cut" value="${cut['26맥스예상컷'] || ''}" ${!isAdmin ? 'readonly' : ''}></td>
+                    <td><input type="text" class="branch-cut" value="${cut.지점예상컷 || ''}"></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function saveAllCuts() {
+            Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            const rows = document.querySelectorAll('#cutTbody tr');
+            const promises = [];
+
+            rows.forEach(row => {
+                const collegeID = row.dataset.collegeId;
+                const initialMaxCut = row.dataset.initialMaxCut;
+                const initialBranchCut = row.dataset.initialBranchCut;
+                
+                const maxCutInput = row.querySelector('.max-cut');
+                const branchCutInput = row.querySelector('.branch-cut');
+
+                if (!maxCutInput.readOnly && maxCutInput.value !== initialMaxCut) {
+                    promises.push(
+                        fetch(`${SERVER}/26susi_update_max_cut`, {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 대학ID: collegeID, 맥스예상컷: maxCutInput.value })
+                        })
+                    );
+                }
+
+                if (branchCutInput.value !== initialBranchCut) {
+                     promises.push(
+                        fetch(`${SERVER}/26susi_update_branch_cut`, {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 대학ID: collegeID, 지점예상컷: branchCutInput.value })
+                        })
+                    );
+                }
+            });
+
+            if (promises.length === 0) {
+                Swal.fire('변경사항 없음', '변경된 내용이 없습니다.', 'info');
+                return;
+            }
+
+            try {
+                const results = await Promise.all(promises);
+                const allOk = results.every(res => res.ok);
+
+                if (allOk) {
+                    Swal.fire('저장 완료!', '모든 변경사항이 성공적으로 저장되었습니다.', 'success').then(() => {
+                        loadCutData();
+                    });
+                } else {
+                     Swal.fire('일부 저장 실패', '일부 항목 저장에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요.', 'warning');
+                }
+
+            } catch (e) {
+                Swal.fire('오류 발생', '저장 중 문제가 발생했습니다.', 'error');
+            }
+        }
+
+        // ✅ 페이지가 로드되면 가장 먼저 로그인 상태를 확인하고 UI를 업데이트
+        updateUserStatus();
+        loadCutData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>실기 배점표 수정</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; max-width: 1400px; margin: auto; background-color: #f9f9f9; color: #333; }
+        h1 { text-align: center; margin-bottom: 2rem; color: #2c3e50; }
+        select { display: block; width: 100%; font-size: 1.1rem; padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ccc; background-color: white; cursor: pointer; }
+        #scoreTableContainer { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; justify-content: center; }
+        .event-table-wrapper { flex: 1; min-width: 320px; background-color: white; border-radius: 8px; box-shadow: 0 4px_12px rgba(0,0,0,0.08); overflow: hidden; }
+        .event-table-wrapper table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #e0e0e0; padding: 10px 12px; text-align: center; font-size: 0.9rem; }
+        thead th { background-color: #f5f7fa; font-weight: 500; color: #2c3e50; }
+        .event-header { font-size: 1rem; font-weight: 700; background-color: #e9ecf1; padding: 12px; }
+        .score-col { font-weight: 700; background-color: #f5f7fa; }
+        tbody tr:nth-child(even) { background-color: #fcfcfc; }
+        #message { width: 100%; text-align: center; font-size: 1.1em; color: #555; padding: 40px; }
+        button { padding: 10px 15px; font-size: 0.9rem; cursor: pointer; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>실기 배점표 수정</h1>
+        <button onclick="logout()" style="margin-bottom: 0;">로그아웃</button>
+    </div>
+
+    <select id="collegeSelect" onchange="onCollegeChange()">
+        <option value="">대학/학과를 선택하세요</option>
+    </select>
+    
+    <button id="saveButton" onclick="saveChanges()" style="display:none;">
+        변경사항 저장
+    </button>
+
+    <div id="scoreTableContainer">
+        <div id="message">대학을 선택하면 배점표가 표시됩니다.</div>
+    </div>
+
+<script>
+    const BASE_URL = 'https://supermax.kr';
+
+    // ✅ 수정됨: 관리자 인증 함수 추가
+    async function checkAdmin() {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            location.href = 'admin_login.html'; // 로그인 페이지로 이동
+            return false;
+        }
+        try {
+            const res = await fetch(`${BASE_URL}/26susi/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (!json.success || !json.user || json.user.userid !== 'admin') {
+                alert('관리자 계정으로만 접근 가능합니다!');
+                localStorage.removeItem('jwt_token');
+                location.href = 'admin_login.html';
+                return false;
+            }
+            return true; // 관리자 인증 성공
+        } catch (e) {
+            alert('인증 중 오류가 발생했습니다.');
+            location.href = 'admin_login.html';
+            return false;
+        }
+    }
+
+    // ✅ 수정됨: 로그아웃 함수 추가
+    function logout() {
+        localStorage.removeItem('jwt_token');
+        location.href = 'admin_login.html';
+    }
+
+    async function loadColleges() {
+        try {
+            const res = await fetch(`${BASE_URL}/26susi_get_practical_colleges`);
+            const data = await res.json();
+            const select = document.getElementById('collegeSelect');
+            data.forEach(row => {
+                const option = document.createElement('option');
+                option.value = row.실기ID;
+                option.textContent = `${row.대학명} - ${row.학과명} (${row.전형명})`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('대학 목록 로딩 실패:', error);
+            document.getElementById('message').textContent = '대학 목록을 불러오는 데 실패했습니다.';
+        }
+    }
+
+    async function onCollegeChange() {
+        const 실기ID = document.getElementById('collegeSelect').value;
+        const container = document.getElementById('scoreTableContainer');
+        const saveBtn = document.getElementById('saveButton');
+        
+        if (!실기ID) {
+            container.innerHTML = `<div id="message">대학을 선택하면 배점표가 표시됩니다.</div>`;
+            saveBtn.style.display = 'none';
+            return;
+        }
+
+        container.innerHTML = `<div id="message">배점표를 불러오는 중...</div>`;
+        try {
+            const res = await fetch(`${BASE_URL}/26susi_get_score_table?실기ID=${실기ID}`);
+            const json = await res.json();
+            if (!json.success || !json.events || Object.keys(json.events).length === 0) {
+                container.innerHTML = `<div id="message">해당 대학의 배점표 데이터가 없습니다.</div>`;
+                saveBtn.style.display = 'none';
+                return;
+            }
+            renderSeparateTables(json.events);
+            saveBtn.style.display = 'block';
+        } catch (error) {
+            console.error('배점표 로딩 실패:', error);
+            container.innerHTML = `<div id="message" style="color: red;">배점표 로딩 중 오류가 발생했습니다.</div>`;
+            saveBtn.style.display = 'none';
+        }
+    }
+
+    async function saveChanges() {
+        const 실기ID = document.getElementById('collegeSelect').value;
+        const token = localStorage.getItem('jwt_token'); 
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            location.href = 'admin_login.html';
+            return;
+        }
+
+        const tables = document.querySelectorAll('.event-table-wrapper');
+        const dataToSend = [];
+        tables.forEach(table => {
+            const 종목명 = table.querySelector('.event-header').textContent;
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.cells;
+                const 배점 = cells[0].textContent.trim();
+                const maleRecord = cells[1].textContent.trim();
+                const femaleRecord = cells[2].textContent.trim();
+
+                if (maleRecord && maleRecord !== '-') { dataToSend.push({ 종목명, 성별: '남', 기록: maleRecord, 배점 }); }
+                if (femaleRecord && femaleRecord !== '-') { dataToSend.push({ 종목명, 성별: '여', 기록: femaleRecord, 배점 }); }
+            });
+        });
+
+        if (!confirm('정말로 배점표를 수정하시겠습니까?')) return;
+        
+        try {
+            const res = await fetch(`${BASE_URL}/26susi_update_score_table`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ 실기ID: 실기ID, data: dataToSend })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('성공적으로 저장되었습니다!');
+            } else {
+                alert(`저장에 실패했습니다: ${result.message || '알 수 없는 오류'}`);
+            }
+        } catch (error) {
+            console.error('저장 중 오류 발생:', error);
+            alert('네트워크 오류 또는 서버 문제로 저장에 실패했습니다.');
+        }
+    }
+
+    function renderSeparateTables(events) {
+        const container = document.getElementById('scoreTableContainer');
+        const eventNames = Object.keys(events);
+        let finalHTML = '';
+        eventNames.forEach(name => {
+            const eventData = events[name];
+            const scoreMap = { 남: new Map(), 여: new Map() };
+            const eventScores = new Set();
+            eventData.남.forEach(item => { scoreMap.남.set(item.배점, item.기록); eventScores.add(item.배점); });
+            eventData.여.forEach(item => { scoreMap.여.set(item.배점, item.기록); eventScores.add(item.배점); });
+            const sortedScores = Array.from(eventScores).sort((a, b) => Number(b) - Number(a));
+            let tableHTML = `<div class="event-table-wrapper"><table><thead><tr><th colspan="3" class="event-header">${name}</th></tr><tr><th>배점</th><th>남</th><th>여</th></tr></thead><tbody>`;
+            sortedScores.forEach(score => {
+                const maleRecord = scoreMap.남.get(score) || '-';
+                const femaleRecord = scoreMap.여.get(score) || '-';
+                tableHTML += `<tr><td contenteditable="true" class="score-col">${score}</td><td contenteditable="true" class="record-male">${maleRecord}</td><td contenteditable="true" class="record-female">${femaleRecord}</td></tr>`;
+            });
+            tableHTML += `</tbody></table></div>`;
+            finalHTML += tableHTML;
+        });
+        container.innerHTML = finalHTML;
+    }
+
+    // ✅ 수정됨: 페이지 로드 시 인증 먼저 실행
+    window.onload = () => {
+        checkAdmin().then(isAdmin => {
+            if (isAdmin) {
+                // 관리자 인증 성공 시에만 대학 목록을 불러온다.
+                loadColleges();
+            }
+        });
+    };
+</script>
+
+</body>
+</html>

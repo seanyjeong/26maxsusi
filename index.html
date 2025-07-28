@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>26수시 수합엔진</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4364f7;
+            --secondary-color: #6a8eff;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+            --sidebar-hover: #34495e;
+            --content-bg: #f4f6f9;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            background-color: var(--content-bg);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- 사이드바 스타일 (기존과 동일) --- */
+        .sidebar {
+            width: 200px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            position: fixed;
+            height: 100%;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .sidebar-header { padding: 0 20px 20px 20px; text-align: center; border-bottom: 1px solid var(--sidebar-hover); }
+        .sidebar-header h1 { font-size: 1.5rem; margin: 0; color: white; }
+        .sidebar-header h1 img { width: 100px; vertical-align: middle; margin-right: 10px; }
+        #user-info { padding: 20px; background-color: var(--sidebar-hover); text-align: center; }
+        #user-info #user-name { font-weight: 700; font-size: 1.1rem; }
+        #user-info #user-branch { font-size: 0.9rem; color: var(--secondary-color); }
+        .sidebar-nav { flex-grow: 1; list-style: none; padding: 20px 0; margin: 0; }
+        .sidebar-nav li a { display: block; padding: 15px 25px; color: var(--sidebar-text); text-decoration: none; font-size: 1rem; transition: background-color 0.2s; }
+        .sidebar-nav li a.active,
+        .sidebar-nav li a:hover { background-color: var(--primary-color); }
+        .sidebar-footer { padding: 20px; text-align: center; }
+        #logout-btn { background-color: transparent; color: var(--sidebar-text); border: 1px solid var(--sidebar-text); width: 100%; padding: 10px; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, color 0.2s; }
+        #logout-btn:hover { background-color: var(--primary-color); border-color: var(--primary-color); }
+
+        /* --- 메인 콘텐츠 프레임 스타일 --- */
+        #content-frame {
+            margin-left: 250px; /* 사이드바 너비만큼 */
+            width: calc(100% - 250px);
+            height: 100vh;
+            border: none;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>
+                <img src="https://github.com/seanyjeong/supermax/blob/main/maxmax.png?raw=true" alt="logo"><br>
+                <span>26수시엔진</span>
+            </h1>
+        </div>
+        
+        <div id="user-info">
+            <div id="user-name">로딩 중...</div>
+            <div id="user-branch"></div>
+        </div>
+
+        <ul class="sidebar-nav">
+            <li><a href="dashboard.html" class="active"> 메인 대시보드</a></li>
+            <li><a href="counsel.html"> 개인별 상담입력</a></li>
+            <li><a href="counsel_group.html"> 그룹별 상담입력</a></li>
+            <li><a href="student.html"> 학생 명단관리</a></li>
+            <li><a href="college-grade.html"> 대학별 내신입력</a></li>
+            <li><a href="cut_manager.html"> 예상컷 관리</a></li>
+            <li id="admin-menu" style="display:none;"><a href="admin.html"> 원장 승인/관리</a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <button id="logout-btn" onclick="logout()">로그아웃</button>
+        </div>
+    </aside>
+
+    <iframe id="content-frame" name="content-frame" src="dashboard.html"></iframe>
+
+    <script>
+        const SERVER = 'https://supermax.kr';
+        const token = localStorage.getItem('token');
+
+        // 페이지 로드 시 초기화 함수 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!token) {
+                location.href = 'login.html';
+                return;
+            }
+            loadUserInfo();
+            setupNavLinks();
+        });
+
+        // 사용자 정보 로드 및 사이드바에 표시
+        async function loadUserInfo() {
+            try {
+                const res = await fetch(`${SERVER}/26susi/profile`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const json = await res.json();
+                
+                if (json.success) {
+                    const user = json.user;
+                    document.getElementById('user-name').textContent = `${user.name} 원장님`;
+                    document.getElementById('user-branch').textContent = `[${user.branch}]`;
+                    if (user.userid === 'admin') {
+                        document.getElementById('admin-menu').style.display = 'block';
+                    }
+                } else {
+                    logout();
+                }
+            } catch (e) {
+                console.error("프로필 로딩 실패", e);
+                Swal.fire('오류', '사용자 정보를 불러오는 데 실패했습니다.', 'error');
+            }
+        }
+
+        // 네비게이션 링크 설정 함수
+        function setupNavLinks() {
+            const navLinks = document.querySelectorAll('.sidebar-nav a');
+            const contentFrame = document.getElementById('content-frame');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // 기본 링크 이동(페이지 새로고침)을 막음
+                    e.preventDefault(); 
+                    
+                    // iframe의 소스를 클릭된 링크의 주소로 변경
+                    contentFrame.src = this.href;
+
+                    // 모든 링크에서 'active' 클래스 제거
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    
+                    // 현재 클릭한 링크에만 'active' 클래스 추가
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        // 로그아웃 함수
+        function logout() {
+            localStorage.removeItem('token');
+            location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

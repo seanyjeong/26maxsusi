@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>원장회원 승인/관리</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4364f7;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #495057;
+            --card-bg: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--light-gray);
+            padding: 20px;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .header-buttons .btn {
+            margin-left: 10px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--medium-gray);
+            vertical-align: middle;
+        }
+
+        thead th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.03);
+        }
+
+        .btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            color: white;
+        }
+        
+        .btn-dark {
+  background-color: #373d41;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-dark:hover {
+  background-color: #2c3135;
+}
+
+        .btn-secondary { background-color: var(--secondary-color); }
+        .btn-secondary:hover { background-color: #373d41; }
+        
+        .btn-success { background-color: var(--success-color); }
+        .btn-success:hover { background-color: #218838; }
+
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-danger:hover { background-color: #c82333; }
+        
+        .btn-sm { padding: 5px 10px; font-size: 13px; }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            color: white;
+        }
+        .status-badge.approved { background-color: var(--success-color); }
+        .status-badge.pending { background-color: var(--warning-color); color: #333; }
+
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <h2> 원장회원 승인/관리</h2>
+<div class="header-buttons">
+    <button class="btn btn-dark" onclick="location.href='실기기준.html'">실기 기준표 관리</button>
+    <button class="btn btn-dark" onclick="location.href='실기배점수정.html'">실기 배점표 관리</button>
+    <button class="btn btn-secondary" onclick="logout()">로그아웃</button>
+</div>
+
+
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table id="memberTable">
+                <thead>
+                    <tr>
+                        <th>아이디</th>
+                        <th>이름</th>
+                        <th>지점명</th>
+                        <th>전화번호</th>
+                        <th>승인여부</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="6">로딩중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    const SERVER = 'https://supermax.kr';
+
+    // 관리자 인증 체크
+    async function checkAdmin() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+            return false;
+        }
+        const res = await fetch(SERVER + '/26susi/profile', {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        const json = await res.json();
+        if (!json.success || !json.user || json.user.userid !== 'admin') {
+            await Swal.fire('권한 없음', '관리자 계정으로만 접근 가능합니다!', 'error');
+            localStorage.removeItem('token');
+            location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+            return false;
+        }
+        return true;
+    }
+
+    // 회원 목록 불러오기
+    async function loadMembers() {
+        const token = localStorage.getItem('token');
+        const res = await fetch(SERVER + '/26susi_admin_members', {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        const json = await res.json();
+        const tbody = document.getElementById('tableBody');
+
+        if (!json.success) {
+            await Swal.fire('인증 오류', json.message || '다시 로그인 해주세요.', 'error');
+            logout();
+            return;
+        }
+        if (!json.members.length) {
+            tbody.innerHTML = '<tr><td colspan="6">가입된 회원이 없습니다.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        json.members.forEach(m => {
+            const isApproved = m.승인여부 === 'O';
+            tbody.innerHTML += `
+            <tr>
+                <td>${m.아이디}</td>
+                <td>${m.이름 || '-'}</td>
+                <td>${m.지점명 || '-'}</td>
+                <td>${m.전화번호 || '-'}</td>
+                <td>
+                    <span class="status-badge ${isApproved ? 'approved' : 'pending'}">
+                        ${isApproved ? '승인됨' : '대기중'}
+                    </span>
+                </td>
+                <td>
+                    ${!isApproved ? `<button class="btn btn-success btn-sm" onclick="approve('${m.아이디}')">승인</button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="del('${m.아이디}')">삭제</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    // 회원 승인
+    function approve(userid) {
+        Swal.fire({
+            title: `'${userid}' 회원을 승인할까요?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '승인',
+            cancelButtonText: '취소',
+            confirmButtonColor: '#28a745',
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const token = localStorage.getItem('token');
+                const res = await fetch(SERVER + '/26susi_admin_approve', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userid })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    Swal.fire('완료!', '성공적으로 승인되었습니다.', 'success');
+                    loadMembers();
+                } else {
+                    Swal.fire('실패', json.message || '오류가 발생했습니다.', 'error');
+                }
+            }
+        });
+    }
+
+    // 회원 삭제
+    function del(userid) {
+        Swal.fire({
+            title: `'${userid}' 회원을 정말 삭제할까요?`,
+            text: "삭제한 정보는 되돌릴 수 없습니다.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '삭제',
+            cancelButtonText: '취소',
+            confirmButtonColor: '#dc3545',
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const token = localStorage.getItem('token');
+                const res = await fetch(SERVER + '/26susi_admin_delete', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userid })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    Swal.fire('삭제 완료!', '회원 정보가 삭제되었습니다.', 'success');
+                    loadMembers();
+                } else {
+                    Swal.fire('실패', json.message || '오류가 발생했습니다.', 'error');
+                }
+            }
+        });
+    }
+
+    // 로그아웃
+    function logout() {
+        localStorage.removeItem('token');
+        location.href = 'login.html';
+    }
+
+    // 최초 로딩
+    checkAdmin().then(ok => {
+        if (ok) loadMembers();
+    });
+</script>
+</body>
+</html>

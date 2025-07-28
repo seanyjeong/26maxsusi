@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>원장회원 가입</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4364f7;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-gray: #f4f6f9;
+            --medium-gray: #dde2e8;
+            --dark-gray: #343a40;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --box-shadow: 0 6px 25px rgba(67, 100, 247, 0.08);
+        }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 30px 0;
+        }
+        .register-card {
+            background-color: var(--card-bg);
+            padding: 40px 45px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+        .card-header { text-align: center; margin-bottom: 25px; }
+        .card-header h2 { margin: 0; color: var(--dark-gray); font-size: 1.8rem; font-weight: 700; }
+
+        .input-group { position: relative; margin-bottom: 5px; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #adb5bd; }
+        .input-group input { width: 100%; padding: 13px 15px 13px 45px; border: 1px solid var(--medium-gray); border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        .input-group input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(67, 100, 247, 0.1); }
+        .input-group input::placeholder { color: #adb5bd; }
+        
+        /* 피드백 메시지 스타일 */
+        .feedback { font-size: 0.85rem; margin-top: 3px; margin-bottom: 12px; height: 1em; padding-left: 5px; }
+        .feedback.success { color: var(--success-color); }
+        .feedback.error { color: var(--danger-color); }
+        
+        /* 전화번호 입력칸 레이아웃 수정 */
+        .phone-verify-group { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+        .phone-verify-group .input-group { flex-grow: 1; margin: 0; }
+        .phone-verify-group button { flex-shrink: 0; padding: 13px 15px; width: auto; }
+
+        .btn { border: none; border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #3a52c4; }
+        .btn-primary:disabled { background-color: #aeb8d0; cursor: not-allowed; }
+        
+        .btn-full { width: 100%; padding: 14px; margin-top: 10px; font-size: 1.1rem; }
+        #registerMsg { color: var(--danger-color); text-align: center; margin-top: 15px; height: 1em; font-weight: 500; }
+        .card-footer { margin-top: 25px; text-align: center; font-size: 0.9rem; color: #666; }
+        .card-footer a { color: var(--primary-color); font-weight: 500; text-decoration: none; }
+        .card-footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="register-card">
+        <div class="card-header"> <h2>회원가입</h2> </div>
+        <form id="registerForm" autocomplete="off">
+            <div class="input-group"><i class="fas fa-user"></i><input name="userid" placeholder="아이디" required></div>
+            <div class="feedback" id="userid-feedback"></div>
+
+            <div class="input-group"><i class="fas fa-lock"></i><input id="password" type="password" name="password" placeholder="비밀번호" required></div>
+            <div class="feedback"></div>
+
+            <div class="input-group"><i class="fas fa-check-circle"></i><input id="passwordConfirm" type="password" name="passwordConfirm" placeholder="비밀번호 확인" required></div>
+            <div class="feedback" id="password-feedback"></div>
+
+            <div class="input-group"><i class="fas fa-id-badge"></i><input name="name" placeholder="이름" required></div>
+            <div class="feedback"></div>
+
+            <div class="input-group"><i class="fas fa-store"></i><input name="branch" placeholder="지점명" required></div>
+            <div class="feedback"></div>
+            
+            <div class="phone-verify-group">
+                <div class="input-group"><i class="fas fa-phone"></i><input id="phone" name="phone" placeholder="전화번호 ('-' 제외)" required></div>
+                <button type="button" class="btn btn-primary" id="btnSendCode" onclick="sendVerificationCode()">인증요청</button>
+            </div>
+            
+            <div class="phone-verify-group" style="margin-top:10px;">
+                <div class="input-group"><i class="fas fa-hashtag"></i><input id="verificationCode" placeholder="인증번호 4자리" disabled></div>
+                <button type="button" class="btn btn-primary" id="btnVerifyCode" onclick="verifyCode()" disabled>확인</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" id="btnRegister" disabled>가입 신청</button>
+            <div id="registerMsg"></div>
+        </form>
+        <div class="card-footer"> 이미 계정이 있다면? <a href="login.html">로그인</a> </div>
+    </div>
+
+<script>
+    const SERVER_URL = 'https://supermax.kr';
+    const form = document.getElementById('registerForm');
+    const useridInput = form.userid;
+    const password = document.getElementById('password');
+    const passwordConfirm = document.getElementById('passwordConfirm');
+    const useridFeedback = document.getElementById('userid-feedback');
+    const passwordFeedback = document.getElementById('password-feedback');
+    const btnRegister = document.getElementById('btnRegister');
+
+    let isIdAvailable = false;
+    let isPasswordMatch = false;
+    let isVerified = false;
+    
+    // 아이디 중복 체크 (입력창에서 포커스가 벗어날 때)
+    useridInput.addEventListener('blur', async () => {
+        const userid = useridInput.value.trim();
+        if (userid.length < 4) {
+            useridFeedback.textContent = '아이디는 4자 이상 입력해주세요.';
+            useridFeedback.className = 'feedback error';
+            isIdAvailable = false;
+            checkFormValidity();
+            return;
+        }
+        
+        try {
+            const res = await fetch(`${SERVER_URL}/26susi/check-userid`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userid })
+            });
+            const data = await res.json();
+            useridFeedback.textContent = data.message;
+            if (data.available) {
+                useridFeedback.className = 'feedback success';
+                isIdAvailable = true;
+            } else {
+                useridFeedback.className = 'feedback error';
+                isIdAvailable = false;
+            }
+        } catch(e) {
+            useridFeedback.textContent = '서버 통신 오류';
+            useridFeedback.className = 'feedback error';
+            isIdAvailable = false;
+        }
+        checkFormValidity();
+    });
+
+    // 비밀번호 일치 여부 실시간 확인
+    passwordConfirm.addEventListener('keyup', () => {
+        if (password.value && passwordConfirm.value) {
+            if (password.value === passwordConfirm.value) {
+                passwordFeedback.textContent = '비밀번호가 일치합니다.';
+                passwordFeedback.className = 'feedback success';
+                isPasswordMatch = true;
+            } else {
+                passwordFeedback.textContent = '비밀번호가 일치하지 않습니다.';
+                passwordFeedback.className = 'feedback error';
+                isPasswordMatch = false;
+            }
+        } else {
+            passwordFeedback.textContent = '';
+        }
+        checkFormValidity();
+    });
+    
+    // 인증번호 발송 요청
+    async function sendVerificationCode() {
+        if (!isIdAvailable) {
+            Swal.fire('알림', '먼저 사용 가능한 아이디를 입력해주세요.', 'warning');
+            return;
+        }
+        const phone = document.getElementById('phone').value.replace(/-/g, '');
+        if (!/^\d{10,11}$/.test(phone)) {
+            Swal.fire('알림', '올바른 전화번호를 입력해주세요.', 'warning');
+            return;
+        }
+        // ... (이하 인증번호 발송 로직은 이전과 동일)
+        const btnSend = document.getElementById('btnSendCode');
+        btnSend.disabled = true;
+        try {
+            const res = await fetch(`${SERVER_URL}/26susi/send-verification-sms`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire('성공', '인증번호가 발송되었습니다.', 'success');
+                document.getElementById('verificationCode').disabled = false;
+                document.getElementById('btnVerifyCode').disabled = false;
+                let timer = 180;
+                btnSend.textContent = `재요청 (${timer}s)`;
+                const interval = setInterval(() => {
+                    timer--;
+                    btnSend.textContent = `재요청 (${timer}s)`;
+                    if (timer <= 0) {
+                        clearInterval(interval);
+                        btnSend.textContent = '인증요청';
+                        btnSend.disabled = false;
+                    }
+                }, 1000);
+            } else {
+                Swal.fire('실패', data.message, 'error');
+                btnSend.disabled = false;
+            }
+        } catch(e) {
+             Swal.fire('오류', '서버 통신 중 오류.', 'error');
+             btnSend.disabled = false;
+        }
+    }
+
+    // 인증번호 확인 요청
+    async function verifyCode() {
+        const phone = document.getElementById('phone').value.replace(/-/g, '');
+        const code = document.getElementById('verificationCode').value;
+        if (code.length !== 4) { return; }
+        try {
+            const res = await fetch(`${SERVER_URL}/26susi/verify-code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, code })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire('인증 성공!', '휴대폰 인증이 완료되었습니다.', 'success');
+                isVerified = true;
+                document.getElementById('phone').readOnly = true;
+                document.getElementById('verificationCode').readOnly = true;
+                document.getElementById('btnVerifyCode').disabled = true;
+                document.getElementById('btnSendCode').disabled = true;
+            } else {
+                Swal.fire('인증 실패', data.message, 'error');
+                isVerified = false;
+            }
+        } catch(e) {
+             Swal.fire('오류', '서버 통신 중 오류.', 'error');
+        }
+        checkFormValidity();
+    }
+    
+    // 모든 조건 충족 시 가입 버튼 활성화
+    function checkFormValidity() {
+        btnRegister.disabled = !(isIdAvailable && isPasswordMatch && isVerified);
+    }
+    
+    // 최종 가입 신청
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!isIdAvailable || !isPasswordMatch || !isVerified) {
+            Swal.fire('알림', '아이디, 비밀번호, 휴대폰 인증을 모두 완료해야 합니다.', 'warning');
+            return;
+        }
+        const data = {
+            userid: form.userid.value,
+            password: form.password.value,
+            name: form.name.value,
+            branch: form.branch.value,
+            phone: form.phone.value,
+        };
+        const res = await fetch(`${SERVER_URL}/26susi/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (json.success) {
+            await Swal.fire('가입 신청 완료!', '관리자 승인 후 로그인이 가능합니다.', 'success');
+            location.href = 'login.html';
+        } else {
+            document.getElementById('registerMsg').textContent = json.message || '가입 실패';
+        }
+    });
+</script>
+</body>
+</html>

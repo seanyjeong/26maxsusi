@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실기 총점 설정</title>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 10px;
+    }
+    .college-box {
+      border: 1px solid #ccc;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .college-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .row {
+      margin-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 130px;
+    }
+    input[type="number"], input[type="text"] {
+      width: 150px;
+      padding: 4px;
+    }
+    .btn-toggle {
+      padding: 6px 10px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-toggle.active {
+      background-color: #4364f7;
+      color: white;
+      border-color: #4364f7;
+    }
+    .btn-save {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>실기 총점 반영 설정</h2>
+  <div id="college-list"></div>
+
+  <script>
+    const BASE_URL = 'https://supermax.kr';
+
+    async function fetchColleges() {
+        // 1. 호출하는 API 주소를 새로 만든 API로 변경합니다.
+        const res = await fetch(`${BASE_URL}/26susi_get_practical_colleges_with_scores`);
+        const data = await res.json();
+        renderCollegeList(data);
+    }
+
+
+function renderCollegeList(list) {
+    const wrapper = document.getElementById('college-list');
+    wrapper.innerHTML = '';
+
+    list.forEach(item => {
+        const box = document.createElement('div');
+        box.className = 'college-box';
+        
+        // API로 불러온 값을 변수에 할당 (값이 없으면 기본값 사용)
+        const totalScore = item.실기반영총점 || '';
+        // 저장된 기준총점이 있으면 그걸 쓰고, 없으면 기본만점총합을 사용
+        const baseScore = item.기준총점 || item.기본만점총합; 
+        const conversionMode = item.환산방식 || '비율환산';
+        const specialDesc = item.특수식설명 || '';
+
+        // 템플릿 리터럴 안의 value 속성에 위 변수들을 채워넣음
+        box.innerHTML = `
+            <div class="college-title">[${item.대학명} ${item.학과명} ${item.전형명}]</div>
+            <div class="row">실기ID: ${item.실기ID}</div>
+            <div class="row"><label>실기반영총점</label><input type="number" class="input-total" value="${totalScore}"></div>
+            <div class="row"><label>기준총점</label><input type="number" class="input-base" value="${baseScore}"></div>
+            <div class="row">
+                <label>환산방식</label>
+                <button class="btn-toggle" data-mode="비율환산">비율환산</button>
+                <button class="btn-toggle" data-mode="특수식">특수식</button>
+            </div>
+            <div class="row"><label>특수식설명</label><input type="text" class="input-desc" value="${specialDesc}"></div>
+            <button class="btn-save">저장</button>
+        `;
+        
+        // (로직 추가) 불러온 '환산방식'에 해당하는 버튼에 active 클래스 추가
+        const activeBtn = box.querySelector(`.btn-toggle[data-mode="${conversionMode}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        const btns = box.querySelectorAll('.btn-toggle');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        const saveBtn = box.querySelector('.btn-save');
+        saveBtn.addEventListener('click', async () => {
+            const total = box.querySelector('.input-total').value;
+            const base = box.querySelector('.input-base').value;
+            const desc = box.querySelector('.input-desc').value;
+            const mode = box.querySelector('.btn-toggle.active')?.dataset.mode || '비율환산';
+
+            const payload = {
+                대학ID: item.대학ID,
+                실기반영총점: parseInt(total) || null,
+                기준총점: parseInt(base) || null,
+                환산방식: mode,
+                특수식설명: desc
+            };
+
+            const res = await fetch(`${BASE_URL}/26susi_save_practical_total_config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) alert('저장 완료!');
+            else alert('저장 실패');
+        });
+
+        wrapper.appendChild(box);
+    });
+}
+
+    fetchColleges();
+  </script>
+</body>
+</html>

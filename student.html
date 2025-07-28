@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>학생 명단 관리</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4364f7;
+            --secondary-color: #6a8eff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #495057;
+            --card-bg: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--light-gray);
+            padding: 20px;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+        
+        #branchInfo {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+            overflow: hidden; /* 테이블 radius 적용을 위해 */
+        }
+        
+        .card-header {
+            padding: 15px 20px;
+            background-color: #fcfdff;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--dark-gray);
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        thead th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+        
+        tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.03);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .btn-primary { background-color: var(--primary-color); }
+        .btn-primary:hover { background-color: #3a52c4; }
+        
+        .btn-success { background-color: var(--success-color); }
+        .btn-success:hover { background-color: #218838; }
+
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-danger:hover { background-color: #c82333; }
+        
+        .btn-sm { padding: 5px 10px; font-size: 13px; }
+
+        button:disabled, .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #ccc !important;
+        }
+        
+        .card-footer {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-top: 1px solid var(--medium-gray);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <h2>학생 명단 관리</h2>
+        <div id="branchInfo"></div>
+    </div>
+  
+    <div class="card">
+        <div class="card-header">
+            <h3>학생 신규 등록</h3>
+        </div>
+        <form id="regForm" autocomplete="off">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">No</th>
+                            <th style="width: 15%;">이름</th>
+                            <th style="width: 25%;">학교</th>
+                            <th style="width: 10%;">학년</th>
+                            <th style="width: 10%;">성별</th>
+                            <th style="width: 25%;">전화번호</th>
+                            <th style="width: 10%;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regTbody"></tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <span id="regMsg" style="color:var(--success-color); margin-right: auto;"></span>
+                <button type="button" class="btn btn-primary" onclick="addRegRow()">+ 행 추가</button>
+                <button type="submit" class="btn btn-success">명단 등록</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>기존 학생 관리</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="studentTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">No</th>
+                            <th style="width: 15%;">이름</th>
+                            <th style="width: 25%;">학교</th>
+                            <th style="width: 10%;">학년</th>
+                            <th style="width: 10%;">성별</th>
+                            <th style="width: 25%;">전화번호</th>
+                            <th style="width: 15%;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentBody">
+                        <tr><td colspan="7">로딩중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="msg" style="color:var(--danger-color); margin-top:12px;"></div>
+        </div>
+    </div>
+
+<script>
+    const SERVER = 'https://supermax.kr';
+    let branch = '';
+    let token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+
+    // JWT 파싱
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch { return {}; }
+    }
+    const payload = parseJwt(token);
+    branch = payload.branch;
+    document.getElementById('branchInfo').textContent = "내 지점: " + (branch || '(지점정보없음)');
+
+    // 신규등록 행 UI 추가
+    function addRegRow() {
+      const tbody = document.getElementById('regTbody');
+      const tr = document.createElement('tr');
+      tr.className = 'reg-row';
+      const idx = tbody.children.length + 1;
+      tr.innerHTML = `
+        <td class="num-cell">${idx}</td>
+        <td><input type="text" name="name" onpaste="handlePaste(event, this)"></td>
+        <td><input type="text" name="school"></td>
+        <td><input type="text" name="grade"></td>
+        <td><input type="text" name="gender"></td>
+        <td><input type="text" name="phone"></td>
+        <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); reNumberRows();">삭제</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+    // 최초 5행 추가
+    for(let i=0; i<5; i++) addRegRow();
+
+    // 엑셀/시트 붙여넣기 기능
+    function handlePaste(e, targetInput) {
+      const clipboard = e.clipboardData || window.clipboardData;
+      const text = clipboard.getData('text');
+      const lines = text.split(/\r?\n/).filter(line=>line.trim());
+      if (lines.length < 2 && lines[0].split('\t').length < 2) return;
+      e.preventDefault();
+      const tr = targetInput.closest('tr');
+      const tbody = document.getElementById('regTbody');
+      let startIdx = Array.from(tbody.children).indexOf(tr);
+
+      lines.forEach((line, i) => {
+        let arr = line.split('\t');
+        let row;
+        if (tbody.children[startIdx + i]) {
+          row = tbody.children[startIdx + i];
+        } else {
+          addRegRow();
+          row = tbody.children[tbody.children.length - 1];
+        }
+        if (arr[0]) row.querySelector('input[name="name"]').value = arr[0].trim();
+        if (arr[1]) row.querySelector('input[name="school"]').value = arr[1].trim();
+        if (arr[2]) row.querySelector('input[name="grade"]').value = arr[2].trim();
+        if (arr[3]) row.querySelector('input[name="gender"]').value = arr[3].trim();
+        if (arr[4]) row.querySelector('input[name="phone"]').value = arr[4].trim();
+      });
+      reNumberRows();
+    }
+
+    // 행 삭제 후 번호 재정렬
+    function reNumberRows() {
+      const rows = document.querySelectorAll('#regTbody tr');
+      rows.forEach((tr, i) => {
+        tr.querySelector('.num-cell').textContent = i+1;
+      });
+    }
+
+    // 신규 명단 등록
+    document.getElementById('regForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const students = Array.from(document.querySelectorAll('#regTbody tr')).map(row => ({
+          name: row.querySelector('input[name="name"]').value.trim(),
+          school: row.querySelector('input[name="school"]').value.trim(),
+          grade: row.querySelector('input[name="grade"]').value.trim(),
+          gender: row.querySelector('input[name="gender"]').value.trim(),
+          phone: row.querySelector('input[name="phone"]').value.trim()
+      })).filter(s => s.name);
+      
+      if(!students.length) {
+        Swal.fire('알림', '입력된 학생이 없습니다!', 'warning');
+        return;
+      }
+      
+      const res = await fetch(SERVER + '/26susi_student_bulk_insert', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer '+token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ branch, students })
+      });
+      const json = await res.json();
+      if(json.success) {
+        Swal.fire('등록 완료!', `${json.inserted}명의 학생이 성공적으로 등록되었습니다.`, 'success');
+        document.getElementById('regTbody').innerHTML = '';
+        for(let i=0; i<5; i++) addRegRow();
+        loadStudents(); // 목록 새로고침
+      } else {
+        Swal.fire('등록 실패', json.message || '서버 오류가 발생했습니다.', 'error');
+      }
+    };
+
+    // 학생 목록 불러오기
+    async function loadStudents() {
+      const res = await fetch(SERVER + '/26susi_student_list', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const json = await res.json();
+      const body = document.getElementById('studentBody');
+      if (!json.success) {
+        body.innerHTML = '<tr><td colspan="7">오류! 다시 로그인 해주세요.</td></tr>';
+        if(json.message && json.message.includes("권한없음")) logout();
+        return;
+      }
+      if (!json.students.length) {
+        body.innerHTML = '<tr><td colspan="7">등록된 학생이 없습니다.</td></tr>';
+        return;
+      }
+      body.innerHTML = '';
+      json.students.forEach((s, idx) => {
+        const sid = s.학생ID;
+        body.innerHTML += `
+        <tr id="row_${sid}">
+          <td>${idx + 1}</td>
+          <td><input type="text" value="${s.이름 || ''}" onchange="onEdit(${sid})" id="name_${sid}"></td>
+          <td><input type="text" value="${s.학교명 || ''}" onchange="onEdit(${sid})" id="school_${sid}"></td>
+          <td><input type="text" value="${s.학년 || ''}" onchange="onEdit(${sid})" id="grade_${sid}"></td>
+          <td><input type="text" value="${s.성별 || ''}" onchange="onEdit(${sid})" id="gender_${sid}"></td>
+          <td><input type="text" value="${s.전화번호 || ''}" onchange="onEdit(${sid})" id="phone_${sid}"></td>
+          <td>
+            <button id="editBtn_${sid}" class="btn btn-primary btn-sm" onclick="saveEdit(${sid})" disabled>저장</button>
+            <button class="btn btn-danger btn-sm" onclick="delStudent(${sid})">삭제</button>
+          </td>
+        </tr>`;
+      });
+    }
+
+    // 수정 시 '저장' 버튼 활성화
+    function onEdit(sid) {
+      document.getElementById(`editBtn_${sid}`).disabled = false;
+    }
+
+    // 학생 정보 수정 저장
+    async function saveEdit(sid) {
+      const data = {
+        student_id: sid,
+        name: document.getElementById(`name_${sid}`).value.trim(),
+        school: document.getElementById(`school_${sid}`).value.trim(),
+        grade: document.getElementById(`grade_${sid}`).value.trim(),
+        gender: document.getElementById(`gender_${sid}`).value.trim(),
+        phone: document.getElementById(`phone_${sid}`).value.trim()
+      };
+      const btn = document.getElementById(`editBtn_${sid}`);
+      btn.disabled = true; // 중복 클릭 방지
+      
+      const res = await fetch(SERVER + '/26susi_student_update', {
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer '+token,
+          'Content-Type':'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if(!json.success) {
+        Swal.fire('수정 실패', json.message || '서버 오류', 'error');
+        btn.disabled = false; // 실패 시 버튼 다시 활성화
+      } else {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: '수정 완료!',
+            showConfirmButton: false,
+            timer: 1500
+        });
+      }
+    }
+
+    // 학생 삭제 (SweetAlert2 적용)
+    function delStudent(id) {
+        Swal.fire({
+            title: '정말 삭제하시겠습니까?',
+            text: "삭제된 학생 정보는 복구할 수 없습니다.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '삭제',
+            cancelButtonText: '취소'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const res = await fetch(SERVER + '/26susi_student_delete', {
+                    method:'POST',
+                    headers:{
+                        'Authorization':'Bearer '+token,
+                        'Content-Type':'application/json'
+                    },
+                    body: JSON.stringify({ student_id: id })
+                });
+                const json = await res.json();
+                if(json.success) {
+                    Swal.fire('삭제 완료!', '학생 정보가 삭제되었습니다.', 'success');
+                    loadStudents(); // 목록 새로고침
+                } else {
+                    Swal.fire('삭제 실패', json.message || '서버 오류', 'error');
+                }
+            }
+        });
+    }
+
+    // 로그아웃
+    function logout() {
+      localStorage.removeItem('token');
+      location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+    }
+
+    // 페이지 시작 시 학생 목록 로드
+    loadStudents();
+</script>
+
+</body>
+</html>

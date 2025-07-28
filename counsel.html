@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>상담 입력</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+ 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary-color: #4364f7;
+      --secondary-color: #6a8eff;
+      --accent-color: #3a86ff;
+      --light-gray: #f8f9fa;
+      --medium-gray: #e9ecef;
+      --dark-gray: #495057;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+      --border-radius: 6px;
+      --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    .section.compact {
+  padding: 10px 15px;
+}
+
+.section {
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--box-shadow);
+  width: 100%; /* 현재 100%이므로 중앙 정렬이 안 됨 */
+  max-width: 1200px; /* ⬅️ 이 값을 추가하여 div.section의 최대 너비를 제한합니다. */
+  margin: 0 auto; /* ⬅️ 이 값을 추가하여 div.section 자체를 중앙 정렬합니다. */
+  overflow-x: hidden; /* 또는 auto, 필요에 따라 */
+}
+
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f7fa;
+      padding: 20px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      color: var(--primary-color);
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
+    }
+
+table {
+  width: 100%; /* ⬅️ 부모 section의 100% 너비를 차지하도록 유지 */
+  max-width: 1200px; /* ⬅️ 테이블의 최대 너비는 section의 최대 너비와 같거나 작게 */
+  margin-left: auto; /* ⬅️ 부모 section 내에서 중앙 정렬 */
+  margin-right: auto; /* ⬅️ 부모 section 내에서 중앙 정렬 */
+  border-collapse: collapse;
+  margin-bottom: 25px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+  /* ⬅️ 가장 중요: 테이블 레이아웃을 고정하여 각 열의 너비를 강제합니다. */
+  table-layout: fixed;
+}
+
+/* 각 th/td에 명확한 너비 설정 (이 비율을 이미지에 맞게 미세 조정하세요) */
+/* 모든 열의 width 합계가 100%가 되도록 조정하는 것이 중요합니다. */
+/* [수정 후] : 비율을 조정하여 총 100%가 되도록 합니다. */
+.college-group-header th:nth-child(1), td:nth-child(1) { width: 15%; } /* 대학명 */
+.college-group-header th:nth-child(2), td:nth-child(2) { width: 15%; } /* 학과명 */
+.college-group-header th:nth-child(3), td:nth-child(3) { width: 12%; } /* 전형명 */
+.college-group-header th:nth-child(4), td:nth-child(4) { width: 6%; }  /* 등급 */
+.college-group-header th:nth-child(5), td:nth-child(5) { width: 8%; }  /* 내신점수 */
+.college-group-header th:nth-child(6), td:nth-child(6) { width: 8%; }  /* 실기총점 */
+.college-group-header th:nth-child(7), td:nth-child(7) { width: 8%; }  /* 합산점수 */
+.college-group-header th:nth-child(8), td:nth-child(8) { width: 9%; }  /* 맥스예상컷 */
+.college-group-header th:nth-child(9), td:nth-child(9) { width: 9%; }  /* 지점예상컷 */
+.college-group-header th:last-child, td:last-child { width: 4%; }  /* 삭제 */
+
+/* 셀 내부의 텍스트와 input 요소들도 중앙 정렬 */
+th, td {
+  padding: 8px;
+  text-align: center; /* ⬅️ 셀 내용을 중앙 정렬 */
+  border: 1px solid var(--medium-gray);
+  white-space: nowrap; /* 셀 내용이 길어질 때 줄바꿈 방지 */
+}
+
+/* select 요소는 텍스트는 좌측 정렬하되, 전체 너비는 셀에 맞춤 */
+td select {
+    min-width: unset; /* 전역 min-width 해제 */
+    width: 100%; /* ⬅️ 셀 너비에 맞게 100%로 설정 */
+    text-align: left; /* 텍스트는 왼쪽 정렬 */
+    /* ... 기타 select 스타일 ... */
+}
+
+/* input 요소는 텍스트를 중앙 정렬 */
+.input-sm, .input-grade, .input-score, .input-total-score, .합산점수 {
+    text-align: center; /* ⬅️ input 내부 텍스트 중앙 정렬 */
+}
+
+    .row-wrap {
+      display: flex;
+      gap: 20px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark-gray);
+    }
+
+    select, input, textarea {
+      font-family: 'Noto Sans KR', sans-serif;
+      padding: 10px 12px;
+      border: 1px solid var(--medium-gray);
+      border-radius: var(--border-radius);
+      font-size: 14px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(67, 100, 247, 0.2);
+    }
+
+    select {
+      background-color: white;
+      min-width: 180px;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .add-row-btn {
+      background-color: var(--success-color);
+      margin-left: 10px;
+    }
+
+    .add-row-btn:hover {
+      background-color: #218838;
+    }
+
+    .del-btn {
+      background-color: var(--danger-color);
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .del-btn:hover {
+      background-color: #c82333;
+    }
+table {
+  width: 100%;
+  max-width: 1200px; /* 표의 최대 너비 설정 */
+  margin-left: auto; /* ⬅️ 이 줄을 유지하여 표를 중앙에 정렬합니다. */
+  margin-right: auto; /* ⬅️ 이 줄을 유지하여 표를 중앙에 정렬합니다. */
+  
+  border-collapse: collapse;
+  margin-bottom: 25px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+
+
+    th, td {
+      padding: 8px;
+      text-align: center;
+      border: 1px solid var(--medium-gray);
+      white-space: nowrap;
+    }
+
+    .college-group-header th {
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 10px 8px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--light-gray);
+    }
+
+    tr:hover {
+      background-color: rgba(67, 100, 247, 0.05);
+    }
+
+    .input-sm {
+      width: 70px;
+      padding: 8px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .input-grade {
+      width: 60px;
+    }
+
+    .input-score {
+      width: 80px;
+    }
+
+    .input-memo {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border-radius: var(--border-radius);
+      resize: vertical;
+    }
+
+    .practical-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 10px 0;
+      justify-content: left;
+    }
+
+    .practical-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 120px;
+      border: 1px solid var(--medium-gray);
+      border-radius: var(--border-radius);
+      padding: 8px 5px;
+      background-color: var(--light-gray);
+    }
+
+    .practical-input-container {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+    }
+
+    .practical-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--dark-gray);
+      white-space: nowrap;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .input-sm[readonly] {
+      background-color: var(--medium-gray);
+      border-color: #ddd;
+      color: #666;
+    }
+    
+    
+
+    #msg {
+      margin-left: 15px;
+      color: var(--success-color);
+      font-weight: 500;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 1600px) {
+      body {
+        padding: 15px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      th, td {
+        white-space: normal;
+      }
+
+      .practical-row {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .row-wrap {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+
+      select, input {
+        width: 100%;
+      }
+    }
+
+    .score-table-btn {
+    font-size: 11px;
+    padding: 3px 6px;
+    margin-left: 8px;
+    background-color: var(--secondary-color);
+}
+
+    /* ✅ 2. 팝업(모달) 스타일 추가 */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 100; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.6);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 1200px;
+    border-radius: var(--border-radius);
+    position: relative;
+}
+.close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.close-btn:hover { color: black; }
+#modalTitle { margin-bottom: 20px; color: var(--primary-color); }
+#modalTableContainer { display: flex; gap: 16px; overflow-x: auto; }
+#modalTableContainer table { min-width: 300px; }
+
+/* ✅ PDF 출력 모드 설정 */
+/* PDF 출력 모드에서 테이블과 셀 너비 조정 */
+/* PDF 출력 모드 설정 (수정됨) */
+.pdf-export-mode {
+    /* 캡처 영역 자체의 너비를 고정하는 것이 더 안정적일 수 있음 */
+    width: 1200px !important;
+    margin: 0 auto;
+}
+
+.pdf-export-mode table {
+    width: 100% !important;
+    table-layout: fixed !important; /* auto 대신 fixed로 유지 */
+    /* margin-left와 margin-right를 제거하여 부모 요소의 중앙 정렬을 따름 */
+}
+
+.pdf-export-mode th, 
+.pdf-export-mode td {
+padding: 4px !important;
+font-size: 10px !important;
+word-break: keep-all !important;
+white-space: normal !important;
+  /* min-width는 그대로 두거나 필요 시 조정 */
+}
+/* 이하 다른 pdf-export-mode 스타일은 그대로 유지 */
+
+.pdf-export-mode th, 
+.pdf-export-mode td {
+  padding: 4px !important;
+  font-size: 10px !important;
+  min-width: 50px !important; /* 최소 너비 보장 */
+  word-break: keep-all !important; /* 단어 잘림 방지 */
+  white-space: normal !important; /* 줄바꿈 허용 */
+}
+
+/* 왼쪽 정렬이 필요한 셀에 대해 */
+.pdf-export-mode td:nth-child(1),
+.pdf-export-mode th:nth-child(1) {
+  text-align: left !important;
+  padding-left: 2px !important;
+}
+
+
+
+/* PDF 생성 시 임시 제목 스타일 */
+#pdf-temp-title {
+    text-align: center;
+    color: #4364f7; /* 메인 테마 색상 */
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: 700;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 15px;
+}
+
+/* PDF 출력 시 입력창 잘림 현상 해결을 위한 최종 코드 */
+.pdf-export-mode .input-sm {
+    height: 42px !important; /* 캡처 시 높이를 강제로 늘려 잘릴 공간을 원천 차단 */
+    margin-bottom: 2px;      /* 확실한 공간 확보를 위해 아래 외부 여백도 살짝 추가 */
+}
+
+
+
+/* PDF 생성 로딩 스피너 스타일 */
+.swal2-spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #4364f7; /* 메인 테마 색상 */
+  border-radius: 50%;
+  animation: swal2-rotate-spinner 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes swal2-rotate-spinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+  
+  </style>
+</head>
+<body>
+
+<h2 id="main-title"></h2>
+  
+
+<div class="section compact">
+  <div class="row-wrap">
+    <div style="flex-grow: 1;">
+      <label>학생 선택</label>
+      <select id="studentSelect" style="width: 100%;"></select>
+    </div>
+    <div>
+  <button type="button" class="add-row-btn" onclick="addCollegeRow()">+ 대학 추가</button>
+  <button type="submit" form="counselForm" style="margin-left: 10px;">상담내용 저장</button>
+  <button type="button" onclick="downloadPDF()" style="background-color: #28a745; margin-left: 10px;">PDF로 저장</button>
+</div>
+  </div>
+</div>
+
+
+  
+  <div id="captureArea">
+    <form id="counselForm" autocomplete="off">
+      <div class="section" style="overflow-x: auto;">
+        <table id="collegeTable">
+          <tbody id="collegeTbody"></tbody>
+        </table>
+      </div>
+      
+      <div class="section">
+        <label>상담 메모</label>
+        <textarea id="counselMemo" class="input-memo" placeholder="상담 내용을 상세히 입력해주세요"></textarea>
+      </div>
+    </form>
+    
+    <div style="display: flex; align-items: center; margin-top: 20px;">
+      <button type="submit" form="counselForm">상담내용 저장</button>
+      <span id="msg" style="margin-left: 15px;"></span>
+    </div>
+  </div>
+
+<div id="scoreTableModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeScoreTablePopup()">&times;</span>
+        <h3 id="modalTitle"></h3>
+        <div id="modalTableContainer"></div>
+    </div>
+</div>
+
+  <script>
+    const SERVER = 'https://supermax.kr';
+    let token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+
+    let students=[], colleges=[], practicals=[];
+    let studentMap = {}, collegeGroups = {};
+const scoreTableCache = new Map(); // ✅ 추가
+
+    // 1. 데이터 로드
+// [교체할 함수]
+// [교체할 함수]
+async function loadData() {
+    // 로딩 창에 로고 이미지 추가
+    Swal.fire({
+        title: '데이터 로딩중...',
+        html: `
+            <img src="https://github.com/seanyjeong/supermax/blob/main/maxmax.png?raw=true" alt="로딩 로고" style="width: 120px; margin-bottom: 20px;">
+            <div class="swal2-spinner"></div>
+        `,
+        allowOutsideClick: false,
+        showConfirmButton: false,
+    });
+
+    try {
+        const [profileRes, studentRes, collegeRes, practicalRes] = await Promise.all([
+            fetch(SERVER + '/26susi/profile', { headers: { Authorization: 'Bearer ' + token } }),
+            fetch(SERVER + '/26susi_student_list', { headers: { Authorization: 'Bearer ' + token } }),
+            fetch(SERVER + '/26susi_college_list', { headers: { Authorization: 'Bearer ' + token } }),
+            fetch(SERVER + '/26susi/practical-ids')
+        ]);
+
+        const profileData = await profileRes.json();
+        if (profileData.success && profileData.user.branch) {
+            document.getElementById('main-title').textContent = `2026맥스체대입시 ${profileData.user.branch} 교육원 수시상담`;
+        } else {
+            document.getElementById('main-title').textContent = "26맥스체대입시 수시상담";
+        }
+
+        students = (await studentRes.json()).students || [];
+        studentMap = {};
+        students.forEach(s => { studentMap[s.학생ID] = s; });
+
+        colleges = (await collegeRes.json()).colleges || [];
+        practicals = await practicalRes.json();
+
+        groupColleges();
+        renderStudentSelect();
+        addCollegeRow();
+
+    } catch (error) {
+        console.error("초기 데이터 로딩 실패:", error);
+        Swal.fire({
+            icon: 'error',
+            title: '오류',
+            text: '데이터를 불러오는 데 실패했습니다. 페이지를 새로고침 해주세요.'
+        });
+    } finally {
+        Swal.close();
+    }
+}
+
+    function groupColleges() {
+      collegeGroups = {};
+      colleges.forEach(c => {
+        if (!collegeGroups[c.대학명]) collegeGroups[c.대학명] = {};
+        if (!collegeGroups[c.대학명][c.학과명]) collegeGroups[c.대학명][c.학과명] = [];
+        if (!collegeGroups[c.대학명][c.학과명].includes(c.전형명))
+          collegeGroups[c.대학명][c.학과명].push(c.전형명);
+      });
+    }
+
+// [교체할 함수]
+function renderStudentSelect() {
+  const sel = document.getElementById('studentSelect');
+  // "학생을 선택하세요" 옵션을 기본으로 추가합니다.
+  let optionsHTML = '<option value="" selected disabled>학생을 선택하세요.</option>';
+  optionsHTML += students.map(s => `<option value="${s.학생ID}">${s.이름} (${s.성별})</option>`).join('');
+  sel.innerHTML = optionsHTML;
+}
+
+// ✅ 4. 행 삭제 시 카운터 번호를 다시 매기는 기능 구현
+function reNumberRows() {
+    const counters = document.querySelectorAll('#collegeTbody .row-counter');
+    counters.forEach((counter, i) => {
+        counter.textContent = `${i + 1}.`;
+    });
+}
+// ✅ 6. 팝업 관련 함수 3개 추가
+
+function closeScoreTablePopup() {
+    document.getElementById('scoreTableModal').style.display = 'none';
+}
+
+async function openScoreTablePopup(btn) {
+    const tbody = btn.closest('tbody.row-group');
+    const collegeID = getCollegeIDByTbody(tbody);
+    const matched = colleges.find(c => c.대학ID === collegeID);
+    
+    if (!matched || !matched.실기ID) {
+        alert('대학, 학과, 전형을 모두 선택해야 배점표를 볼 수 있습니다.');
+        return;
+    }
+
+    const modal = document.getElementById('scoreTableModal');
+    const titleEl = document.getElementById('modalTitle');
+    const container = document.getElementById('modalTableContainer');
+    
+    titleEl.textContent = `${matched.대학명} - ${matched.학과명} (${matched.전형명}) 배점표`;
+    container.innerHTML = '로딩 중...';
+    modal.style.display = 'block';
+
+    try {
+        const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${matched.실기ID}`);
+        const data = await res.json();
+        if (data.success) {
+            renderPopupScoreTable(data.events, container);
+        } else {
+            container.innerHTML = '배점표를 불러오는 데 실패했습니다.';
+        }
+    } catch (e) {
+        container.innerHTML = '배점표 로드 중 오류 발생.';
+    }
+}
+
+function renderPopupScoreTable(events, container) {
+    let finalHTML = '';
+    const eventNames = Object.keys(events);
+
+    eventNames.forEach(name => {
+        const eventData = events[name];
+        const scoreMap = { 남: new Map(), 여: new Map() };
+        const eventScores = new Set();
+        eventData.남.forEach(item => { scoreMap.남.set(item.배점, item.기록); eventScores.add(item.배점); });
+        eventData.여.forEach(item => { scoreMap.여.set(item.배점, item.기록); eventScores.add(item.배점); });
+        const sortedScores = Array.from(eventScores).sort((a, b) => Number(b) - Number(a));
+
+        let tableHTML = `
+            <table>
+                <thead>
+                    <tr><th colspan="3">${name}</th></tr>
+                    <tr><th>배점</th><th>남</th><th>여</th></tr>
+                </thead>
+                <tbody>`;
+        
+        sortedScores.forEach(score => {
+            tableHTML += `
+                <tr>
+                    <td>${score}</td>
+                    <td>${scoreMap.남.get(score) || '-'}</td>
+                    <td>${scoreMap.여.get(score) || '-'}</td>
+                </tr>`;
+        });
+        tableHTML += '</tbody></table>';
+        finalHTML += tableHTML;
+    });
+    container.innerHTML = finalHTML;
+}
+
+    function addCollegeRow() {
+        const tbody = document.getElementById('collegeTbody');
+        const idx = tbody.querySelectorAll('.row-group').length + 1;
+
+        const group = document.createElement('tbody');
+        group.classList.add('row-group');
+
+        // ✅ New: College Group Header
+        const collegeGroupHeader = document.createElement('tr');
+        collegeGroupHeader.classList.add('college-group-header');
+// ✅ 3. 카운터와 배점표 버튼 추가
+collegeGroupHeader.innerHTML = `
+    <th>
+        <span class="row-counter">${idx}.</span> 대학명
+        <button type="button" class="score-table-btn" onclick="openScoreTablePopup(this)">배점표</button>
+    </th>
+    <th>학과명</th>
+    <th>전형명</th>
+    <th>등급</th>
+    <th>내신점수</th>
+    <th>실기총점</th>
+    <th>합산점수</th>
+        <th>26맥스컷</th>
+    <th>26지점컷</th>
+    <th></th>
+`;
+        group.appendChild(collegeGroupHeader);
+
+
+        // ✅ 2. 기본 정보 줄
+        const infoRow = document.createElement('tr');
+        infoRow.innerHTML = `
+            <td><select class="sel-college" onchange="onCollegeNameChange(this)"></select></td>
+            <td><select class="sel-major" onchange="onMajorChange(this)" disabled></select></td>
+            <td><select class="sel-type" onchange="onTypeChange(this)" disabled></select></td>
+            <td><input type="text" class="input-grade" onchange="onInputEdit(this)"></td>
+            <td><input type="text" class="input-score" onchange="onInputEdit(this)"></td>
+            <td class="total-score-cell"><input type="text" class="input-total-score" readonly></td>
+            <td><input type="text" class="input-score 합산점수" readonly></td>
+ <td><input type="text" class="input-score max-cut" readonly></td>
+    <td><input type="text" class="input-score branch-cut" readonly></td>
+
+    <td><button class="del-btn" onclick="this.closest('tbody').remove(); reNumberRows();">삭제</button></td>
+        `;
+ 
+        group.appendChild(infoRow);
+
+        // ✅ 3. 실기 입력 줄 (비어있는 필드만 생성)
+        const practicalRow = document.createElement('tr');
+        practicalRow.innerHTML = `
+            <td colspan="10">
+                <div class="practical-row practical-fields"></div>
+            </td>
+        `;
+        group.appendChild(practicalRow);
+
+        tbody.appendChild(group);
+        reNumberRows();
+
+        // 대학 목록 옵션 추가
+        const collegeSel = group.querySelector('.sel-college');
+        collegeSel.innerHTML = '<option value="">선택</option>';
+        Object.keys(collegeGroups).forEach(c => {
+            collegeSel.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+    }
+
+    function reNumberRows() {
+      const groups = document.querySelectorAll('#collegeTbody .row-group');
+      groups.forEach((group, i) => {
+        // 여기서는 번호 매김 대신 각 그룹의 시각적인 구분을 강조합니다.
+        // 필요한 경우 .college-group-header에 특정 번호를 표시할 수 있습니다.
+      });
+    }
+
+    function onCollegeNameChange(sel) {
+
+      const tbody = sel.closest('tbody');
+  scoreTableCache.set(tbody, {}); // ✅ 추가
+      const majorSel = tbody.querySelector('.sel-major');
+      majorSel.innerHTML = '<option value="">선택</option>';
+      majorSel.disabled = true;
+      const typeSel = tbody.querySelector('.sel-type');
+      typeSel.innerHTML = '<option value="">선택</option>';
+      typeSel.disabled = true;
+      // 기존 실기 필드 초기화 (여기서 등급/점수는 초기화하지 않음)
+      const practicalContainer = tbody.querySelector('.practical-fields');
+      if (practicalContainer) practicalContainer.innerHTML = '';
+      
+      // 계산된 총점만 초기화
+      tbody.querySelector('.input-total-score').value = '';
+      tbody.querySelector('.합산점수').value = '';
+
+      if (!sel.value) return;
+      Object.keys(collegeGroups[sel.value] || {}).forEach(m =>
+        majorSel.innerHTML += `<option value="${m}">${m}</option>`
+      );
+      majorSel.disabled = false;
+    }
+
+    function onMajorChange(sel) {
+
+      const tbody = sel.closest('tbody');
+  scoreTableCache.set(tbody, {}); // ✅ 추가
+      const collegeSel = tbody.querySelector('.sel-college');
+      const major = sel.value;
+      const typeSel = tbody.querySelector('.sel-type');
+      typeSel.innerHTML = '<option value="">선택</option>';
+      typeSel.disabled = true;
+      // 기존 실기 필드 초기화 (여기서 등급/점수는 초기화하지 않음)
+      const practicalContainer = tbody.querySelector('.practical-fields');
+      if (practicalContainer) practicalContainer.innerHTML = '';
+
+      // 계산된 총점만 초기화
+      tbody.querySelector('.input-total-score').value = '';
+      tbody.querySelector('.합산점수').value = '';
+
+      if (!collegeSel.value || !major) return;
+      (collegeGroups[collegeSel.value][major] || []).forEach(t =>
+        typeSel.innerHTML += `<option value="${t}">${t}</option>`
+      );
+      typeSel.disabled = false;
+    }
+
+    function getCollegeID(대학명, 학과명, 전형명) {
+      const c = colleges.find(c =>
+        c.대학명 === 대학명 && c.학과명 === 학과명 && c.전형명 === 전형명
+      );
+      return c?.대학ID || '';
+    }
+
+// ✅ 이 함수를 스크립트에 추가해주세요.
+function getCollegeIDByTbody(tbody) {
+    const collegeSel = tbody.querySelector('.sel-college');
+    const majorSel = tbody.querySelector('.sel-major');
+    const typeSel = tbody.querySelector('.sel-type');
+
+    if (!collegeSel.value || !majorSel.value || !typeSel.value) {
+        return null;
+    }
+    return getCollegeID(collegeSel.value, majorSel.value, typeSel.value);
+}
+
+// ✅ [추가] 1. 실기 점수를 대학별 공식에 따라 환산하는 함수
+function calculateReflectedScore(tbody) {
+    const collegeSel = tbody.querySelector('.sel-college');
+    const majorSel = tbody.querySelector('.sel-major');
+    const typeSel = tbody.querySelector('.sel-type');
+
+    if (!collegeSel.value || !majorSel.value || !typeSel.value) return 0;
+
+    const collegeID = getCollegeID(collegeSel.value, majorSel.value, typeSel.value);
+    const collegeInfo = colleges.find(c => c.대학ID === collegeID);
+    const rawScore = calculateTotalScore(tbody);
+
+    // 환산 정보가 없으면 원래 점수 그대로 반환
+    if (!collegeInfo || !collegeInfo.실기반영총점 || !collegeInfo.기준총점) {
+        return rawScore;
+    }
+    
+    // 비율 환산 공식 적용
+    return (rawScore / collegeInfo.기준총점) * collegeInfo.실기반영총점;
+}
+
+// ✅ [추가] 2. '감' 수를 계산하는 함수
+function calculateGam(tbody, eventName, studentScore) {
+    const cachedData = scoreTableCache.get(tbody);
+    const student = studentMap[document.getElementById('studentSelect').value];
+    if (!cachedData || !cachedData[eventName] || !student) return 0;
+
+    const scoreList = cachedData[eventName][student.성별];
+    if (!scoreList || scoreList.length === 0) return 0;
+
+    const scores = scoreList.map(item => parseFloat(item.배점)).sort((a, b) => b - a);
+    if (studentScore >= scores[0]) return 0;
+    
+    const studentScoreIndex = scores.indexOf(parseFloat(studentScore));
+    return studentScoreIndex === -1 ? 0 : studentScoreIndex;
+}
+
+
+
+
+
+// ✅ [추가] 3. '합산점수' 계산 함수 (환산된 실기점수 사용)
+function calculateTotalSum(tbody) {
+    // 환산된 실기점수를 가져옵니다.
+    const reflectedScore = calculateReflectedScore(tbody);
+    const naesinScore = parseFloat(tbody.querySelector('.input-score')?.value) || 0;
+    
+    // 환산된 실기점수와 내신점수를 더합니다.
+    return reflectedScore + naesinScore;
+}
+
+ // [이 함수로 전체를 교체해주세요]
+
+async function onTypeChange(sel) {
+    const tbody = sel.closest('tbody');
+    const collegeSel = tbody.querySelector('.sel-college');
+    const majorSel = tbody.querySelector('.sel-major');
+    const typeSel = tbody.querySelector('.sel-type');
+
+    const collegeName = collegeSel.value;
+    const majorName = majorSel.value;
+    const typeName = typeSel.value;
+
+    // 선택이 완료되지 않으면 필드를 비우고 반환
+    if (!collegeName || !majorName || !typeName) {
+        const practicalContainer = tbody.querySelector('.practical-fields');
+        if (practicalContainer) practicalContainer.innerHTML = '';
+        tbody.querySelector('.input-total-score').value = '';
+        tbody.querySelector('.합산점수').value = '';
+        tbody.querySelector('.input-grade').value = '';
+        tbody.querySelector('.input-score').value = '';
+        // 예상컷 필드도 비워줍니다.
+        tbody.querySelector('.max-cut').value = '';
+        tbody.querySelector('.branch-cut').value = '';
+        return;
+    }
+
+    // 실기 필드 초기화
+    const practicalContainer = tbody.querySelector('.practical-fields');
+    if (practicalContainer) practicalContainer.innerHTML = '';
+
+    const student_id = document.getElementById('studentSelect').value;
+    const student = studentMap[student_id];
+    if (!student) return;
+
+    const gender = student.성별;
+
+    // 실기ID 및 대학 정보 조회
+    const collegeID = getCollegeID(collegeName, majorName, typeName);
+    const matched = colleges.find(c => c.대학ID === collegeID);
+
+    // =========================================================
+    // ✅ 오류 수정: 예상컷 불러오는 코드를 이 위치로 이동
+    // =========================================================
+    const maxCutInput = tbody.querySelector('.max-cut');
+    const branchCutInput = tbody.querySelector('.branch-cut');
+    if (matched) { // 'matched' 변수가 생성된 직후에 사용하도록 순서 변경
+        maxCutInput.value = matched['26맥스예상컷'] || '';
+        branchCutInput.value = matched['지점예상컷'] || '';
+    } else {
+        maxCutInput.value = '';
+        branchCutInput.value = '';
+    }
+    // =========================================================
+
+    const practical_id = matched?.실기ID;
+    
+    // 배점표 캐싱 로직 시작
+    scoreTableCache.set(tbody, {});
+    if (practical_id) {
+        try {
+            const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${practical_id}`);
+            const data = await res.json();
+            if (data.success) {
+                scoreTableCache.set(tbody, data.events);
+            }
+        } catch (e) {
+            console.error("배점표 캐싱 실패:", e);
+        }
+    }
+    // 배점표 캐싱 로직 끝
+
+    if (!practical_id) {
+        practicalContainer.innerHTML = '<span style="color:red;">❌ 실기 ID를 찾을 수 없습니다</span>';
+        tbody.querySelector('.input-total-score').value = '';
+        tbody.querySelector('.합산점수').value = '';
+    } else {
+        // 종목명 리스트 가져오기
+        const res = await fetch(`${SERVER}/26susi_events_by_practical_id?practical_id=${practical_id}&gender=${gender}`, {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        const json = await res.json();
+        let found = {};
+        const events = (json.events || []).filter(ev => {
+            if (!ev.종목명) return false;
+            if (found[ev.종목명]) return false;
+            found[ev.종목명] = 1;
+            return true;
+        });
+
+        // 종목 필드 렌더링
+        if (practicalContainer && events.length > 0) {
+            practicalContainer.innerHTML = events.map((e, idx) => `
+                <div class="practical-group">
+                    <span class="practical-label">${e.종목명}</span>
+                    <div class="practical-input-container">
+                        <input type="text" class="input-sm input-record" placeholder="기록" data-idx="${idx}" oninput="onRecordInputChange(this)">
+                        <input type="text" class="input-sm input-score-only" placeholder="점수" data-idx="${idx}" readonly>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            practicalContainer.innerHTML = '<span style="color:gray;">실기 종목이 없습니다.</span>';
+        }
+    }
+
+    // 등급/내신점수 불러오기
+    if (collegeID && student_id) {
+        const res2 = await fetch(`${SERVER}/26susi_student_grade?student_id=${student_id}`, {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        const json2 = await res2.json();
+        if (json2.success && Array.isArray(json2.grades)) {
+            const g = json2.grades.find(row => row.대학ID === collegeID);
+            
+            if (g) {
+                tbody.querySelector('.input-grade').value = g.등급 ?? '';
+                tbody.querySelector('.input-score').value = g.내신점수 ?? '';
+            }
+        }
+    }
+
+    // 선택이 완료되면 합산 점수 다시 계산
+    if (collegeName && majorName && typeName) {
+        const 합산Input = tbody.querySelector('.합산점수');
+        if (합산Input) 합산Input.value = calculateTotalSum(tbody).toFixed(2);
+    }
+}
+
+
+    function onInputEdit(input) {
+      const tbody = input.closest('tbody');
+      const student_id = document.getElementById('studentSelect').value;
+      const collegeSel = tbody.querySelector('.sel-college');
+      const majorSel = tbody.querySelector('.sel-major');
+      const typeSel = tbody.querySelector('.sel-type');
+      if (!collegeSel.value || !majorSel.value || !typeSel.value) return; // 모든 선택이 완료된 경우에만 저장 시도
+
+      const collegeID = getCollegeID(collegeSel.value, majorSel.value, typeSel.value);
+      if (input.classList.contains('input-grade') || input.classList.contains('input-score')) {
+        const 등급 = tbody.querySelector('.input-grade').value;
+        const 내신점수 = tbody.querySelector('.input-score').value;
+        if (student_id && collegeID) { // 등급/내신점수가 빈 문자열이어도 저장
+          fetch(SERVER + '/26susi_student_grade_update', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id, college_id: collegeID, 등급, 내신점수 })
+          });
+        }
+      }
+        // 등급 또는 내신 점수 변경 시 합산 점수 다시 계산 및 표시
+// ✅ [변경] 등급/내신점수 수정 시, 최종 합산점수만 다시 계산하여 표시
+tbody.querySelector('.합산점수').value = calculateTotalSum(tbody).toFixed(2);
+    }
+
+    function getPracticalIDByCollegeID(대학ID) {
+      const c = colleges.find(c => c.대학ID === 대학ID);
+      return c?.실기ID || null;
+    }
+    
+    function calculateTotalScore(tbody) {
+      const 점수Inputs = tbody.querySelectorAll('.input-score-only');
+      let total = 0;
+      점수Inputs.forEach(inp => {
+        const val = parseFloat(inp.value);
+        if (!isNaN(val)) total += val;
+      });
+      return total;
+    }
+
+
+// ✅ [전체 교체] 실기 기록 입력 시 모든 계산을 총괄하는 함수
+async function onRecordInputChange(input) {
+    const tbody = input.closest('tbody');
+    const collegeSel = tbody.querySelector('.sel-college');
+    const majorSel = tbody.querySelector('.sel-major');
+    const typeSel = tbody.querySelector('.sel-type');
+
+    if (!collegeSel.value || !majorSel.value || !typeSel.value) return;
+
+    const collegeID = getCollegeID(collegeSel.value, majorSel.value, typeSel.value);
+    const matched = colleges.find(c => c.대학ID === collegeID);
+    const practical_id = matched?.실기ID;
+    const student = studentMap[document.getElementById('studentSelect').value];
+
+    if (!practical_id || !student) return;
+
+    const inputs = Array.from(tbody.querySelectorAll('.practical-group')).map(group => {
+        let eventName = group.querySelector('.practical-label').textContent;
+        const gamIndex = eventName.indexOf('('); // ✅ 수정된 부분: 공백 제거
+        if (gamIndex > -1) {
+            eventName = eventName.substring(0, gamIndex);
+        }
+        return {
+            종목명: eventName,
+            기록: group.querySelector('.input-record').value.trim() || null
+        };
+    });
+
+    const res = await fetch(`${SERVER}/26susi/calculate-score`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 실기ID: practical_id, gender: student.성별, inputs })
+    });
+    const json = await res.json();
+    if (!json.종목별결과) return;
+
+    let totalGam = 0;
+    tbody.querySelectorAll('.practical-group').forEach((group, i) => {
+        const result = json.종목별결과[i];
+        const scoreInput = group.querySelector('.input-score-only');
+        const recordInput = group.querySelector('.input-record');
+        const eventLabel = group.querySelector('.practical-label');
+
+        let eventName = eventLabel.textContent;
+        const gamIndex = eventName.indexOf('('); // ✅ 수정된 부분: 공백 제거
+        if (gamIndex > -1) {
+            eventName = eventName.substring(0, gamIndex);
+        }
+        eventLabel.innerHTML = eventName; 
+
+        if (recordInput.value.trim() && result) {
+            scoreInput.value = result.배점;
+            const gam = calculateGam(tbody, eventName, result.배점);
+            totalGam += gam;
+            if (gam > 0) {
+                const gamSpan = document.createElement('span');
+                gamSpan.style.color = 'red';
+                gamSpan.style.fontSize = '12px';
+                gamSpan.style.marginLeft = '5px';
+                gamSpan.textContent = `(${gam}감)`;
+                eventLabel.appendChild(gamSpan);
+            }
+        } else {
+            scoreInput.value = '';
+        }
+    });
+
+    // 최종 점수들 업데이트
+    const reflectedScore = calculateReflectedScore(tbody);
+    const totalScoreInput = tbody.querySelector('.input-total-score');
+    totalScoreInput.value = reflectedScore > 0 ? reflectedScore.toFixed(2) : '';
+
+    const totalScoreCell = totalScoreInput.closest('td');
+    totalScoreCell.querySelector('.total-gam-span')?.remove();
+    if (totalGam > 0) {
+        const totalGamSpan = document.createElement('span');
+        totalGamSpan.className = 'total-gam-span';
+        totalGamSpan.style.color = 'red';
+        totalGamSpan.style.fontWeight = 'bold';
+        totalGamSpan.textContent = `(총 ${totalGam}감)`;
+        totalScoreCell.appendChild(totalGamSpan);
+    }
+    
+    tbody.querySelector('.합산점수').value = calculateTotalSum(tbody).toFixed(2);
+}
+
+document.getElementById('counselForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const msgEl = document.getElementById('msg');
+    msgEl.textContent = '저장 중...';
+
+    const student_id = document.getElementById('studentSelect').value;
+    const collegesArr = [];
+    
+    // (이 부분은 이전과 동일... 생략)
+    document.querySelectorAll('#collegeTbody .row-group').forEach(tbody => {
+      const collegeSel = tbody.querySelector('.sel-college');
+      const majorSel = tbody.querySelector('.sel-major');
+      const typeSel = tbody.querySelector('.sel-type');
+      if (!collegeSel.value || !majorSel.value || !typeSel.value) return;
+      const 대학ID = getCollegeID(collegeSel.value, majorSel.value, typeSel.value);
+      if (!대학ID) return;
+      const 실기총점 = calculateReflectedScore(tbody);
+      const 합산점수 = calculateTotalSum(tbody);
+      const practical_id = getPracticalIDByCollegeID(대학ID);
+      const practicalGroups = tbody.querySelectorAll('.practical-group');
+      let 기록 = [], 점수 = [];
+      for(let i = 0; i < 7; i++) {
+        const group = practicalGroups[i];
+        기록.push(group?.querySelector('.input-record')?.value || null);
+        점수.push(group?.querySelector('.input-score-only')?.value || null);
+      }
+      collegesArr.push({
+        대학ID, 실기ID: practical_id,
+        내신등급: tbody.querySelector('.input-grade')?.value || null,
+        내신점수: tbody.querySelector('.input-score')?.value || null,
+        기록1: 기록[0], 점수1: 점수[0], 기록2: 기록[1], 점수2: 점수[1],
+        기록3: 기록[2], 점수3: 점수[2], 기록4: 기록[3], 점수4: 점수[3],
+        기록5: 기록[4], 점수5: 점수[4], 기록6: 기록[5], 점수6: 점수[5],
+        기록7: 기록[6], 점수7: 점수[6],
+        실기총점, 합산점수,
+      });
+    });
+
+    const saveColleges = fetch(SERVER + '/26susi_counsel_college_save_multi', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_id, colleges: collegesArr })
+    });
+    
+    const saveMemo = fetch(SERVER + '/26susi_counsel_memo_save', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_id, memo: document.getElementById('counselMemo').value })
+    });
+
+    try {
+        const responses = await Promise.all([saveColleges, saveMemo]);
+        const results = await Promise.all(responses.map(res => res.json()));
+        const allSuccess = results.every(r => r.success);
+
+        msgEl.textContent = ''; 
+
+        if (allSuccess) {
+            const studentName = studentMap[student_id].이름;
+            
+            // ✅ 수정된 부분: 이미지 관련 속성 추가
+            Swal.fire({
+              imageUrl: 'https://github.com/seanyjeong/supermax/blob/main/maxmax.png?raw=true', // 여기에 원하는 이미지 URL을 넣으면 돼
+              imageWidth: 120, // 이미지 너비
+              
+              imageAlt: 'Success Checkmark', // 이미지가 로드 안될 때 나올 텍스트
+              title: '저장 완료!',
+              text: `${studentName} 학생의 상담내용이 저장되었습니다.`,
+              confirmButtonColor: '#4364f7'
+            });
+
+        } else {
+            Swal.fire({
+              icon: 'error',
+              title: '저장 실패',
+              text: '데이터 저장 중 문제가 발생했습니다. 다시 시도해주세요.',
+              confirmButtonColor: '#d33'
+            });
+        }
+
+    } catch(err) {
+        console.error("저장 중 오류 발생:", err);
+        Swal.fire({
+          icon: 'error',
+          title: '오류 발생',
+          text: '서버와 통신 중 오류가 발생했습니다.',
+          confirmButtonColor: '#d33'
+        });
+    }
+  };
+
+
+  
+    // 학생 선택 시 기존 상담 불러오기
+    document.getElementById('studentSelect').addEventListener('change', function() {
+      const student_id = this.value;
+      loadCounselData(student_id);
+    });
+
+// [교체할 함수]
+// [교체할 함수]
+async function loadCounselData(student_id) {
+    // 로딩 창에 로고 이미지 추가
+    Swal.fire({
+        title: '학생 정보 로딩 중...',
+        html: `
+            <img src="https://github.com/seanyjeong/supermax/blob/main/maxmax.png?raw=true" alt="로딩 로고" style="width: 120px; margin-bottom: 20px;">
+            <div class="swal2-spinner"></div>
+        `,
+        allowOutsideClick: false,
+        showConfirmButton: false,
+    });
+
+    const tbodyContainer = document.getElementById('collegeTbody');
+    const memoTextarea = document.getElementById('counselMemo');
+    tbodyContainer.innerHTML = '';
+    memoTextarea.value = '';
+
+    try {
+        const collegePromise = fetch(`${SERVER}/26susi_counsel_college_load?student_id=${student_id}`, {
+            headers: { Authorization: 'Bearer ' + token }
+        }).then(res => res.json());
+
+        const memoPromise = fetch(`${SERVER}/26susi_counsel_memo_load?student_id=${student_id}`, {
+            headers: { Authorization: 'Bearer ' + token }
+        }).then(res => res.json());
+
+        const [collegeRes, memoRes] = await Promise.all([collegePromise, memoPromise]);
+        
+        if (memoRes.success) {
+            memoTextarea.value = memoRes.memo || '';
+        }
+
+        if (!collegeRes.success || !collegeRes.colleges || collegeRes.colleges.length === 0) {
+            addCollegeRow();
+            return;
+        }
+
+        for (let item of collegeRes.colleges) {
+            const c = colleges.find(c => c.대학ID === item.대학ID);
+            if (!c) continue;
+
+            addCollegeRow();
+            await new Promise(r => setTimeout(r, 50)); 
+
+            const group = document.querySelector('#collegeTbody .row-group:last-child');
+            
+            const collegeSel = group.querySelector('.sel-college');
+            collegeSel.value = c.대학명;
+            await onCollegeNameChange(collegeSel);
+
+            const majorSel = group.querySelector('.sel-major');
+            majorSel.value = c.학과명;
+            await onMajorChange(majorSel);
+
+            const typeSel = group.querySelector('.sel-type');
+            typeSel.value = c.전형명;
+            await onTypeChange(typeSel); 
+
+            const practicalGroups = group.querySelectorAll('.practical-group');
+            for (let i = 0; i < 7; i++) {
+                const recordInput = practicalGroups[i]?.querySelector('.input-record');
+                if (recordInput && item[`기록${i+1}`]) {
+                    recordInput.value = item[`기록${i+1}`];
+                }
+            }
+            
+            const firstRecordInput = group.querySelector('.input-record');
+            if (firstRecordInput?.value) {
+                await onRecordInputChange(firstRecordInput);
+            }
+        }
+    } catch (error) {
+        console.error("상담 정보 로딩 중 오류 발생:", error);
+        Swal.fire({
+            icon: 'error',
+            title: '오류 발생',
+            text: '상담 정보를 불러오는 데 실패했습니다.'
+        });
+    } finally {
+        Swal.close();
+    }
+}
+
+// ✅✅✅ 이 함수로 통째로 교체! ✅✅✅
+async function downloadPDF() {
+    // ✅ 1단계: 로딩 화면 표시
+    Swal.fire({
+        title: 'PDF 문서를 만들고 있어요',
+        html: '<div class="swal2-spinner"></div>',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+    });
+
+    try {
+        // 2단계: 캡처할 대상 요소 및 학생 정보 가져오기
+        const element = document.getElementById('captureArea');
+        const studentId = document.getElementById('studentSelect').value;
+        const studentName = studentMap[studentId] ? studentMap[studentId].이름 : '학생';
+
+        const titleElement = document.createElement('h2');
+        titleElement.id = 'pdf-temp-title';
+        titleElement.textContent = `${studentName} 학생 상담요약`;
+
+        // 3단계: PDF 생성 전, 페이지 스타일 저장 및 캡처 환경 최적화
+        const originalHtmlStyle = document.documentElement.style.cssText;
+        const originalBodyStyle = document.body.style.cssText;
+        const originalElementStyle = element.style.cssText;
+
+        document.documentElement.style.cssText = 'overflow: hidden !important;';
+        document.body.style.cssText = 'margin: 0 !important; padding: 0 !important; overflow: hidden !important;';
+        element.classList.add('pdf-export-mode');
+        element.prepend(titleElement);
+
+        // 4단계: 고품질 스크린샷 캡처
+        const canvas = await window.html2canvas(element, {
+            scale: 1.5,
+            useCORS: true,
+        });
+
+        // 5단계: 캡처 후, 웹페이지 스타일과 임시 제목 즉시 복원
+        element.classList.remove('pdf-export-mode');
+        titleElement.remove();
+        document.documentElement.style.cssText = originalHtmlStyle;
+        document.body.style.cssText = originalBodyStyle;
+        element.style.cssText = originalElementStyle;
+        
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+        // 6단계: PDF 문서 설정 및 이미지 크기/위치 계산
+        const A4_WIDTH_MM = 210;
+        const A4_HEIGHT_MM = 297;
+        const MARGIN_MM = 15;
+
+        const availableWidth = A4_WIDTH_MM - (2 * MARGIN_MM);
+        const availableHeight = A4_HEIGHT_MM - (2 * MARGIN_MM);
+
+        const imgRatio = canvas.width / canvas.height;
+        
+        let pdfImgWidth = availableWidth;
+        let pdfImgHeight = pdfImgWidth / imgRatio;
+
+        if (pdfImgHeight > availableHeight) {
+            pdfImgHeight = availableHeight;
+            pdfImgWidth = pdfImgHeight * imgRatio;
+        }
+
+        const xPosition = (A4_WIDTH_MM - pdfImgWidth) / 2;
+        // ✅ [수정] Y 좌표를 상단 여백(MARGIN_MM)으로 고정하여 항상 위에서 시작하도록 변경
+        const yPosition = MARGIN_MM;
+
+        // 7단계: jsPDF로 새 PDF 문서를 만들고, 이미지 삽입
+        const doc = new window.jspdf.jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        doc.addImage(imgData, 'JPEG', xPosition, yPosition, pdfImgWidth, pdfImgHeight);
+        
+        // 8단계: PDF 파일 저장
+        doc.save(`${studentName}_상담요약.pdf`);
+
+        // ✅ 9단계: 로딩 화면을 '성공' 알림으로 변경 후 자동 닫기
+        Swal.fire({
+            icon: 'success',
+            title: 'PDF 생성 완료!',
+            showConfirmButton: false,
+            timer: 1500 // 1.5초 후에 자동으로 닫힘
+        });
+
+    } catch (error) {
+        // 에러 발생 시 처리
+        console.error("PDF 생성 중 오류 발생:", error);
+        Swal.fire({
+            icon: 'error',
+            title: '오류 발생',
+            text: 'PDF를 만드는 중 문제가 발생했습니다.'
+        });
+    }
+}
+
+    loadData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>대학별 내신/등급 입력 시스템</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #e6e9ff;
+      --border: #e0e0e0;
+      --header-bg: #f8f9fa;
+    }
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      max-width: 98%;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333;
+    }
+    
+    h2 {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    
+    #branchInfo {
+      background: var(--primary-light);
+      padding: 8px 12px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+    
+    #searchInput {
+      width: 300px;
+      padding: 10px 15px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin: 10px 0 20px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    #searchInput:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    th, td {
+      padding: 12px 8px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    
+    thead th {
+      background-color: var(--header-bg);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    tbody tr:hover {
+      background-color: rgba(67, 97, 238, 0.03);
+    }
+    
+    input[type="text"] {
+      width: 70px;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 0.95em;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+    }
+    
+    .col-name {
+      white-space: nowrap;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .row-no {
+      color: #999;
+      font-weight: 500;
+    }
+    
+    #msg {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-top: 15px;
+      display: inline-block;
+      font-weight: 500;
+    }
+    
+    .controls {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logout-btn {
+      background: none;
+      border: 1px solid #ddd;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #666;
+      transition: all 0.2s;
+    }
+    
+    .logout-btn:hover {
+      background: #f5f5f5;
+      color: #333;
+    }
+    
+    /* 스크롤바 스타일 */
+    ::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+input[type="text"] {
+  width: 100%;
+  box-sizing: border-box; /* ✅ 셀 내부에서 넘치지 않게 */
+  padding: 6px 4px;
+  font-size: 0.85em;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+
+
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <h2>대학별 내신/등급 입력 시스템</h2>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </div>
+  
+  <div id="branchInfo"></div>
+
+  <input type="text" id="searchInput" placeholder="대학명, 학과명, 전형명으로 검색">
+
+  <div style="overflow-x:auto; max-height: 75vh; border: 1px solid #eee; border-radius: 6px;">
+    <table id="gradeTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  
+  <div id="msg"></div>
+  
+  <script>
+    const SERVER = 'https://supermax.kr';
+    let branch = '';
+    let token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+
+    // JWT 디코딩 (한글 지점명)
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch { return {}; }
+    }
+    const payload = parseJwt(token);
+    branch = payload.branch;
+    document.getElementById('branchInfo').textContent = "내 지점: " + (branch || '(지점정보없음)');
+
+    let colleges = [], students = [], grade_map = {};
+    let filteredColleges = [];
+
+    async function loadAll() {
+      const res = await fetch(SERVER + '/26susi_student_grade_map', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      const json = await res.json();
+      if (!json.success) {
+        document.getElementById('msg').textContent = "데이터 로딩 오류! 다시 로그인 필요";
+        if(json.message && json.message.includes("권한없음")) logout();
+        return;
+      }
+      colleges = json.colleges;
+      students = json.students;
+      grade_map = json.grade_map;
+      filteredColleges = colleges;
+      renderTable();
+    }
+
+    // 검색 필터
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const q = this.value.trim().toLowerCase();
+      filteredColleges = colleges.filter(col =>
+        (col.대학명 && col.대학명.toLowerCase().includes(q)) ||
+        (col.학과명 && col.학과명.toLowerCase().includes(q)) ||
+        (col.전형명 && col.전형명.toLowerCase().includes(q))
+      );
+      renderTable();
+    });
+
+function renderTable() {
+  // 헤더 (2줄 구성)
+  let headHtml = `<tr>
+    <th rowspan="2">No</th>
+    <th rowspan="2">대학명</th>
+    <th rowspan="2">학과명</th>
+    <th rowspan="2">전형명</th>`;
+  students.forEach(st => {
+    headHtml += `<th colspan="2" class="col-name">${st.이름}</th>`;
+  });
+  headHtml += `</tr><tr>`;
+  students.forEach(() => {
+    headHtml += `<th>등급</th><th>내신</th>`;
+  });
+  headHtml += `</tr>`;
+  document.getElementById('tableHead').innerHTML = headHtml;
+
+  // 바디
+  let bodyHtml = '';
+  (filteredColleges || []).forEach((col, rowIdx) => {
+    bodyHtml += `<tr>
+      <td class="row-no">${rowIdx + 1}</td>
+      <td>${col.대학명}</td>
+      <td>${col.학과명 || ''}</td>
+      <td>${col.전형명 || ''}</td>`;
+
+    students.forEach(st => {
+      const key = `${st.학생ID}-${col.대학ID}`;
+      const grade = grade_map[key]?.등급 || '';
+      const score = grade_map[key]?.내신점수 || '';
+      bodyHtml += `
+        <td><input type="text" value="${grade}" 
+          onchange="updateGrade(${st.학생ID},'${col.대학ID}', this.value, null)" 
+          placeholder="등급"></td>
+        <td><input type="text" value="${score}"
+          onchange="updateGrade(${st.학생ID},'${col.대학ID}', null, this.value)" 
+          placeholder="내신"></td>`;
+    });
+
+    bodyHtml += `</tr>`;
+  });
+  document.getElementById('tableBody').innerHTML = bodyHtml;
+}
+
+
+    // 저장(수정) 함수: 셀 값 바뀔 때마다 자동 저장
+    async function updateGrade(student_id, college_id, grade, score) {
+      const key = `${student_id}-${college_id}`;
+      const prev = grade_map[key] || {};
+      if (grade === null) grade = prev.등급 || '';
+      if (score === null) score = prev.내신점수 || '';
+      grade_map[key] = { 등급: grade, 내신점수: score }; // 프론트상 값 갱신
+
+      const res = await fetch(SERVER + '/26susi_student_grade_update', {
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer '+token,
+          'Content-Type':'application/json'
+        },
+        body: JSON.stringify({
+          student_id, college_id,
+          "등급": grade, "내신점수": score
+        })
+      });
+      const json = await res.json();
+      if(!json.success) {
+        document.getElementById('msg').textContent = json.message||'저장실패';
+        document.getElementById('msg').style.backgroundColor = '#ffebee';
+        document.getElementById('msg').style.color = '#c62828';
+      } else {
+        document.getElementById('msg').textContent = "성공적으로 저장되었습니다!";
+        document.getElementById('msg').style.backgroundColor = '#e8f5e9';
+        document.getElementById('msg').style.color = '#2e7d32';
+        setTimeout(()=>{ 
+          document.getElementById('msg').textContent = ""; 
+          document.getElementById('msg').style.backgroundColor = '';
+        }, 1500);
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
