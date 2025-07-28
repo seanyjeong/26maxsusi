@@ -167,6 +167,31 @@ input[type="text"] {
   border-radius: 3px;
 }
 
+/* thead 전체에 기본 sticky 설정 */
+thead th {
+  position: sticky;
+  background: var(--header-bg); /* 스크롤 시 내용이 비치지 않게 배경색 지정 */
+  z-index: 1;
+}
+
+/* 첫 번째 헤더 행 (학생 이름) 고정 */
+thead tr:first-child th {
+  top: 0;
+  z-index: 2; /* 두 번째 행보다 위에 보이도록 z-index를 높게 설정 */
+}
+
+/* 두 번째 헤더 행 (등급, 내신) 고정 */
+/* 두 번째 헤더 행 (등급, 내신) 고정 */
+thead tr:nth-child(2) th {
+  /*
+    여기의 top 값을 1~2px 정도 줄여서 틈을 없애봐.
+    예를 들어 50px이었다면 49px로 시도해 보는 거야.
+    F12 개발자 도구에서 값을 실시간으로 조절하면 편해.
+  */
+  top: 45px; /* ✨ 이 값을 미세 조정 */
+   border-bottom: 1px solid var(--border);
+}
+
 
 
   </style>
