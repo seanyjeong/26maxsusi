@@ -96,6 +96,19 @@ table {
 .college-group-header th:last-child, td:last-child { width: 4%; }  /* 삭제 */
 
 /* 셀 내부의 텍스트와 input 요소들도 중앙 정렬 */
+
+.input-total-score {
+  width: 60px !important;
+  min-width: 40px !important;
+  max-width: 100px !important;
+  box-sizing: border-box;
+}
+.college-group-header th:nth-child(6),
+td:nth-child(6) {
+    width: 8%;
+    overflow: hidden;
+}
+
 th, td {
   padding: 8px;
   text-align: center; /* ⬅️ 셀 내용을 중앙 정렬 */
@@ -455,7 +468,68 @@ white-space: normal !important;
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-  
+
+/* [style 태그 안에 이 부분을 추가] */
+
+.details-btn {
+    font-size: 11px;
+    padding: 3px 6px;
+    margin-left: 8px;
+    background-color: var(--accent-color); /* 눈에 띄는 다른 색상 */
+}
+
+/* [style 태그 안에 이 부분을 추가] */
+
+.modal-body-custom {
+    max-height: 75vh;
+    overflow-y: auto;
+    padding: 10px;
+}
+.detail-section {
+    margin-bottom: 25px;
+}
+.detail-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-gray);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--medium-gray);
+}
+.detail-section h4 i {
+    color: var(--primary-color);
+    margin-right: 8px;
+}
+.detail-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    table-layout: fixed;
+}
+.detail-section th, .detail-section td {
+    border: 1px solid var(--medium-gray);
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+.detail-section th {
+    background-color: var(--light-gray);
+    font-weight: 500;
+}
+.detail-section td {
+    background-color: #fff;
+}
+
+.total-gam-span {
+  font-size: 11px !important;
+  vertical-align: middle;
+  margin-left: 5px;
+  color: red;
+  font-weight: bold;
+}
+
+
+
   </style>
 </head>
 <body>
@@ -624,7 +698,7 @@ function addCollegeRow() {
     group.classList.add('row-group');
     const collegeGroupHeader = document.createElement('tr');
     collegeGroupHeader.classList.add('college-group-header');
-    collegeGroupHeader.innerHTML = `<th><span class="row-counter">${idx}.</span> 대학명<button type="button" class="score-table-btn" onclick="openScoreTablePopup(this)">배점표</button></th><th>학과명</th><th>전형명</th><th>등급</th><th>내신점수</th><th>실기총점</th><th>합산점수</th><th>26맥스컷</th><th>26지점컷</th><th></th>`;
+collegeGroupHeader.innerHTML = `<th><span class="row-counter">${idx}.</span> 대학명<button type="button" class="score-table-btn" onclick="openScoreTablePopup(this)">배점표</button><button type="button" class="details-btn" onclick="showCollegeDetailsModal(this)">간단요강</button></th><th>학과명</th><th>전형명</th><th>등급</th><th>내신점수</th><th>실기총점</th><th>합산점수</th><th>26맥스컷</th><th>26지점컷</th><th></th>`;
     group.appendChild(collegeGroupHeader);
     const infoRow = document.createElement('tr');
     infoRow.innerHTML = `<td><select class="sel-college" onchange="onCollegeNameChange(this)"></select></td><td><select class="sel-major" onchange="onMajorChange(this)" disabled></select></td><td><select class="sel-type" onchange="onTypeChange(this)" disabled></select></td><td><input type="text" class="input-grade" onchange="onInputEdit(this)"></td><td><input type="text" class="input-score" onchange="onInputEdit(this)"></td><td><input type="text" class="input-total-score" readonly></td><td><input type="text" class="input-score 합산점수" readonly></td><td><input type="text" class="input-score max-cut" readonly></td><td><input type="text" class="input-score branch-cut" readonly></td><td><button class="del-btn" onclick="this.closest('tbody').remove(); reNumberRows();">삭제</button></td>`;
@@ -852,6 +926,158 @@ function renderPopupScoreTable(events, container) {
 }
 
 loadData();
+
+// [기존 showCollegeDetailsModal 함수를 이걸로 교체]
+
+// [counsel.html] 파일의 기존 showCollegeDetailsModal 함수를 이걸로 교체
+
+async function showCollegeDetailsModal(btn) {
+    const tbody = btn.closest('tbody.row-group');
+    const collegeID = getCollegeIDByTbody(tbody);
+    if (!collegeID) {
+        Swal.fire('알림', '먼저 대학을 선택해주세요.', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${SERVER}/26susi/university-details?college_id=${collegeID}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            const details = data.details;
+            const modal = document.getElementById('scoreTableModal');
+            
+            // --- 1. 모달 제목 설정 ---
+            document.getElementById('modalTitle').textContent = `${details.대학명} - ${details.학과명} (${details.전형명})`;
+            
+            const modalBody = document.getElementById('modalTableContainer');
+            
+            // --- 2. 데이터 유무에 따라 HTML 구조 생성 ---
+            
+            // 1단계 전형 유무 확인
+            const hasFirstStage = details['1단계배수'] && details['1단계배수'].trim() !== '';
+
+            // 지원가능 대상 리스트 만들기
+            const eligibility = [];
+            if (details.일반고 === 'O') eligibility.push('일반고');
+            if (details.특성화고 === 'O') eligibility.push('특성화고');
+            if (details.체육고 === 'O') eligibility.push('체육고');
+            if (details.검정고시 === 'O') eligibility.push('검정고시');
+
+            let modalHTML = `
+            <div class="modal-body-custom">
+                <div class="detail-section">
+                    <h4><i class="fas fa-users"></i> 모집 정보</h4>
+                    <table>
+                        <thead><tr><th>모집정원</th><th>25학년도 정원</th><th>25학년도 경쟁률</th><th>25학년도 추가합격</th><th>교직이수</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>${details.정원 || '-'}</td>
+                                <td>${details['25정원'] || '자료없음'}</td>
+                                <td>${details['25경쟁률'] || '자료없음'}</td>
+                                <td>${details['25추가합격'] || '자료없음'}</td>
+                                <td>${details.교직이수 || '-'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="detail-section">
+                    <h4><i class="fas fa-clipboard-list"></i> 전형 방법</h4>
+                    <table>
+                        <thead><tr>`;
+            
+            // 1단계 배수 유무에 따라 헤더 변경
+            if (hasFirstStage) {
+                modalHTML += `<th>1단계(배수)</th><th>학생부</th><th>기타</th><th>2단계 내신</th><th>2단계 실기</th><th>2단계 면접</th><th>2단계 기타</th>`;
+            } else {
+                modalHTML += `<th>내신</th><th>실기</th><th>면접</th><th>기타</th>`;
+            }
+            
+            modalHTML += `</tr></thead><tbody><tr>`;
+
+            // 1단계 배수 유무에 따라 데이터 변경
+            if (hasFirstStage) {
+                modalHTML += `
+                    <td>${details['1단계배수']}</td>
+                    <td>${details['1단계학생부'] || '-'}%</td>
+                    <td>${details['1단계기타'] || '-'}%</td>
+                    <td>${details['2단계내신'] || '-'}%</td>
+                    <td>${details['2단계실기'] || '-'}%</td>
+                    <td>${details['2단계면접'] || '-'}%</td>
+                    <td>${details['2단계기타'] || '-'}%</td>
+                `;
+            } else {
+                modalHTML += `
+                    <td>${details['2단계내신'] || '-'}%</td>
+                    <td>${details['2단계실기'] || '-'}%</td>
+                    <td>${details['2단계면접'] || '-'}%</td>
+                    <td>${details['2단계기타'] || '-'}%</td>
+                `;
+            }
+
+            modalHTML += `</tr></tbody></table></div>`;
+
+            // 지원 가능 대상
+            if (eligibility.length > 0) {
+                modalHTML += `
+                <div class="detail-section">
+                    <h4><i class="fas fa-check-circle"></i> 지원 가능 대상</h4>
+                    <p style="padding: 0 10px;">${eligibility.join(', ')}</p>
+                </div>`;
+            }
+
+            // 학생부 반영
+            modalHTML += `
+                <div class="detail-section">
+                    <h4><i class="fas fa-book"></i> 학생부 반영</h4>
+                    <table>
+                        <thead><tr><th>교과</th><th>출결</th><th>기타</th><th>일반선택</th><th>진로선택</th><th>N수생 반영</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>${details.내신교과 || '-'}%</td>
+                                <td>${details.내신출결 || '-'}%</td>
+                                <td>${details.내신기타 || '-'}%</td>
+                                <td>${details.내신일반 || '-'}</td>
+                                <td>${details.내신진로 || '-'}</td>
+                                <td>${details.N학년비율 || '-'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`;
+
+            // 주요 일정 (조건부 렌더링)
+            modalHTML += `
+                <div class="detail-section">
+                    <h4><i class="fas fa-calendar-alt"></i> 주요 일정</h4>
+                    <table>
+                        <thead><tr>`;
+            
+            if (hasFirstStage) {
+                modalHTML += `<th>1단계 발표</th>`;
+            }
+            modalHTML += `<th>실기고사</th><th>최종 발표</th></tr></thead><tbody><tr>`;
+
+            if (hasFirstStage) {
+                modalHTML += `<td>${details['1단계발표일'] || '-'}</td>`;
+            }
+            modalHTML += `<td>${details.실기일 || '-'}</td><td>${details.합격자발표일 || '-'}</td></tr></tbody></table></div>`;
+
+            modalHTML += `</div>`; // modal-body-custom 끝
+
+            // --- 3. 생성된 HTML을 모달에 삽입하고 띄우기 ---
+            modalBody.innerHTML = modalHTML;
+            modal.style.display = 'block';
+
+        } else {
+            Swal.fire('오류', data.message, 'error');
+        }
+    } catch (error) {
+        Swal.fire('오류', '정보를 불러오는 데 실패했습니다.', 'error');
+    }
+}
   </script>
 </body>
 </html>
