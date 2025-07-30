@@ -684,9 +684,10 @@ function groupColleges() {
 
 function renderStudentSelect() {
     const sel = document.getElementById('studentSelect');
+    // ✅ 학생 목록을 '이름' 기준으로 가나다순 정렬하는 코드 추가
+    students.sort((a, b) => a.이름.localeCompare(b.이름));
     sel.innerHTML = '<option value="" selected disabled>학생을 선택하세요.</option>' + students.map(s => `<option value="${s.학생ID}">${s.이름} (${s.성별})</option>`).join('');
 }
-
 function reNumberRows() {
     document.querySelectorAll('#collegeTbody .row-counter').forEach((counter, i) => { counter.textContent = `${i + 1}.`; });
 }
@@ -708,7 +709,8 @@ collegeGroupHeader.innerHTML = `<th><span class="row-counter">${idx}.</span> 대
     group.appendChild(practicalRow);
     tbody.appendChild(group);
     reNumberRows();
-    group.querySelector('.sel-college').innerHTML = '<option value="">선택</option>' + Object.keys(collegeGroups).map(c => `<option value="${c}">${c}</option>`).join('');
+const sortedCollegeNames = Object.keys(collegeGroups).sort((a, b) => a.localeCompare(b));
+group.querySelector('.sel-college').innerHTML = '<option value="">선택</option>' + sortedCollegeNames.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
 function onCollegeNameChange(sel) {
