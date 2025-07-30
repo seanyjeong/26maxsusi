@@ -55,6 +55,10 @@
             padding: 15px 20px;
             background-color: #fcfdff;
             border-bottom: 1px solid var(--medium-gray);
+            /* ✅ 수정한 부분: flex를 이용해 제목과 안내문구 정렬 */
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
         }
         
         .card-header h3 {
@@ -158,10 +162,13 @@
         <h2>학생 명단 관리</h2>
         <div id="branchInfo"></div>
     </div>
-  
+ 
     <div class="card">
         <div class="card-header">
             <h3>학생 신규 등록</h3>
+            <span style="font-size: 0.8rem; color: #888; font-weight: 400;">
+                엑셀에서 '이름, 학교, 학년, 성별, 전화번호' 순으로 복사 후, 이름 칸에 붙여넣으세요.
+            </span>
         </div>
         <form id="regForm" autocomplete="off">
             <div class="table-responsive">
@@ -220,6 +227,9 @@
     let branch = '';
     let token = localStorage.getItem('token');
     if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
+    
+    // ✅ 추가된 부분: 붙여넣기 이전 상태를 저장할 변수
+    let beforePasteState = null;
 
     // JWT 파싱
     function parseJwt(token) {
@@ -256,8 +266,36 @@
     // 최초 5행 추가
     for(let i=0; i<5; i++) addRegRow();
 
+    // ✅ 추가된 부분: 현재 등록 테이블의 상태를 저장하는 함수
+    function getCurrentRegState() {
+        return Array.from(document.querySelectorAll('#regTbody tr')).map(row => ({
+            name: row.querySelector('input[name="name"]').value,
+            school: row.querySelector('input[name="school"]').value,
+            grade: row.querySelector('input[name="grade"]').value,
+            gender: row.querySelector('input[name="gender"]').value,
+            phone: row.querySelector('input[name="phone"]').value
+        }));
+    }
+
+    // ✅ 추가된 부분: 저장된 상태로 테이블을 복원하는 함수
+    function restoreRegState(state) {
+        const rows = document.querySelectorAll('#regTbody tr');
+        rows.forEach((row, i) => {
+            if (state[i]) {
+                row.querySelector('input[name="name"]').value = state[i].name;
+                row.querySelector('input[name="school"]').value = state[i].school;
+                row.querySelector('input[name="grade"]').value = state[i].grade;
+                row.querySelector('input[name="gender"]').value = state[i].gender;
+                row.querySelector('input[name="phone"]').value = state[i].phone;
+            }
+        });
+    }
+
     // 엑셀/시트 붙여넣기 기능
     function handlePaste(e, targetInput) {
+      // ✅ 추가된 부분: 붙여넣기 직전의 상태를 저장
+      beforePasteState = getCurrentRegState();
+
       const clipboard = e.clipboardData || window.clipboardData;
       const text = clipboard.getData('text');
       const lines = text.split(/\r?\n/).filter(line=>line.trim());
@@ -284,6 +322,25 @@
       });
       reNumberRows();
     }
+
+    // ✅ 추가된 부분: Ctrl+Z 되돌리기 이벤트 리스너
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+            if (beforePasteState) {
+                e.preventDefault(); // 브라우저 기본 되돌리기 방지
+                restoreRegState(beforePasteState);
+                beforePasteState = null; // 되돌렸으므로 상태 비우기
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: '붙여넣기를 되돌렸습니다.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        }
+    });
 
     // 행 삭제 후 번호 재정렬
     function reNumberRows() {
