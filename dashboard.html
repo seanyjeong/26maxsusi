@@ -1,127 +1,88 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>대시보드</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    :root {
-      --primary: #4364f7;
-      --light-gray: #f8f9fa;
-      --medium-gray: #e9ecef;
-      --dark-gray: #495057;
-      --card-bg: #fff;
-      --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-      --border-radius: 10px;
-    }
-
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: var(--light-gray);
-      margin: 0;
-      padding: 20px;
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    h2 {
-      color: var(--primary);
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      box-shadow: var(--box-shadow);
-      border-radius: var(--border-radius);
-      margin-bottom: 25px;
-      padding: 20px;
-    }
-
-    .card h3 {
-      margin-top: 0;
-      color: var(--dark-gray);
-    }
-
-    ul {
-      list-style: none;
-      padding-left: 0;
-      margin: 0;
-    }
-
-    li {
-      padding: 10px 0;
-      border-bottom: 1px solid var(--medium-gray);
-    }
-
-    li:last-child {
-      border-bottom: none;
-    }
-
-    .date {
-      font-weight: bold;
-      color: #333;
-    }
-
-    .desc {
-      color: #555;
-    }
-
-    .highlight {
-      background: #f0f4ff;
-      padding: 10px;
-      border-left: 5px solid var(--primary);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>대시보드</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4364f7; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #495057; --card-bg: #fff; --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); --border-radius: 10px; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: var(--light-gray); margin: 0; padding: 20px; max-width: 1200px; margin: auto; }
+        h2 { color: var(--primary); margin-bottom: 20px; }
+        .card { background: var(--card-bg); box-shadow: var(--box-shadow); border-radius: var(--border-radius); margin-bottom: 25px; padding: 20px; }
+        .card h3 { margin-top: 0; color: var(--dark-gray); border-bottom: 1px solid var(--medium-gray); padding-bottom: 10px; margin-bottom: 10px; font-size: 1.1em; }
+        ul { list-style: none; padding-left: 0; margin: 0; }
+        li { padding: 12px 5px; border-bottom: 1px solid var(--medium-gray); display: flex; align-items: center; gap: 15px; }
+        li:last-child { border-bottom: none; }
+        .date { font-weight: 600; color: var(--primary); width: 150px; text-align: center; }
+        .desc { color: #555; }
+        .placeholder { color: #999; text-align: center; padding: 20px; }
+    </style>
 </head>
 <body>
 
-  <h2> 대시보드</h2>
+    <h2>대시보드</h2>
 
-  <div class="card">
-    <h3> 수시 원서접수 일정</h3>
-    <div class="highlight">
-      <div class="date">2025년 9월 10일(수) ~ 9월 14일(일)</div>
-      <div class="desc">공통 접수 기간 (수시모집 전체)</div>
+    <div class="card">
+        <h3>합격자 발표 일정 (가까운 순)</h3>
+        <ul id="announcement-list">
+            <li class="placeholder">일정을 불러오는 중입니다...</li>
+        </ul>
     </div>
-  </div>
+    
+    <div class="card">
+        <h3>우리 지점 실기일정 (가까운 순)</h3>
+        <p style="color: #888; font-size: 0.9em;">* 이 부분은 추후 상담 데이터와 연동하여 업데이트될 예정입니다.</p>
+        </div>
 
-  <div class="card">
-    <h3> 우리 지점 실기일정 (가까운 순)</h3>
-    <ul>
-      <li>
-        <div class="date">8월 2일 (금)</div>
-        <div class="desc">고려대(세종) 실기 - 5명 예정</div>
-      </li>
-      <li>
-        <div class="date">8월 5일 (월)</div>
-        <div class="desc">단국대 실기 - 3명 예정</div>
-      </li>
-      <li>
-        <div class="date">8월 6일 (화)</div>
-        <div class="desc">경희대 실기 - 4명 예정</div>
-      </li>
-    </ul>
-  </div>
+<script>
+    const SERVER = 'https://supermax.kr';
+    const token = window.parent.localStorage.getItem('token'); // iframe 환경이므로 parent에서 가져옴
 
-  <div class="card">
-    <h3> 합격자 발표일 (순서대로)</h3>
-    <ul>
-      <li>
-        <div class="date">10월 15일 (화)</div>
-        <div class="desc">한체대 1차 발표</div>
-      </li>
-      <li>
-        <div class="date">10월 22일 (화)</div>
-        <div class="desc">고려대(세종) 발표</div>
-      </li>
-      <li>
-        <div class="date">10월 25일 (금)</div>
-        <div class="desc">단국대 발표</div>
-      </li>
-    </ul>
-  </div>
+    // 날짜 형식을 'YYYY.MM.DD'에서 'M월 D일 (요일)'로 바꿔주는 함수
+    function formatDate(dateString) {
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        const [year, month, day] = dateString.split('.').map(Number);
+        const date = new Date(year, month - 1, day);
+        const dayName = days[date.getDay()];
+        return `${month}월 ${day}일 (${dayName})`;
+    }
 
+    // 발표일정 목록을 불러오는 함수
+    async function loadAnnouncementDates() {
+        const list = document.getElementById('announcement-list');
+        if (!token) {
+            list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`;
+            return;
+        }
+
+        try {
+            const res = await fetch(`${SERVER}/26susi/announcement-dates`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+
+            if (data.success && data.dates.length > 0) {
+                list.innerHTML = ''; // 로딩 메시지 삭제
+                data.dates.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="date">${formatDate(item.발표일)}</div>
+                        <div class="desc">${item.대학명} ${item.학과명} - ${item.내용}</div>
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                list.innerHTML = `<li class="placeholder">예정된 발표 일정이 없습니다.</li>`;
+            }
+        } catch (error) {
+            console.error("발표일정 로딩 실패:", error);
+            list.innerHTML = `<li class="placeholder">일정을 불러오는 데 실패했습니다.</li>`;
+        }
+    }
+
+    // 페이지가 로드되면 함수 실행
+    document.addEventListener('DOMContentLoaded', loadAnnouncementDates);
+</script>
 </body>
 </html>
