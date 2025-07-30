@@ -132,54 +132,60 @@ if (data.success) {
         } else { Swal.fire('오류', '데이터 조회 중 문제가 발생했습니다.', 'error'); }
     }
 
-    function renderTable(students, events) {
-        const thead = document.getElementById('resultTable').querySelector('thead');
-        const tbody = document.getElementById('resultTable').querySelector('tbody');
-        thead.innerHTML = ''; tbody.innerHTML = '';
-        currentStudentMap.clear();
-        students.forEach(s => currentStudentMap.set(s.학생ID, s));
+// 1. renderTable 함수 수정
+function renderTable(students, events) {
+    const thead = document.getElementById('resultTable').querySelector('thead');
+    const tbody = document.getElementById('resultTable').querySelector('tbody');
+    thead.innerHTML = ''; tbody.innerHTML = '';
+    currentStudentMap.clear();
+    students.forEach(s => currentStudentMap.set(s.학생ID, s));
 
-        let headerHTML = '<tr><th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th>';
-        events.forEach(e => headerHTML += `<th>${e}</th>`);
-        headerHTML += '<th>실기총점</th><th>합산점수</th><th>최초합</th><th>최종합</th><th>관리</th></tr>';
-        thead.innerHTML = headerHTML;
+    // [수정] 헤더에 '실기 일정' 추가
+    let headerHTML = '<tr><th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th>';
+    events.forEach(e => headerHTML += `<th>${e}</th>`);
+    headerHTML += '<th>실기총점</th><th>합산점수</th><th>실기 일정</th><th>최초합</th><th>최종합</th><th>관리</th></tr>';
+    thead.innerHTML = headerHTML;
 
-        if (students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${8 + events.length}">해당 전형으로 수합된 학생이 없습니다.</td></tr>`;
-            return;
-        }
-        students.forEach(student => addStudentRow(student, events, false));
+    if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${9 + events.length}">해당 전형으로 수합된 학생이 없습니다.</td></tr>`;
+        return;
     }
+    students.forEach(student => addStudentRow(student, events, false));
+}
+
+// 2. addStudentRow 함수 수정
+function addStudentRow(student, events, isNew = true) {
+    if (!student || (isNew && currentStudentMap.has(student.학생ID))) return;
+
+    const tbody = document.getElementById('resultTbody');
+    if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+    currentStudentMap.set(student.학생ID, student);
+
+    const row = document.createElement('tr');
+    row.dataset.studentId = student.학생ID;
+
+    let rowHTML = `<td>${student.이름}</td><td>${student.학년}</td><td>${student.성별}</td>
+        <td><input class="input-grade" type="text" value="${student.내신등급 || ''}" oninput="onNaesinInputChange(this)"></td>
+        <td><input class="input-score" type="text" value="${student.내신점수 || ''}" oninput="onNaesinInputChange(this)"></td>`;
     
-    function addStudentRow(student, events, isNew = true) {
-        if (!student || (isNew && currentStudentMap.has(student.학생ID))) return;
-
-        const tbody = document.getElementById('resultTbody');
-        if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
-        currentStudentMap.set(student.학생ID, student);
-
-        const row = document.createElement('tr');
-        row.dataset.studentId = student.학생ID;
-
-        let rowHTML = `<td>${student.이름}</td><td>${student.학년}</td><td>${student.성별}</td>
-            <td><input class="input-grade" type="text" value="${student.내신등급 || ''}" oninput="onNaesinInputChange(this)"></td>
-            <td><input class="input-score" type="text" value="${student.내신점수 || ''}" oninput="onNaesinInputChange(this)"></td>`;
-        
-        events.forEach((eventName, i) => {
-            rowHTML += `<td><div class="practical-input-group">
-                <input type="text" class="input-record" data-event-name="${eventName}" value="${student[`기록${i+1}`] || ''}" oninput="onRecordInputChange(this)" placeholder="기록">
-                <input type="text" class="input-score-only" readonly></div></td>`;
-        });
-        
-        rowHTML += `<td class="total-score-cell">-</td><td class="total-sum-cell">-</td>
-            <td><input class="input-first-pass" type="text" value="${student.최초합여부 || ''}" placeholder="합/불/예비"></td>
-            <td><input class="input-final-pass" type="text" value="${student.최종합여부 || ''}" placeholder="합/불/예비"></td>
-            <td><button class="btn-delete" onclick="deleteRow(this)">삭제</button></td>`;
-        
-        row.innerHTML = rowHTML;
-        tbody.appendChild(row);
-        updateScoresForRow(row);
-    }
+    events.forEach((eventName, i) => {
+        rowHTML += `<td><div class="practical-input-group">
+            <input type="text" class="input-record" data-event-name="${eventName}" value="${student[`기록${i+1}`] || ''}" oninput="onRecordInputChange(this)" placeholder="기록">
+            <input type="text" class="input-score-only" readonly></div></td>`;
+    });
+    
+    // [수정] 날짜 입력 필드(type="date") 추가
+    const scheduleDate = student.실기일정 ? student.실기일정.split(' ')[0] : ''; // YYYY-MM-DD 형식으로 변환
+    rowHTML += `<td class="total-score-cell">-</td><td class="total-sum-cell">-</td>
+        <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
+        <td><input class="input-first-pass" type="text" value="${student.최초합여부 || ''}" placeholder="합/불/예비"></td>
+        <td><input class="input-final-pass" type="text" value="${student.최종합여부 || ''}" placeholder="합/불/예비"></td>
+        <td><button class="btn-delete" onclick="deleteRow(this)">삭제</button></td>`;
+    
+    row.innerHTML = rowHTML;
+    tbody.appendChild(row);
+    updateScoresForRow(row);
+}
     
     function deleteRow(button) {
         Swal.fire({
@@ -262,39 +268,41 @@ async function openStudentAddModal() {
         });
     }
 }
-    async function saveFinalData() {
-        if (!currentCollege) { Swal.fire('알림', '저장할 데이터가 없습니다.', 'warning'); return; }
-        Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        
-        const studentDataPayload = [];
-        document.querySelectorAll('#resultTbody tr[data-student-id]').forEach(row => {
-            const data = {
-                학생ID: parseInt(row.dataset.studentId, 10),
-                실기ID: currentCollege.실기ID,
-                내신등급: row.querySelector('.input-grade').value,
-                내신점수: row.querySelector('.input-score').value,
-                실기총점: parseFloat(row.querySelector('.total-score-cell').textContent) || null,
-                합산점수: parseFloat(row.querySelector('.total-sum-cell').textContent) || null,
-                최초합여부: row.querySelector('.input-first-pass').value,
-                최종합여부: row.querySelector('.input-final-pass').value,
-            };
-            row.querySelectorAll('.input-record').forEach((inp, i) => {
-                data[`기록${i+1}`] = inp.value || null;
-                data[`점수${i+1}`] = inp.nextElementSibling.value || null;
-            });
-            studentDataPayload.push(data);
+ async function saveFinalData() {
+    if (!currentCollege) { Swal.fire('알림', '저장할 데이터가 없습니다.', 'warning'); return; }
+    Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    const studentDataPayload = [];
+    document.querySelectorAll('#resultTbody tr[data-student-id]').forEach(row => {
+        // [수정] '실기일정' 값을 payload에 추가
+        const data = {
+            학생ID: parseInt(row.dataset.studentId, 10),
+            실기ID: currentCollege.실기ID,
+            내신등급: row.querySelector('.input-grade').value,
+            내신점수: row.querySelector('.input-score').value,
+            실기총점: parseFloat(row.querySelector('.total-score-cell').textContent) || null,
+            합산점수: parseFloat(row.querySelector('.total-sum-cell').textContent) || null,
+            실기일정: row.querySelector('.input-date').value || null, // 이 줄 추가
+            최초합여부: row.querySelector('.input-first-pass').value,
+            최종합여부: row.querySelector('.input-final-pass').value,
+        };
+        row.querySelectorAll('.input-record').forEach((inp, i) => {
+            data[`기록${i+1}`] = inp.value || null;
+            data[`점수${i+1}`] = inp.nextElementSibling.value || null;
         });
+        studentDataPayload.push(data);
+    });
 
-        const res = await fetch(`${SERVER}/26susi_final_save`, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ college_id: currentCollege.대학ID, studentData: studentDataPayload })
-        });
-        const result = await res.json();
-        
-        if (result.success) Swal.fire('저장 완료!', '성공적으로 저장되었습니다.', 'success');
-        else Swal.fire('저장 실패', result.message || '오류가 발생했습니다.', 'error');
-    }
+    const res = await fetch(`${SERVER}/26susi_final_save`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ college_id: currentCollege.대학ID, studentData: studentDataPayload })
+    });
+    const result = await res.json();
+    
+    if (result.success) Swal.fire('저장 완료!', '성공적으로 저장되었습니다.', 'success');
+    else Swal.fire('저장 실패', result.message || '오류가 발생했습니다.', 'error');
+}
 
     // --- 점수 계산 및 유틸리티 함수 (counsel_group.html과 거의 동일) ---
     async function fetchPracticalEvents(practicalId) { if (!practicalId) { practicalEvents = []; return; } const res = await fetch(`${SERVER}/26susi_events_by_practical_id?practical_id=${practicalId}&gender=남`, { headers: { 'Authorization': 'Bearer ' + token } }); const data = await res.json(); practicalEvents = data.success ? [...new Set(data.events.map(e => e.종목명))] : []; }
