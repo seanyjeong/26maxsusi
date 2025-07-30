@@ -7,7 +7,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- jsPDF 라이브러리 먼저 -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/seanyjeong/supermax@main/NanumGothic-normal.js"></script>
+
+
+  
+
+
+    
 
  
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -394,24 +406,24 @@ table {
 /* PDF 출력 모드에서 테이블과 셀 너비 조정 */
 /* PDF 출력 모드 설정 (수정됨) */
 .pdf-export-mode {
-    /* 캡처 영역 자체의 너비를 고정하는 것이 더 안정적일 수 있음 */
+    font-family: 'Noto Sans KR', sans-serif !important;
     width: 1200px !important;
     margin: 0 auto;
 }
 
 .pdf-export-mode table {
     width: 100% !important;
-    table-layout: fixed !important; /* auto 대신 fixed로 유지 */
-    /* margin-left와 margin-right를 제거하여 부모 요소의 중앙 정렬을 따름 */
+    table-layout: fixed !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
 }
 
 .pdf-export-mode th, 
 .pdf-export-mode td {
-padding: 4px !important;
-font-size: 10px !important;
-word-break: keep-all !important;
-white-space: normal !important;
-  /* min-width는 그대로 두거나 필요 시 조정 */
+    padding: 4px !important;
+    font-size: 10px !important;
+    word-break: keep-all !important;
+    white-space: normal !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
 }
 /* 이하 다른 pdf-export-mode 스타일은 그대로 유지 */
 
@@ -586,7 +598,7 @@ const SERVER = 'https://supermax.kr';
 let token = localStorage.getItem('token');
 if (!token) location.href = 'login.html';
 
-let students = [], colleges = [], studentMap = {}, collegeGroups = {};
+let students = [], colleges = [], studentMap = {}, collegeGroups = {}, directorPhone = '';
 
 // [counsel.html] 이 함수로 교체
 async function updateAllScores(tbody) {
@@ -647,6 +659,9 @@ async function updateAllScores(tbody) {
     }
 }
     
+
+
+// ✅ [수정] loadData 함수를 아래 코드로 교체
 async function loadData() {
     Swal.fire({
         title: '데이터 로딩중...',
@@ -660,9 +675,13 @@ async function loadData() {
             fetch(SERVER + '/26susi_college_list', { headers: { Authorization: 'Bearer ' + token } }),
         ]);
         const profileData = await profileRes.json();
-        if (profileData.success && profileData.user.branch) {
-            document.getElementById('main-title').textContent = `2026맥스체대입시 ${profileData.user.branch} 교육원 수시상담`;
-        } else { document.getElementById('main-title').textContent = "26맥스체대입시 수시상담"; }
+        if (profileData.success && profileData.user) {
+            const user = profileData.user;
+            document.getElementById('main-title').textContent = `2026맥스체대입시 ${user.branch} 교육원 수시상담`;
+            directorPhone = user.phone || '000-0000-0000'; // 원장님 전화번호 저장
+        } else { 
+            document.getElementById('main-title').textContent = "26맥스체대입시 수시상담"; 
+        }
         students = (await studentRes.json()).students || [];
         studentMap = {}; students.forEach(s => { studentMap[s.학생ID] = s; });
         colleges = (await collegeRes.json()).colleges || [];
@@ -672,6 +691,7 @@ async function loadData() {
         Swal.fire({ icon: 'error', title: '오류', text: '데이터를 불러오는 데 실패했습니다.' });
     } finally { Swal.close(); }
 }
+
 
 function groupColleges() {
     collegeGroups = {};
@@ -863,33 +883,154 @@ async function loadCounselData(student_id) {
     finally { Swal.close(); }
 }
 
+// ✅ 1. (새로 추가) 이미지를 Base64로 변환하는 도우미 함수
+function toBase64(url) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function() {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                resolve(reader.result);
+            }
+            reader.readAsDataURL(xhr.response);
+        };
+        xhr.onerror = reject;
+        xhr.open('GET', url);
+        xhr.responseType = 'blob';
+        xhr.send();
+    });
+}
+
+function getImageDimensions(base64) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = function() {
+            resolve({
+                width: this.naturalWidth,
+                height: this.naturalHeight
+            });
+        };
+        img.onerror = reject;
+        img.src = base64;
+    });
+}
+
 async function downloadPDF() {
-    Swal.fire({ title: 'PDF 문서를 만들고 있어요', html: '<div class="swal2-spinner"></div>', allowOutsideClick: false, showConfirmButton: false, });
+    const studentId = document.getElementById('studentSelect').value;
+    if (!studentId) {
+        Swal.fire('알림', '먼저 학생을 선택해주세요.', 'warning');
+        return;
+    }
+
+    Swal.fire({ title: 'PDF 문서를 만들고 있어요', html: '<div class="swal2-spinner"></div>', allowOutsideClick: false, showConfirmButton: false });
+
     try {
-        const element = document.getElementById('captureArea');
-        const studentId = document.getElementById('studentSelect').value;
-        const studentName = studentMap[studentId] ? studentMap[studentId].이름 : '학생';
-        const titleElement = document.createElement('h2');
-        titleElement.id = 'pdf-temp-title';
-        titleElement.textContent = `${studentName} 학생 상담요약`;
-        element.classList.add('pdf-export-mode');
-        element.prepend(titleElement);
-        const canvas = await window.html2canvas(element, { scale: 1.5, useCORS: true, });
-        element.classList.remove('pdf-export-mode');
-        titleElement.remove();
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const student = studentMap[studentId];
+        const branchName = document.getElementById('main-title').textContent.split(' ')[1] || 'OO';
+        
+        // 전화번호 포맷팅 (하이픈 추가)
+        const formatPhoneNumber = (phone) => {
+            return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+        };
+        const formattedPhone = formatPhoneNumber(directorPhone);
+
+        const logoUrl = '25max.png';
+        const logoBase64 = await toBase64(logoUrl);
+        const logoOriginalSize = await getImageDimensions(logoBase64);
+        const logoAspectRatio = logoOriginalSize.width / logoOriginalSize.height;
+
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const A4_WIDTH_MM = 210, A4_HEIGHT_MM = 297, MARGIN_MM = 15;
-        const availableWidth = A4_WIDTH_MM - (2 * MARGIN_MM), availableHeight = A4_HEIGHT_MM - (2 * MARGIN_MM);
+
+        const A4_WIDTH = 210;
+        const A4_HEIGHT = 297;
+
+        // --- 전문적인 표지 디자인 ---
+        doc.setFont('NanumGothic', 'normal');
+        
+
+
+        // 2. 상단 데코레이션 라인
+        doc.setDrawColor(74, 107, 175); // 진한 파란색
+        doc.setLineWidth(1.5);
+        doc.line(20, 20, A4_WIDTH - 20, 20);
+
+        // 3. 메인 타이틀 (그림자 효과 대체)
+        doc.setFontSize(28);
+        doc.setTextColor(44, 62, 80); // 어두운 청회색
+        doc.text(`맥스체대입시 ${branchName} 교육원`, A4_WIDTH / 2, 50, { align: 'center' });
+        
+        doc.setFontSize(20);
+        doc.text('2026학년도 수시 상담자료', A4_WIDTH / 2, 65, { align: 'center' });
+
+        // 4. 로고
+        const logoWidth = A4_WIDTH * 1;
+        const logoHeight = logoWidth / logoAspectRatio;
+        const logoX = (A4_WIDTH - logoWidth) / 2;
+        const logoY = 80;
+        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
+
+        // 5. 학생 정보 박스 (카드 형태)
+        doc.setDrawColor(224, 224, 224); // 연한 회색 테두리
+        doc.setFillColor(255, 255, 255); // 흰색 배경
+        doc.roundedRect(40, A4_HEIGHT - 80, A4_WIDTH - 80, 60, 3, 3, 'FD');
+        
+        doc.setFontSize(16);
+        doc.setTextColor(44, 62, 80);
+        doc.text('상담 학생 정보', A4_WIDTH / 2, A4_HEIGHT - 65, { align: 'center' });
+        
+        doc.setFontSize(14);
+        doc.setTextColor(127, 140, 141); // 중간 회색
+        doc.text(`이    름 : ${student.이름}`, 50, A4_HEIGHT - 50);
+        doc.text(`상담문의 : ${formattedPhone}`, 50, A4_HEIGHT - 35);
+
+        // 6. 하단 데코레이션
+        doc.setDrawColor(74, 107, 175);
+        doc.setLineWidth(1);
+        doc.line(20, A4_HEIGHT - 15, A4_WIDTH - 20, A4_HEIGHT - 15);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(149, 165, 166); // 연한 회색
+        doc.text('맥스체대입시 - 체대입시 진학의 메카', A4_WIDTH / 2, A4_HEIGHT - 10, { align: 'center' });
+
+        // --- 내용 페이지 추가 ---
+        doc.addPage();
+        const element = document.getElementById('captureArea');
+        element.classList.add('pdf-export-mode');
+        const canvas = await html2canvas(element, { 
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            allowTaint: true
+        });
+        element.classList.remove('pdf-export-mode');
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const MARGIN = 15;
+        const availableWidth = A4_WIDTH - (2 * MARGIN);
+        const availableHeight = A4_HEIGHT - (2 * MARGIN);
         const imgRatio = canvas.width / canvas.height;
         let pdfImgWidth = availableWidth, pdfImgHeight = pdfImgWidth / imgRatio;
-        if (pdfImgHeight > availableHeight) { pdfImgHeight = availableHeight; pdfImgWidth = pdfImgHeight * imgRatio; }
-        const xPosition = (A4_WIDTH_MM - pdfImgWidth) / 2, yPosition = MARGIN_MM;
-        doc.addImage(imgData, 'JPEG', xPosition, yPosition, pdfImgWidth, pdfImgHeight);
-        doc.save(`${studentName}_상담요약.pdf`);
+
+        if (pdfImgHeight > availableHeight) {
+            pdfImgHeight = availableHeight;
+            pdfImgWidth = pdfImgHeight * imgRatio;
+        }
+
+        const xPos = (A4_WIDTH - pdfImgWidth) / 2;
+        doc.addImage(imgData, 'JPEG', xPos, MARGIN, pdfImgWidth, pdfImgHeight);
+        
+        doc.save(`${student.이름}_상담요약.pdf`);
         Swal.fire({ icon: 'success', title: 'PDF 생성 완료!', showConfirmButton: false, timer: 1500 });
-    } catch (error) { Swal.fire({ icon: 'error', title: '오류 발생', text: 'PDF를 만드는 중 문제가 발생했습니다.' }); }
+
+    } catch (error) {
+        console.error("PDF 생성 오류: ", error);
+        Swal.fire({ 
+            icon: 'error', 
+            title: '오류 발생', 
+            text: 'PDF 생성 중 문제가 발생했습니다: ' + error.message 
+        });
+    }
 }
 
 function getCollegeID(대학명, 학과명, 전형명) { const c = colleges.find(c => c.대학명 === 대학명 && c.학과명 === 학과명 && c.전형명 === 전형명); return c?.대학ID || null; }
