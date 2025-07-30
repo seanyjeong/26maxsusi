@@ -5,15 +5,16 @@
     <title>26수시 수합엔진</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-color: #4364f7;
             --secondary-color: #6a8eff;
-            --sidebar-bg: #2c3e50;
-            --sidebar-text: #ecf0f1;
-            --sidebar-hover: #34495e;
-            --content-bg: #f4f6f9;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #f8fafc;
+            --content-bg: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         body {
@@ -23,11 +24,12 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            color: #1e293b;
         }
 
-        /* --- 사이드바 스타일 (기존과 동일) --- */
+        /* --- 사이드바 스타일 --- */
         .sidebar {
-            width: 200px;
+            width: 240px;
             background-color: var(--sidebar-bg);
             color: var(--sidebar-text);
             display: flex;
@@ -37,31 +39,164 @@
             height: 100%;
             left: 0;
             top: 0;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: var(--card-shadow);
             z-index: 100;
+            transition: all 0.3s ease;
         }
-        .sidebar-header { padding: 0 20px 20px 20px; text-align: center; border-bottom: 1px solid var(--sidebar-hover); }
-        .sidebar-header h1 { font-size: 1.5rem; margin: 0; color: white; }
-        .sidebar-header h1 img { width: 100px; vertical-align: middle; margin-right: 10px; }
-        #user-info { padding: 20px; background-color: var(--sidebar-hover); text-align: center; }
-        #user-info #user-name { font-weight: 700; font-size: 1.1rem; }
-        #user-info #user-branch { font-size: 0.9rem; color: var(--secondary-color); }
-        .sidebar-nav { flex-grow: 1; list-style: none; padding: 20px 0; margin: 0; }
-        .sidebar-nav li a { display: block; padding: 15px 25px; color: var(--sidebar-text); text-decoration: none; font-size: 1rem; transition: background-color 0.2s; }
+        
+        .sidebar-header { 
+            padding: 0 20px 20px 20px; 
+            text-align: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            margin-bottom: 20px;
+        }
+        
+        /* ✅ 수정된 부분: 로고와 제목 스타일 */
+        .sidebar-header h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .sidebar-header h1 img {
+            width: 140px;
+            margin-bottom: 10px;
+        }
+        
+        #user-info { 
+            padding: 20px; 
+            background-color: rgba(255,255,255,0.05); 
+            text-align: center; 
+            margin: 0 15px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        #user-info:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        #user-info #user-name { 
+            font-weight: 700; 
+            font-size: 1.1rem; 
+            margin-bottom: 5px;
+        }
+        
+        #user-info #user-branch { 
+            font-size: 0.85rem; 
+            color: var(--secondary-color);
+            opacity: 0.9;
+        }
+        
+        /* ✅ 수정된 부분: flex-grow: 1 삭제 */
+        .sidebar-nav {  
+            list-style: none; 
+            padding: 0 15px; 
+            margin: 0; 
+        }
+        
+        .sidebar-nav li a { 
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px; 
+            color: var(--sidebar-text); 
+            text-decoration: none; 
+            font-size: 0.95rem; 
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-nav li a i {
+            width: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
         .sidebar-nav li a.active,
-        .sidebar-nav li a:hover { background-color: var(--primary-color); }
-        .sidebar-footer { padding: 20px; text-align: center; }
-        #logout-btn { background-color: transparent; color: var(--sidebar-text); border: 1px solid var(--sidebar-text); width: 100%; padding: 10px; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, color 0.2s; }
-        #logout-btn:hover { background-color: var(--primary-color); border-color: var(--primary-color); }
+        .sidebar-nav li a:hover { 
+            background-color: var(--primary-color); 
+            color: white;
+            transform: translateX(3px);
+        }
+        
+        .sidebar-nav li a.active i,
+        .sidebar-nav li a:hover i {
+            opacity: 1;
+        }
+        
+        .sidebar-footer { 
+            padding: 20px; 
+            text-align: center; 
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        #logout-btn { 
+            background-color: transparent; 
+            color: var(--sidebar-text); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        #logout-btn:hover { 
+            background-color: rgba(255,255,255,0.1); 
+            border-color: rgba(255,255,255,0.3);
+        }
 
         /* --- 메인 콘텐츠 프레임 스타일 --- */
         #content-frame {
-            margin-left: 250px; /* 사이드바 너비만큼 */
-            width: calc(100% - 250px);
+            margin-left: 240px;
+            width: calc(100% - 240px);
             height: 100vh;
             border: none;
+            background-color: var(--content-bg);
+            transition: all 0.3s ease;
         }
-        
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar:hover {
+                width: 240px;
+            }
+
+            .sidebar:not(:hover) .sidebar-header h1 span,
+            .sidebar:not(:hover) .sidebar-nav li a span,
+            .sidebar:not(:hover) #logout-btn span,
+            .sidebar:not(:hover) #user-info {
+                display: none;
+            }
+
+            .sidebar-header h1 {
+                justify-content: center;
+            }
+
+            .sidebar-header h1 img {
+                width: 36px;
+                margin-bottom: 0;
+            }
+
+            #content-frame {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -69,7 +204,7 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <h1>
-                <img src="https://github.com/seanyjeong/supermax/blob/main/maxmax.png?raw=true" alt="logo"><br>
+                <img src="https://github.com/seanyjeong/supermax/blob/main/maxmax.png?raw=true" alt="logo">
                 <span>26수시엔진</span>
             </h1>
         </div>
@@ -80,17 +215,21 @@
         </div>
 
         <ul class="sidebar-nav">
-            <li><a href="dashboard.html" class="active"> 메인 대시보드</a></li>
-            <li><a href="counsel.html"> 개인별 상담입력</a></li>
-            <li><a href="counsel_group.html"> 그룹별 상담입력</a></li>
-            <li><a href="student.html"> 학생 명단관리</a></li>
-            <li><a href="college-grade.html"> 대학별 내신입력</a></li>
-            <li><a href="cut_manager.html"> 예상컷 관리</a></li>
-            <li id="admin-menu" style="display:none;"><a href="admin.html"> 원장 승인/관리</a></li>
+            <li><a href="dashboard.html" class="active"><i class="fas fa-home"></i><span>메인 대시보드</span></a></li>
+            <li><a href="student.html"><i class="fas fa-list-ol"></i><span>학생 명단관리</span></a></li>
+            <li><a href="college-grade.html"><i class="fas fa-university"></i><span>대학별 내신입력</span></a></li>
+            <li><a href="counsel.html"><i class="fas fa-user-graduate"></i><span>개인별 상담입력</span></a></li>
+            <li><a href="counsel_group.html"><i class="fas fa-users"></i><span>그룹별 상담입력</span></a></li>
+            <li><a href="final_confirm.html"><i class="fas fa-check-double"></i><span>최종 수시수합</span></a></li>
+            <li><a href="cut_manager.html"><i class="fas fa-cut"></i><span>예상컷 관리</span></a></li>
+            <li id="admin-menu" style="display:none;"><a href="admin.html"><i class="fas fa-lock"></i><span>원장 승인/관리</span></a></li>
         </ul>
 
         <div class="sidebar-footer">
-            <button id="logout-btn" onclick="logout()">로그아웃</button>
+            <button id="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>로그아웃</span>
+            </button>
         </div>
     </aside>
 
@@ -100,7 +239,6 @@
         const SERVER = 'https://supermax.kr';
         const token = localStorage.getItem('token');
 
-        // 페이지 로드 시 초기화 함수 실행
         document.addEventListener('DOMContentLoaded', function() {
             if (!token) {
                 location.href = 'login.html';
@@ -110,7 +248,6 @@
             setupNavLinks();
         });
 
-        // 사용자 정보 로드 및 사이드바에 표시
         async function loadUserInfo() {
             try {
                 const res = await fetch(`${SERVER}/26susi/profile`, {
@@ -134,32 +271,35 @@
             }
         }
 
-        // 네비게이션 링크 설정 함수
         function setupNavLinks() {
             const navLinks = document.querySelectorAll('.sidebar-nav a');
             const contentFrame = document.getElementById('content-frame');
 
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    // 기본 링크 이동(페이지 새로고침)을 막음
                     e.preventDefault(); 
-                    
-                    // iframe의 소스를 클릭된 링크의 주소로 변경
                     contentFrame.src = this.href;
-
-                    // 모든 링크에서 'active' 클래스 제거
                     navLinks.forEach(l => l.classList.remove('active'));
-                    
-                    // 현재 클릭한 링크에만 'active' 클래스 추가
                     this.classList.add('active');
                 });
             });
         }
 
-        // 로그아웃 함수
         function logout() {
-            localStorage.removeItem('token');
-            location.href = 'login.html';
+            Swal.fire({
+                title: '로그아웃 하시겠습니까?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4364f7',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '로그아웃',
+                cancelButtonText: '취소'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('token');
+                    location.href = 'login.html';
+                }
+            });
         }
     </script>
 </body>
