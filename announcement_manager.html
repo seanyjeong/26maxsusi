@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>공지사항 관리</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4364f7; --secondary-color: #6c757d; --success-color: #28a745;
+            --danger-color: #dc3545; --warning-color: #ffc107; --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef; --dark-gray: #495057; --card-bg: #ffffff;
+            --border-radius: 8px; --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--light-gray); padding: 20px; color: #333; max-width: 1200px; margin: 0 auto; }
+        h2, h3 { color: var(--dark-gray); }
+        .card { background-color: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 25px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid var(--medium-gray); vertical-align: middle; }
+        thead th { background-color: #f8f9fa; font-weight: 500; }
+        tbody tr:hover { background-color: rgba(67, 97, 238, 0.03); }
+        .btn { border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s; color: white; }
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-sm { padding: 5px 10px; font-size: 13px; }
+        #notice-form input[type="text"], #notice-form textarea {
+            width: 100%; display: block; padding: 10px; margin-bottom: 10px;
+            border: 1px solid var(--medium-gray); border-radius: 5px; font-size: 1rem; box-sizing: border-box;
+        }
+        #notice-form textarea { min-height: 120px; resize: vertical; }
+        #notice-form label { display: flex; align-items: center; margin-bottom: 15px; font-size: 0.9rem; }
+        #notice-form button { background-color: var(--primary-color); width: 100%; padding: 12px; font-size: 1.1rem; }
+        .status-badge { padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: 500; color: white; background-color: var(--success-color); }
+    </style>
+</head>
+<body>
+
+    <h2>공지사항 관리</h2>
+    
+    <div class="card" style="margin-bottom: 20px;">
+        <h3>새 공지사항 작성</h3>
+        <form id="notice-form">
+            <input type="text" id="notice-title" placeholder="제목" required>
+            <textarea id="notice-content" placeholder="내용" required></textarea>
+            <label><input type="checkbox" id="notice-important" style="margin-right: 8px;"> 중요 공지로 등록</label>
+            <button class="btn" type="submit">등록하기</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>기존 공지사항 목록</h3>
+        <table id="notice-table">
+            <thead><tr><th style="width: 25%;">제목</th><th>내용</th><th style="width: 15%;">작성일</th><th style="width: 10%;">중요</th><th style="width: 10%;">관리</th></tr></thead>
+            <tbody id="notice-tbody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const SERVER = 'https://supermax.kr';
+        const token = localStorage.getItem('token');
+
+        // 관리자 인증 체크
+        async function checkAdmin() {
+            if (!token) { location.href = 'login.html'; return false; }
+            const res = await fetch(`${SERVER}/26susi/profile`, { headers: { Authorization: 'Bearer ' + token } });
+            const json = await res.json();
+            if (!json.success || json.user.userid !== 'admin') {
+                await Swal.fire('권한 없음', '관리자 계정만 접근 가능합니다.', 'error');
+                location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 공지사항 목록 불러오기
+        async function loadNotices() {
+            const res = await fetch(`${SERVER}/26susi/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+            const tbody = document.getElementById('notice-tbody');
+            tbody.innerHTML = '';
+
+            if (data.success && data.announcements.length > 0) {
+                data.announcements.forEach(notice => {
+                    const row = `
+                        <tr>
+                            <td>${notice.제목}</td>
+                            <td style="text-align: left;">${notice.내용.replace(/\n/g, '<br>')}</td>
+                            <td>${new Date(notice.작성일시).toLocaleString('ko-KR')}</td>
+                            <td>${notice.중요 === 'O' ? '<span class="status-badge">중요</span>' : '-'}</td>
+                            <td><button class="btn btn-danger btn-sm" onclick="deleteNotice(${notice.공지ID})">삭제</button></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5">등록된 공지사항이 없습니다.</td></tr>';
+            }
+        }
+
+        // 새 공지사항 등록
+        document.getElementById('notice-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const title = document.getElementById('notice-title').value;
+            const content = document.getElementById('notice-content').value;
+            const is_important = document.getElementById('notice-important').checked;
+            
+            const res = await fetch(`${SERVER}/26susi/announcements/create`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content, is_important })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire('성공', '공지사항이 등록되었습니다.', 'success');
+                this.reset(); // 폼 초기화
+                loadNotices(); // 목록 새로고침
+            } else {
+                Swal.fire('실패', data.message || '등록에 실패했습니다.', 'error');
+            }
+        });
+
+        // 공지사항 삭제
+        function deleteNotice(noticeId) {
+            Swal.fire({
+                title: '정말 삭제하시겠습니까?',
+                text: "삭제된 공지사항은 복구할 수 없습니다.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: '삭제',
+                cancelButtonText: '취소'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const res = await fetch(`${SERVER}/26susi/announcements/delete`, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ notice_id: noticeId })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire('삭제 완료!', '공지사항이 삭제되었습니다.', 'success');
+                        loadNotices(); // 목록 새로고침
+                    } else {
+                        Swal.fire('삭제 실패', data.message, 'error');
+                    }
+                }
+            });
+        }
+
+        // 페이지 시작
+        checkAdmin().then(isAdmin => {
+            if (isAdmin) loadNotices();
+        });
+    </script>
+</body>
+</html>
