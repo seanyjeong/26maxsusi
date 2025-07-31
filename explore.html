@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>대학검색</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4364f7; --secondary-color: #6a8eff; --success-color: #28a745;
+            --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #495057;
+            --card-bg: #ffffff; --border-radius: 8px; --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--light-gray); padding: 20px; color: #333; max-width: 1400px; margin: 0 auto; }
+        h2 { color: var(--primary-color); margin-bottom: 20px; }
+        .card { background-color: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--box-shadow); margin-bottom: 25px; padding: 20px; }
+        .filter-section { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--medium-gray); }
+        .filter-section:last-child { border-bottom: none; }
+        .filter-title { font-weight: 500; color: var(--dark-gray); margin-bottom: 10px; font-size: 1rem; }
+        .filter-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+        .filter-btn { padding: 6px 12px; border: 1px solid var(--medium-gray); background-color: white; cursor: pointer; border-radius: 5px; font-size: 13px; transition: all 0.2s; }
+        .filter-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); font-weight: 500; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; background-color: var(--card-bg); border-radius: var(--border-radius); overflow: hidden; box-shadow: var(--box-shadow); }
+        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid var(--medium-gray); }
+        thead th { background-color: #f8f9fa; font-weight: 500; color: var(--dark-gray); }
+        tbody tr:hover { background-color: rgba(67, 97, 238, 0.03); }
+        .btn-add-counsel { background-color: var(--success-color); color: white; border: none; padding: 5px 10px; font-size: 13px; border-radius: 5px; cursor: pointer; }
+        .horizontal-filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+        .filter-group { flex: 1; min-width: 180px; }
+        
+        /* ✅ [추가] 펼치기/감추기 기능 관련 스타일 */
+        .filter-subtitle {
+            font-weight: 500; color: var(--primary-color); margin-top: 10px; margin-bottom: 8px;
+            font-size: 1.2rem; cursor: pointer; user-select: none; position: relative; padding-left: 15px;
+        }
+        .filter-subtitle::before {
+            content: '▶'; position: absolute; left: 0; top: 50%;
+            transform: translateY(-50%); font-size: 10px; transition: transform 0.2s;
+        }
+        .filter-subtitle.is-open::before {
+            transform: translateY(-50%) rotate(90deg);
+        }
+        .filter-buttons.collapsed {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>모집요강 탐색</h2>
+    
+    <div class="card">
+        <div id="filters-container">
+            <div class="filter-section">
+                <div class="horizontal-filters">
+                    <div class="filter-group" data-filter-group="isPractical">
+                        <div class="filter-title">전형 유형</div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-value="">전체</button>
+                            <button class="filter-btn" data-value="O">실기</button>
+                        </div>
+                    </div>
+                    <div class="filter-group" data-filter-group="firstStage">
+                        <div class="filter-title">1단계 전형</div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-value="">전체</button>
+                            <button class="filter-btn" data-value="O">있음</button>
+                            <button class="filter-btn" data-value="X">없음</button>
+                        </div>
+                    </div>
+                    <div class="filter-group" data-filter-group="minSat">
+                        <div class="filter-title">수능 최저</div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-value="">전체</button>
+                            <button class="filter-btn" data-value="O">있음</button>
+                            <button class="filter-btn" data-value="X">없음</button>
+                        </div>
+                    </div>
+                    <div class="filter-group" data-filter-group="teaching">
+                        <div class="filter-title">교직 이수</div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-value="">전체</button>
+                            <button class="filter-btn" data-value="O">가능(O)</button>
+                            <button class="filter-btn" data-value="△">일부가능(△)</button>
+                            <button class="filter-btn" data-value="X">불가능(X)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-section" data-filter-group="region">
+                <div class="filter-title">지역</div>
+                <div class="filter-buttons" id="region-filters"></div>
+            </div>
+            <div class="filter-section" data-filter-group="eligibility">
+                <div class="filter-title">지원 자격 (중복 선택 가능)</div>
+                <div class="filter-buttons">
+                    <button class="filter-btn" data-key="일반고" data-value="O">일반고</button>
+                    <button class="filter-btn" data-key="특성화고" data-value="O">특성화고</button>
+                    <button class="filter-btn" data-key="체육고" data-value="O">체육고</button>
+                    <button class="filter-btn" data-key="검정고시" data-value="O">검정고시</button>
+                </div>
+            </div>
+            <div class="filter-section" data-filter-group="excludeEvents">
+                <div class="filter-title">제외할 실기 종목 (중복 선택 가능)</div>
+                <div id="event-categories">
+                    <div class="filter-subtitle">‍달리기</div>
+                    <div class="filter-buttons" id="events-running"></div>
+                    <div class="filter-subtitle">점프</div>
+                    <div class="filter-buttons" id="events-jump"></div>
+                    <div class="filter-subtitle">구기</div>
+                    <div class="filter-buttons" id="events-ball"></div>
+                    <div class="filter-subtitle">유연성</div>
+                    <div class="filter-buttons" id="events-flex"></div>
+                    <div class="filter-subtitle">기타</div>
+                    <div class="filter-buttons" id="events-other"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="result-header">
+        <p><strong id="result-count">0</strong>개의 대학이 검색되었습니다.</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 8%;">지역</th><th style="width: 15%;">대학명</th>
+                <th style="width: 18%;">학과명</th><th style="width: 15%;">전형명</th>
+                <th style="width: 8%;">1단계</th><th>실기종목</th>
+                <th style="width: 10%;">관리</th>
+            </tr>
+        </thead>
+        <tbody id="result-tbody"></tbody>
+    </table>
+
+<script>
+    const SERVER = 'https://supermax.kr';
+    const token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html';
+    
+    let allBranchStudents = [];
+    const currentFilters = {};
+
+    async function initializePage() {
+        const [regionRes, eventRes, studentRes] = await Promise.all([
+            fetch(`${SERVER}/26susi/filter-options/regions`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
+            fetch(`${SERVER}/26susi/filter-options/events`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
+            fetch(`${SERVER}/26susi_student_list`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json())
+        ]);
+        
+        if (studentRes.success) allBranchStudents = studentRes.students;
+        if (regionRes.success) createFilterButtons('region-filters', regionRes.regions, true); // ✅ 다중 선택으로 변경
+        if (eventRes.success) categorizeAndCreateEventButtons(eventRes.events);
+        
+        setupEventListeners();
+        applyFilters();
+    }
+
+    function createFilterButtons(containerId, options, isMultiSelect) {
+        const container = document.getElementById(containerId);
+        // '지역' 필터에도 '전체' 버튼 추가
+        if (containerId === 'region-filters') {
+            container.innerHTML += `<button class="filter-btn active" data-value="">전체</button>`;
+        }
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.dataset.value = opt;
+            btn.textContent = opt;
+            container.appendChild(btn);
+        });
+    }
+
+    function categorizeAndCreateEventButtons(events) {
+        const categories = {
+            running: document.getElementById('events-running'),
+            jump: document.getElementById('events-jump'),
+            ball: document.getElementById('events-ball'),
+            flex: document.getElementById('events-flex'),
+            other: document.getElementById('events-other')
+        };
+        const keywords = {
+            running: ['달리기', '런', 'm', '왕복', 'Z', 'z'],
+            jump: ['점프', '멀리뛰기', '세단뛰기', '서전트'],
+            ball: ['농구', '배구', '축구', '핸드볼', '던지기'],
+            flex: ['좌전굴', '체전굴', '유연성', '배후굴']
+        };
+
+        events.forEach(event => {
+            let category = 'other';
+            if (keywords.running.some(k => event.includes(k)) && !event.includes('매달리기')) category = 'running';
+            else if (keywords.jump.some(k => event.includes(k))) category = 'jump';
+            else if (keywords.ball.some(k => event.includes(k))) category = 'ball';
+            else if (keywords.flex.some(k => event.includes(k))) category = 'flex';
+            
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.dataset.value = event;
+            btn.textContent = event;
+            categories[category].appendChild(btn);
+        });
+    }
+
+    function setupEventListeners() {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', handleFilterClick);
+        });
+        document.querySelectorAll('#event-categories .filter-subtitle').forEach(subtitle => {
+            const content = subtitle.nextElementSibling;
+            if (content && content.classList.contains('filter-buttons')) {
+                content.classList.add('collapsed');
+            }
+            subtitle.addEventListener('click', () => {
+                subtitle.classList.toggle('is-open');
+                content.classList.toggle('collapsed');
+            });
+        });
+    }
+
+    // ✅ [수정] 지역(region) 다중 선택 로직 추가
+    function handleFilterClick(event) {
+        const btn = event.target;
+        const section = btn.closest('.filter-group, .filter-section');
+        const group = section.dataset.filterGroup;
+        const isMultiSelect = ['eligibility', 'excludeEvents', 'region'].includes(group);
+
+        if (isMultiSelect) {
+            // '지역' 필터의 특별한 로직
+            if (group === 'region') {
+                if (btn.dataset.value === '') { // '전체' 버튼 클릭 시
+                    section.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.toggle('active');
+                    section.querySelector('.filter-btn[data-value=""]').classList.remove('active');
+                    if (section.querySelectorAll('.filter-btn.active').length === 0) {
+                        section.querySelector('.filter-btn[data-value=""]').classList.add('active');
+                    }
+                }
+            } else { // 기타 다중 선택 필터
+                btn.classList.toggle('active');
+            }
+        } else { // 단일 선택 필터
+            section.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        
+        updateFilters();
+        applyFilters();
+    }
+    
+    // ✅ [수정] 지역(region) 필터 값 처리 로직 추가
+    function updateFilters() {
+        Object.keys(currentFilters).forEach(key => delete currentFilters[key]);
+        
+        document.querySelectorAll('.filter-btn.active').forEach(btn => {
+            const groupContainer = btn.closest('[data-filter-group]');
+            const group = groupContainer.dataset.filterGroup;
+            const key = btn.dataset.key || group;
+            const value = btn.dataset.value;
+
+            if (value === '') return;
+
+            if (['excludeEvents', 'region'].includes(group)) {
+                if (currentFilters[group]) currentFilters[group] += `,${value}`;
+                else currentFilters[group] = value;
+            } else if (group === 'eligibility') {
+                 currentFilters[key] = value;
+            } else {
+                currentFilters[group] = value;
+            }
+        });
+    }
+
+    function applyFilters() {
+        const queryString = new URLSearchParams(currentFilters).toString();
+        fetch(`${SERVER}/26susi/explore-universities?${queryString}`, { headers: { Authorization: 'Bearer ' + token } })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) renderResults(data.universities);
+            });
+    }
+
+    function renderResults(universities) {
+        const tbody = document.getElementById('result-tbody');
+        tbody.innerHTML = '';
+        document.getElementById('result-count').textContent = universities.length;
+        universities.forEach(uni => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${uni.광역 || '-'}</td>
+                <td>${uni.대학명}</td>
+                <td>${uni.학과명}</td>
+                <td>${uni.전형명}</td>
+                <td>${uni['1단계배수'] || '-'}</td>
+                <td>${uni.실기종목들 ? uni.실기종목들.replace(/,/g, ', ') : '실기 없음'}</td>
+                <td><button class="btn-add-counsel" onclick="openStudentModal('${uni.대학ID}')">상담추가</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    // ✅ [수정] 다중 선택 시 모든 학생 ID를 올바르게 가져오도록 수정한 최종 버전
+async function openStudentModal(collegeId) {
+    if (allBranchStudents.length === 0) {
+        Swal.fire('알림', '등록된 학생이 없습니다. 학생 명단관리에서 먼저 학생을 등록해주세요.', 'info');
+        return;
+    }
+
+    const res = await fetch(`${SERVER}/26susi/counseled-students-for-college?college_id=${collegeId}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    const counseledStudentIds = data.success ? data.student_ids : [];
+    const availableStudents = allBranchStudents.filter(s => !counseledStudentIds.includes(s.학생ID));
+    
+    if (availableStudents.length === 0) {
+        Swal.fire('알림', '모든 학생이 이미 이 대학의 상담 목록에 있습니다.', 'info');
+        return;
+    }
+
+    // ▼▼▼▼▼▼ 여기가 핵심 수정! ▼▼▼▼▼▼
+    const { value: selectedIds } = await Swal.fire({
+        title: '상담에 추가할 학생 선택',
+        // input 대신 html로 직접 select 태그를 만듦
+        html: `
+            <p style="font-size:14px; color:gray;">Ctrl/Shift 키로 여러 명 선택 가능</p>
+            <select id="swal-student-select" class="swal2-select" multiple style="min-height: 200px;">
+                ${availableStudents.map(s => `<option value="${s.학생ID}">${s.이름} (${s.학년||'N/A'})</option>`).join('')}
+            </select>
+        `,
+        // preConfirm을 사용해서 선택된 모든 값을 배열로 가져옴
+        preConfirm: () => {
+            return Array.from(document.getElementById('swal-student-select').selectedOptions).map(option => option.value);
+        },
+        showCancelButton: true,
+        confirmButtonText: '추가',
+        cancelButtonText: '취소'
+    });
+    // ▲▲▲▲▲▲ 여기가 핵심 수정! ▲▲▲▲▲▲
+
+    if (selectedIds && selectedIds.length > 0) {
+        const idsToSend = Array.isArray(selectedIds) ? selectedIds : [selectedIds];
+        fetch(`${SERVER}/26susi/add-counseling-bulk`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ college_id: collegeId, student_ids: idsToSend })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) Swal.fire('성공!', data.message, 'success');
+            else Swal.fire('실패', data.message, 'error');
+        });
+    }
+}
+    
+    initializePage();
+</script>
+</body>
+</html>
