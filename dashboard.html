@@ -5,6 +5,7 @@
     <title>대시보드</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --primary: #4364f7; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #495057; --card-bg: #fff; --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); --border-radius: 10px; }
         body { font-family: 'Noto Sans KR', sans-serif; background: var(--light-gray); margin: 0; padding: 20px; max-width: 1200px; margin: auto; }
@@ -28,54 +29,142 @@
                 box-shadow: 0 0 10px #ffecb3;
             }
         }
+
+
+        .notice-important { font-weight: 600; color: var(--primary); }
+
+
+        /* dashboard.html의 style 태그 안에 이 코드를 추가하거나 기존 .notice-item을 수정 */
+.notice-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.notice-item:hover {
+    background-color: #f0f2ff; /* 마우스를 올렸을 때 살짝 색 변경 */
+}
+.notice-important { 
+    font-weight: 600; 
+    color: var(--primary); 
+}
+
+.notice-important svg {
+    width: 17px;
+    height: 17px;
+    stroke : #ff4d4d; /* ✅ 핀 아이콘을 빨간색으로 변경 */
+    stroke-width: 2.5;
+    vertical-align: middle;
+    
+}
+
     </style>
+
 </head>
 <body>
-
     <h2>대시보드</h2>
 
-        <div class="card">
+    <div class="card">
+        <h3> 공지사항</h3>
+        <ul id="notice-list">
+            <li class="placeholder">공지사항을 불러오는 중입니다...</li>
+        </ul>
+    </div>
+
+    <div class="card">
         <h3>우리 지점 실기일정 (가까운 순)</h3>
         <ul id="schedule-list">
             <li class="placeholder">일정을 불러오는 중입니다...</li>
         </ul>
     </div>
+    
     <div class="card">
         <h3>합격자 발표 일정 (가까운 순)</h3>
         <ul id="announcement-list">
             <li class="placeholder">일정을 불러오는 중입니다...</li>
         </ul>
     </div>
-    
-
 
 <script>
     const SERVER = 'https://supermax.kr';
     const token = window.parent.localStorage.getItem('token');
 
-    // ✅ [추가] 날짜가 이번 주에 속하는지 확인하는 함수
+    // ✅ [추가] 공지사항 목록을 불러오는 함수
+// dashboard.html의 기존 loadNotices 함수를 이걸로 덮어쓰기
+async function loadNotices() {
+    const list = document.getElementById('notice-list');
+    if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
+    try {
+        const res = await fetch(`${SERVER}/26susi/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+
+        if (data.success && data.announcements.length > 0) {
+            list.innerHTML = '';
+            data.announcements.forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add('notice-item');
+                li.dataset.title = item.제목;
+                li.dataset.content = item.내용;
+                li.onclick = () => showNoticePopup(li.dataset.title, li.dataset.content);
+
+                let pinIcon = '';
+                if (item.중요 === 'O') {
+                    li.classList.add('notice-important');
+                    // ✅ 네가 선택한 아이콘 SVG 코드로 교체했어
+                    pinIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
+                }
+
+                li.innerHTML = `${pinIcon} <strong>${item.제목}</strong>`;
+                list.appendChild(li);
+            });
+        } else {
+            list.innerHTML = `<li class="placeholder">등록된 공지사항이 없습니다.</li>`;
+        }
+    } catch (error) {
+        console.error("공지사항 로딩 실패:", error);
+        list.innerHTML = `<li class="placeholder">공지사항을 불러오는 데 실패했습니다.</li>`;
+    }
+}
+// ✅ [추가] 공지사항 팝업을 띄우는 함수
+function showNoticePopup(title, content) {
+    Swal.fire({
+        title: `<strong>${title}</strong>`,
+        html: `<div style="text-align: left; white-space: pre-wrap;">${content}</div>`,
+        confirmButtonText: '확인',
+        confirmButtonColor: '#4364f7'
+    });
+}
+
+    // ... (isDateInCurrentWeek, formatDate 등 기존 함수들은 그대로 유지) ...
+
+    // ✅ [수정] 페이지 로드 시 loadNotices 함수 호출 추가
+    document.addEventListener('DOMContentLoaded', () => {
+        loadNotices();
+        loadAnnouncementDates();
+        loadBranchSchedule();
+    });
+    
+    // --- 이하 기존 함수들 ---
+    function isDateInCurrentWeek(dateString) { /* 생략 */ }
+    function formatDate(dateString) { /* 생략 */ }
+    async function loadAnnouncementDates() { /* 생략 */ }
+    async function loadBranchSchedule() { /* 생략 */ }
+</script>
+<script>
+    // ⚠️ 위 script 태그의 생략된 부분에 dashboard.html의 기존 자바스크립트 함수들을 그대로 붙여넣어주세요.
     function isDateInCurrentWeek(dateString) {
         if (!dateString) return false;
-        
         const formattedString = dateString.split(' ')[0].replace(/\./g, '-');
         const targetDate = new Date(formattedString + 'T00:00:00');
         if (isNaN(targetDate.getTime())) return false;
-
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // 시간 정보 초기화
-
-        // 이번 주의 월요일과 일요일 계산
-        const dayOfWeek = today.getDay(); // 0(일) ~ 6(토)
-        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 일요일이면 6일 빼고, 아니면 (1 - 요일)
+        today.setHours(0, 0, 0, 0);
+        const dayOfWeek = today.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         const monday = new Date(today);
         monday.setDate(today.getDate() + diffToMonday);
-
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
-
         return targetDate >= monday && targetDate <= sunday;
     }
-
     function formatDate(dateString) {
         if (!dateString) return '';
         const formattedString = dateString.split(' ')[0].replace(/\./g, '-');
@@ -84,27 +173,20 @@
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         return `${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`;
     }
-
     async function loadAnnouncementDates() {
         const list = document.getElementById('announcement-list');
         if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
-
         try {
             const res = await fetch(`${SERVER}/26susi/announcement-dates`, { headers: { 'Authorization': 'Bearer ' + token } });
             const data = await res.json();
-
             if (data.success && data.dates.length > 0) {
                 list.innerHTML = '';
                 data.dates.forEach(item => {
                     const li = document.createElement('li');
-                    // ✅ [수정] 이번 주 일정에 깜빡임 효과 클래스 추가
                     if (isDateInCurrentWeek(item.발표일)) {
                         li.classList.add('blinking');
                     }
-                    li.innerHTML = `
-                        <div class="date">${formatDate(item.발표일)}</div>
-                        <div class="desc">${item.대학명} ${item.학과명} - ${item.내용}</div>
-                    `;
+                    li.innerHTML = `<div class="date">${formatDate(item.발표일)}</div><div class="desc">${item.대학명} ${item.학과명} - ${item.내용}</div>`;
                     list.appendChild(li);
                 });
             } else {
@@ -115,28 +197,21 @@
             list.innerHTML = `<li class="placeholder">일정을 불러오는 데 실패했습니다.</li>`;
         }
     }
-
     async function loadBranchSchedule() {
         const list = document.getElementById('schedule-list');
         if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
-        
         try {
-            const res = await fetch(`${SERVER}/26susi/branch-schedule`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const res = await fetch(`${SERVER}/26susi/branch-schedule`, { headers: { Authorization: 'Bearer ' + token } });
             const data = await res.json();
-
             if (data.success && data.schedule.length > 0) {
                 list.innerHTML = '';
                 data.schedule.forEach(item => {
                     const li = document.createElement('li');
                     const studentNames = item.students.join(', ');
-                    // ✅ [수정] 이번 주 일정에 깜빡임 효과 클래스 추가
                     if (isDateInCurrentWeek(item.date)) {
                         li.classList.add('blinking');
                     }
-                    li.innerHTML = `
-                        <div class="date">${formatDate(item.date)}</div>
-                        <div class="desc">${item.university} ${item.department} - <strong>${studentNames}</strong> 학생</div>
-                    `;
+                    li.innerHTML = `<div class="date">${formatDate(item.date)}</div><div class="desc">${item.university} ${item.department} - <strong>${studentNames}</strong> 학생</div>`;
                     list.appendChild(li);
                 });
             } else {
@@ -147,11 +222,7 @@
             list.innerHTML = `<li class="placeholder">일정을 불러오는 데 실패했습니다.</li>`;
         }
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        loadAnnouncementDates();
-        loadBranchSchedule();
-    });
 </script>
+
 </body>
 </html>
