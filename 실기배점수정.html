@@ -7,12 +7,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; max-width: 1400px; margin: auto; background-color: #f9f9f9; color: #333; }
         h1 { text-align: center; margin-bottom: 2rem; color: #2c3e50; }
         select { display: block; width: 100%; font-size: 1.1rem; padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ccc; background-color: white; cursor: pointer; }
         #scoreTableContainer { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; justify-content: center; }
-        .event-table-wrapper { flex: 1; min-width: 320px; background-color: white; border-radius: 8px; box-shadow: 0 4px_12px rgba(0,0,0,0.08); overflow: hidden; }
+        .event-table-wrapper { flex: 1; min-width: 320px; background-color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
         .event-table-wrapper table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #e0e0e0; padding: 10px 12px; text-align: center; font-size: 0.9rem; }
         thead th { background-color: #f5f7fa; font-weight: 500; color: #2c3e50; }
@@ -20,14 +21,16 @@
         .score-col { font-weight: 700; background-color: #f5f7fa; }
         tbody tr:nth-child(even) { background-color: #fcfcfc; }
         #message { width: 100%; text-align: center; font-size: 1.1em; color: #555; padding: 40px; }
-        button { padding: 10px 15px; font-size: 0.9rem; cursor: pointer; margin-bottom: 20px; }
+        button { padding: 10px 15px; font-size: 0.9rem; cursor: pointer; border-radius: 6px; border: none; color: white; }
+        #saveButton { background-color: #28a745; margin-bottom: 20px; }
+        .logout-btn { background-color: #6c757d; }
     </style>
 </head>
 <body>
 
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>실기 배점표 수정</h1>
-        <button onclick="logout()" style="margin-bottom: 0;">로그아웃</button>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
     </div>
 
     <select id="collegeSelect" onchange="onCollegeChange()">
@@ -45,11 +48,11 @@
 <script>
     const BASE_URL = 'https://supermax.kr';
 
-    // ✅ 수정됨: 관리자 인증 함수 추가
+    // ✅ 관리자 인증 함수 수정
     async function checkAdmin() {
-        const token = localStorage.getItem('jwt_token');
+        const token = localStorage.getItem('token'); // 'jwt_token' -> 'token'
         if (!token) {
-            location.href = '실기배점수정.html'; // 로그인 페이지로 이동
+            location.href = 'login.html'; // 'admin_login.html' -> 'login.html'
             return false;
         }
         try {
@@ -58,26 +61,27 @@
             });
             const json = await res.json();
             if (!json.success || !json.user || json.user.userid !== 'admin') {
-                alert('관리자 계정으로만 접근 가능합니다!');
-                localStorage.removeItem('jwt_token');
-                location.href = 'admin_login.html';
+                await Swal.fire('권한 없음', '관리자 계정으로만 접근 가능합니다.', 'error');
+                localStorage.removeItem('token'); // 'jwt_token' -> 'token'
+                location.href = 'login.html'; // 'admin_login.html' -> 'login.html'
                 return false;
             }
-            return true; // 관리자 인증 성공
+            return true;
         } catch (e) {
-            alert('인증 중 오류가 발생했습니다.');
-            location.href = 'admin_login.html';
+            await Swal.fire('인증 오류', '인증 중 오류가 발생했습니다.', 'error');
+            location.href = 'login.html'; // 'admin_login.html' -> 'login.html'
             return false;
         }
     }
 
-    // ✅ 수정됨: 로그아웃 함수 추가
+    // ✅ 로그아웃 함수 수정
     function logout() {
-        localStorage.removeItem('jwt_token');
-        location.href = 'admin_login.html';
+        localStorage.removeItem('token'); // 'jwt_token' -> 'token'
+        location.href = 'login.html'; // 'admin_login.html' -> 'login.html'
     }
 
     async function loadColleges() {
+        // ... (이 함수는 수정할 필요 없음)
         try {
             const res = await fetch(`${BASE_URL}/26susi_get_practical_colleges`);
             const data = await res.json();
@@ -95,16 +99,15 @@
     }
 
     async function onCollegeChange() {
+        // ... (이 함수는 수정할 필요 없음)
         const 실기ID = document.getElementById('collegeSelect').value;
         const container = document.getElementById('scoreTableContainer');
         const saveBtn = document.getElementById('saveButton');
-        
         if (!실기ID) {
             container.innerHTML = `<div id="message">대학을 선택하면 배점표가 표시됩니다.</div>`;
             saveBtn.style.display = 'none';
             return;
         }
-
         container.innerHTML = `<div id="message">배점표를 불러오는 중...</div>`;
         try {
             const res = await fetch(`${BASE_URL}/26susi_get_score_table?실기ID=${실기ID}`);
@@ -123,12 +126,13 @@
         }
     }
 
+    // ✅ 저장 함수 수정
     async function saveChanges() {
         const 실기ID = document.getElementById('collegeSelect').value;
-        const token = localStorage.getItem('jwt_token'); 
+        const token = localStorage.getItem('token'); // 'jwt_token' -> 'token'
         if (!token) {
-            alert('로그인이 필요합니다.');
-            location.href = 'admin_login.html';
+            await Swal.fire('인증 오류', '로그인이 필요합니다.', 'error');
+            location.href = 'login.html'; // 'admin_login.html' -> 'login.html'
             return;
         }
 
@@ -142,13 +146,20 @@
                 const 배점 = cells[0].textContent.trim();
                 const maleRecord = cells[1].textContent.trim();
                 const femaleRecord = cells[2].textContent.trim();
-
                 if (maleRecord && maleRecord !== '-') { dataToSend.push({ 종목명, 성별: '남', 기록: maleRecord, 배점 }); }
                 if (femaleRecord && femaleRecord !== '-') { dataToSend.push({ 종목명, 성별: '여', 기록: femaleRecord, 배점 }); }
             });
         });
 
-        if (!confirm('정말로 배점표를 수정하시겠습니까?')) return;
+        const result = await Swal.fire({
+            title: '정말로 배점표를 수정하시겠습니까?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '저장',
+            cancelButtonText: '취소'
+        });
+
+        if (!result.isConfirmed) return;
         
         try {
             const res = await fetch(`${BASE_URL}/26susi_update_score_table`, {
@@ -156,19 +167,20 @@
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ 실기ID: 실기ID, data: dataToSend })
             });
-            const result = await res.json();
-            if (result.success) {
-                alert('성공적으로 저장되었습니다!');
+            const jsonResult = await res.json();
+            if (jsonResult.success) {
+                await Swal.fire('성공!', '성공적으로 저장되었습니다!', 'success');
             } else {
-                alert(`저장에 실패했습니다: ${result.message || '알 수 없는 오류'}`);
+                await Swal.fire('실패', `저장에 실패했습니다: ${jsonResult.message || '알 수 없는 오류'}`, 'error');
             }
         } catch (error) {
             console.error('저장 중 오류 발생:', error);
-            alert('네트워크 오류 또는 서버 문제로 저장에 실패했습니다.');
+            await Swal.fire('네트워크 오류', '네트워크 오류 또는 서버 문제로 저장에 실패했습니다.', 'error');
         }
     }
 
     function renderSeparateTables(events) {
+        // ... (이 함수는 수정할 필요 없음)
         const container = document.getElementById('scoreTableContainer');
         const eventNames = Object.keys(events);
         let finalHTML = '';
@@ -178,12 +190,17 @@
             const eventScores = new Set();
             eventData.남.forEach(item => { scoreMap.남.set(item.배점, item.기록); eventScores.add(item.배점); });
             eventData.여.forEach(item => { scoreMap.여.set(item.배점, item.기록); eventScores.add(item.배점); });
-            const sortedScores = Array.from(eventScores).sort((a, b) => Number(b) - Number(a));
+            const sortedScores = Array.from(eventScores).sort((a, b) => {
+                const numA = parseFloat(a);
+                const numB = parseFloat(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+                return String(b).localeCompare(String(a));
+            });
             let tableHTML = `<div class="event-table-wrapper"><table><thead><tr><th colspan="3" class="event-header">${name}</th></tr><tr><th>배점</th><th>남</th><th>여</th></tr></thead><tbody>`;
             sortedScores.forEach(score => {
                 const maleRecord = scoreMap.남.get(score) || '-';
                 const femaleRecord = scoreMap.여.get(score) || '-';
-                tableHTML += `<tr><td contenteditable="true" class="score-col">${score}</td><td contenteditable="true" class="record-male">${maleRecord}</td><td contenteditable="true" class="record-female">${femaleRecord}</td></tr>`;
+                tableHTML += `<tr><td contenteditable="true" class="score-col">${score}</td><td contenteditable="true">${maleRecord}</td><td contenteditable="true">${femaleRecord}</td></tr>`;
             });
             tableHTML += `</tbody></table></div>`;
             finalHTML += tableHTML;
@@ -191,11 +208,10 @@
         container.innerHTML = finalHTML;
     }
 
-    // ✅ 수정됨: 페이지 로드 시 인증 먼저 실행
+    // ✅ 페이지 로드 시 인증 먼저 실행
     window.onload = () => {
         checkAdmin().then(isAdmin => {
             if (isAdmin) {
-                // 관리자 인증 성공 시에만 대학 목록을 불러온다.
                 loadColleges();
             }
         });
