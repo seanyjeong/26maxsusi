@@ -203,7 +203,7 @@ function logout() {
                 } else {
                     greeting = `<strong>[${currentUser.branch}] ${currentUser.name}님</strong>`;
                 }
-                container.innerHTML = `${greeting} <button onclick="logout()">로그아웃</button>`;
+                container.innerHTML = `${greeting}`;
             } else {
                 // 로그아웃 된 경우
                 container.innerHTML = `<button onclick="location.href='login.html?next=cut_manager.html'">로그인</button>`;
@@ -348,4 +348,5 @@ function logout() {
         loadCutData();
     </script>
 </body>
+
 </html>
