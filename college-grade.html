@@ -44,7 +44,7 @@
       padding: 10px 15px;
       border: 1px solid var(--border);
       border-radius: 4px;
-      margin: 10px 0 20px;
+      margin-bottom: 10px;
       font-size: 14px;
       transition: all 0.3s;
     }
@@ -72,8 +72,7 @@
       background-color: var(--header-bg);
       font-weight: 600;
       position: sticky;
-      top: 0;
-      z-index: 10;
+      z-index: 1;
     }
     
     tbody tr:hover {
@@ -81,13 +80,13 @@
     }
     
     input[type="text"] {
-      width: 70px;
-      padding: 6px 8px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 4px;
+      font-size: 0.85em;
+      text-align: center;
       border: 1px solid var(--border);
       border-radius: 3px;
-      font-size: 0.95em;
-      text-align: center;
-      transition: all 0.2s;
     }
     
     input[type="text"]:focus {
@@ -100,6 +99,7 @@
       white-space: nowrap;
       font-weight: 600;
       color: var(--primary);
+      min-width: 160px;
     }
     
     .row-no {
@@ -124,22 +124,6 @@
       align-items: center;
     }
     
-    .logout-btn {
-      background: none;
-      border: 1px solid #ddd;
-      padding: 8px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #666;
-      transition: all 0.2s;
-    }
-    
-    .logout-btn:hover {
-      background: #f5f5f5;
-      color: #333;
-    }
-    
-    /* 스크롤바 스타일 */
     ::-webkit-scrollbar {
       height: 8px;
       width: 8px;
@@ -157,58 +141,36 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #a8a8a8;
     }
-input[type="text"] {
-  width: 100%;
-  box-sizing: border-box; /* ✅ 셀 내부에서 넘치지 않게 */
-  padding: 6px 4px;
-  font-size: 0.85em;
-  text-align: center;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-}
 
-/* thead 전체에 기본 sticky 설정 */
-thead th {
-  position: sticky;
-  background: var(--header-bg); /* 스크롤 시 내용이 비치지 않게 배경색 지정 */
-  z-index: 1;
-}
+    thead tr:first-child th {
+      top: 0;
+      z-index: 2;
+    }
 
-/* 첫 번째 헤더 행 (학생 이름) 고정 */
-thead tr:first-child th {
-  top: 0;
-  z-index: 2; /* 두 번째 행보다 위에 보이도록 z-index를 높게 설정 */
-}
-
-/* 두 번째 헤더 행 (등급, 내신) 고정 */
-/* 두 번째 헤더 행 (등급, 내신) 고정 */
-thead tr:nth-child(2) th {
-  /*
-    여기의 top 값을 1~2px 정도 줄여서 틈을 없애봐.
-    예를 들어 50px이었다면 49px로 시도해 보는 거야.
-    F12 개발자 도구에서 값을 실시간으로 조절하면 편해.
-  */
-  top: 45px; /* ✨ 이 값을 미세 조정 */
-   border-bottom: 1px solid var(--border);
-}
-
-thead th.col-name {
-  min-width: 160px; /* 한 학생당 차지할 최소 너비 (등급+내신 합쳐서) */
-}
-
+    thead tr:nth-child(2) th {
+      top: 45px;
+      border-bottom: 1px solid var(--border);
+    }
   </style>
 </head>
 <body>
   <div class="controls">
     <h2>대학별 내신/등급 입력 시스템</h2>
-
   </div>
   
   <div id="branchInfo"></div>
 
-  <input type="text" id="searchInput" placeholder="대학명, 학과명, 전형명으로 검색">
+  <div>
+    <input type="text" id="searchInput" placeholder="대학명, 학과명, 전형명으로 검색">
+  </div>
+  
+  <div id="pagination-controls" style="margin: 20px 0; display: flex; align-items: center; gap: 15px;">
+    <button id="prevPageBtn">&laquo; 이전 학생들</button>
+    <span id="pageInfo"></span>
+    <button id="nextPageBtn">다음 학생들 &raquo;</button>
+  </div>
 
-  <div style="overflow-x:auto; max-height: 75vh; border: 1px solid #eee; border-radius: 6px;">
+  <div style="overflow-x:auto; max-height: 70vh; border: 1px solid #eee; border-radius: 6px;">
     <table id="gradeTable">
       <thead id="tableHead"></thead>
       <tbody id="tableBody"></tbody>
@@ -223,7 +185,6 @@ thead th.col-name {
     let token = localStorage.getItem('token');
     if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
 
-    // JWT 디코딩 (한글 지점명)
     function parseJwt(token) {
       try {
         const base64Url = token.split('.')[1];
@@ -241,6 +202,9 @@ thead th.col-name {
     let colleges = [], students = [], grade_map = {};
     let filteredColleges = [];
 
+    let currentPage = 1;
+    const studentsPerPage = 5;
+
     async function loadAll() {
       const res = await fetch(SERVER + '/26susi_student_grade_map', {
         headers: { Authorization: 'Bearer ' + token }
@@ -255,12 +219,14 @@ thead th.col-name {
       students = json.students;
       grade_map = json.grade_map;
       filteredColleges = colleges;
+      
       renderTable();
+      setupPagination();
     }
 
-    // 검색 필터
     document.getElementById('searchInput').addEventListener('input', function() {
       const q = this.value.trim().toLowerCase();
+      // 검색 시에는 currentPage를 1로 초기화하지 않음. 대학 필터링은 학생 페이지와 무관.
       filteredColleges = colleges.filter(col =>
         (col.대학명 && col.대학명.toLowerCase().includes(q)) ||
         (col.학과명 && col.학과명.toLowerCase().includes(q)) ||
@@ -269,58 +235,84 @@ thead th.col-name {
       renderTable();
     });
 
-function renderTable() {
-  // 헤더 (2줄 구성)
-  let headHtml = `<tr>
-    <th rowspan="2">No</th>
-    <th rowspan="2">대학명</th>
-    <th rowspan="2">학과명</th>
-    <th rowspan="2">전형명</th>`;
-  students.forEach(st => {
-    headHtml += `<th colspan="2" class="col-name">${st.이름}</th>`;
-  });
-  headHtml += `</tr><tr>`;
-  students.forEach(() => {
-    headHtml += `<th>등급</th><th>내신</th>`;
-  });
-  headHtml += `</tr>`;
-  document.getElementById('tableHead').innerHTML = headHtml;
+    function renderTable() {
+      const startIndex = (currentPage - 1) * studentsPerPage;
+      const endIndex = startIndex + studentsPerPage;
+      const paginatedStudents = students.slice(startIndex, endIndex);
 
-  // 바디
-  let bodyHtml = '';
-  (filteredColleges || []).forEach((col, rowIdx) => {
-    bodyHtml += `<tr>
-      <td class="row-no">${rowIdx + 1}</td>
-      <td>${col.대학명}</td>
-      <td>${col.학과명 || ''}</td>
-      <td>${col.전형명 || ''}</td>`;
+      let headHtml = `<tr>
+        <th rowspan="2">No</th>
+        <th rowspan="2">대학명</th>
+        <th rowspan="2">학과명</th>
+        <th rowspan="2">전형명</th>`;
+      paginatedStudents.forEach(st => {
+        headHtml += `<th colspan="2" class="col-name">${st.이름}</th>`;
+      });
+      headHtml += `</tr><tr>`;
+      paginatedStudents.forEach(() => {
+        headHtml += `<th>등급</th><th>내신</th>`;
+      });
+      headHtml += `</tr>`;
+      document.getElementById('tableHead').innerHTML = headHtml;
 
-    students.forEach(st => {
-      const key = `${st.학생ID}-${col.대학ID}`;
-      const grade = grade_map[key]?.등급 || '';
-      const score = grade_map[key]?.내신점수 || '';
-      bodyHtml += `
-        <td><input type="text" value="${grade}" 
-          onchange="updateGrade(${st.학생ID},'${col.대학ID}', this.value, null)" 
-          placeholder="등급"></td>
-        <td><input type="text" value="${score}"
-          onchange="updateGrade(${st.학생ID},'${col.대학ID}', null, this.value)" 
-          placeholder="내신"></td>`;
-    });
+      let bodyHtml = '';
+      (filteredColleges || []).forEach((col, rowIdx) => {
+        bodyHtml += `<tr>
+          <td class="row-no">${rowIdx + 1}</td>
+          <td>${col.대학명}</td>
+          <td>${col.학과명 || ''}</td>
+          <td>${col.전형명 || ''}</td>`;
 
-    bodyHtml += `</tr>`;
-  });
-  document.getElementById('tableBody').innerHTML = bodyHtml;
-}
+        paginatedStudents.forEach(st => {
+          const key = `${st.학생ID}-${col.대학ID}`;
+          const grade = grade_map[key]?.등급 || '';
+          const score = grade_map[key]?.내신점수 || '';
+          bodyHtml += `
+            <td><input type="text" value="${grade}" 
+              onchange="updateGrade(${st.학생ID},'${col.대학ID}', this.value, null)" 
+              placeholder="등급"></td>
+            <td><input type="text" value="${score}"
+              onchange="updateGrade(${st.학생ID},'${col.대학ID}', null, this.value)" 
+              placeholder="내신"></td>`;
+        });
 
+        bodyHtml += `</tr>`;
+      });
+      document.getElementById('tableBody').innerHTML = bodyHtml;
+      
+      updatePageInfo();
+    }
+    
+    function updatePageInfo() {
+      const totalPages = Math.ceil(students.length / studentsPerPage);
+      document.getElementById('pageInfo').textContent = `페이지 ${currentPage} / ${totalPages > 0 ? totalPages : 1}`;
+      document.getElementById('prevPageBtn').disabled = (currentPage === 1);
+      document.getElementById('nextPageBtn').disabled = (currentPage >= totalPages);
+    }
 
-    // 저장(수정) 함수: 셀 값 바뀔 때마다 자동 저장
+    function setupPagination() {
+      document.getElementById('prevPageBtn').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      });
+
+      document.getElementById('nextPageBtn').addEventListener('click', () => {
+        const totalPages = Math.ceil(students.length / studentsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      });
+    }
+
     async function updateGrade(student_id, college_id, grade, score) {
       const key = `${student_id}-${college_id}`;
       const prev = grade_map[key] || {};
       if (grade === null) grade = prev.등급 || '';
       if (score === null) score = prev.내신점수 || '';
-      grade_map[key] = { 등급: grade, 내신점수: score }; // 프론트상 값 갱신
+      grade_map[key] = { 등급: grade, 내신점수: score };
 
       const res = await fetch(SERVER + '/26susi_student_grade_update', {
         method:'POST',
@@ -358,4 +350,3 @@ function renderTable() {
   </script>
 </body>
 </html>
-
