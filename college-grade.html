@@ -215,9 +215,12 @@
         if(json.message && json.message.includes("권한없음")) logout();
         return;
       }
-      colleges = json.colleges;
-      students = json.students;
-      grade_map = json.grade_map;
+   colleges = json.colleges;
+   // ✅ 대학명을 가나다순으로 정렬하는 코드 추가
+   colleges.sort((a, b) => a.대학명.localeCompare(b.대학명));
+   
+   students = json.students;
+   grade_map = json.grade_map;
       filteredColleges = colleges;
       
       renderTable();
@@ -350,3 +353,4 @@
   </script>
 </body>
 </html>
+
