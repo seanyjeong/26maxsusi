@@ -164,11 +164,16 @@
     <input type="text" id="searchInput" placeholder="대학명, 학과명, 전형명으로 검색">
   </div>
   
-  <div id="pagination-controls" style="margin: 20px 0; display: flex; align-items: center; gap: 15px;">
-    <button id="prevPageBtn">&laquo; 이전 학생들</button>
-    <span id="pageInfo"></span>
-    <button id="nextPageBtn">다음 학생들 &raquo;</button>
-  </div>
+<div id="pagination-controls" style="margin: 20px 0; display: flex; align-items: center; gap: 15px;">
+    <button id="prevPageBtn">&laquo; 이전 학생들</button>
+    <span id="pageInfo"></span>
+    <button id="nextPageBtn">다음 학생들 &raquo;</button>
+
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 5px;">
+        <input type="text" id="studentSearchInput" placeholder="학생 이름으로 검색" style="width: 150px; padding: 8px; font-size: 14px;">
+        <button id="studentSearchBtn">검색</button>
+    </div>
+      </div>
 
   <div style="overflow-x:auto; max-height: 70vh; border: 1px solid #eee; border-radius: 6px;">
     <table id="gradeTable">
@@ -225,6 +230,7 @@
       
       renderTable();
       setupPagination();
+      setupStudentSearch();
     }
 
     document.getElementById('searchInput').addEventListener('input', function() {
@@ -237,6 +243,45 @@
       );
       renderTable();
     });
+
+    // 👇 이 함수 전체를 복사해서 붙여넣어줘
+function setupStudentSearch() {
+    const searchInput = document.getElementById('studentSearchInput');
+    const searchBtn = document.getElementById('studentSearchBtn');
+
+    const findStudent = () => {
+        const query = searchInput.value.trim().toLowerCase();
+        if (!query) {
+            alert("검색할 학생 이름을 입력하세요.");
+            return;
+        }
+
+        // 전체 학생 목록(students)에서 이름이 포함된 학생의 순서(index)를 찾음
+        const studentIndex = students.findIndex(st => 
+            st.이름 && st.이름.toLowerCase().includes(query)
+        );
+
+        if (studentIndex !== -1) {
+            // 학생을 찾았을 경우
+            // 학생의 순서를 이용해 몇 페이지에 있는지 계산
+            const targetPage = Math.floor(studentIndex / studentsPerPage) + 1;
+            if (currentPage !== targetPage) {
+                currentPage = targetPage;
+                renderTable(); // 해당 페이지로 테이블을 다시 그림
+            }
+        } else {
+            // 학생을 못 찾았을 경우
+            alert('"' + searchInput.value + '" 학생을 찾을 수 없습니다.');
+        }
+    };
+
+    searchBtn.addEventListener('click', findStudent);
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            findStudent();
+        }
+    });
+}
 
     function renderTable() {
       const startIndex = (currentPage - 1) * studentsPerPage;
