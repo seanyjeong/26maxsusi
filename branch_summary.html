@@ -14,36 +14,49 @@
         .university-accordion details { background: white; border-radius: var(--border-radius); margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .university-accordion summary { padding: 15px 20px; font-size: 1.2em; font-weight: 500; cursor: pointer; color: var(--dark-gray); display: flex; justify-content: space-between; align-items: center; }
         .university-accordion summary:hover { background-color: #fdfdff; }
+        .summary-title { display: flex; align-items: center; gap: 10px; }
         .summary-info { font-size: 0.8em; font-weight: 400; color: #555; }
         .table-container { padding: 0 20px 20px 20px; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid var(--medium-gray); padding: 8px; text-align: center; font-size: 12px; white-space: nowrap; }
+        th, td { border: 1px solid var(--medium-gray); padding: 8px; text-align: center; font-size: 12px; white-space: nowrap; vertical-align: middle; }
         th { background-color: var(--primary-color); color: white; font-weight: 500; position: sticky; top: 0; z-index: 1; }
-        input { width: 95%; box-sizing: border-box; text-align: center; border: 1px solid var(--medium-gray); border-radius: 4px; padding: 4px; font-size: 12px; }
+        input, select, button { box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; border: 1px solid var(--medium-gray); border-radius: 4px; padding: 4px; font-size: 12px; }
+        input { width: 95%; text-align: center; }
+        select { width: 100%; text-align: left; padding: 4px 2px; }
+        button { cursor: pointer; }
         .practical-input-group { display: flex; align-items: center; justify-content: center; gap: 4px; }
         .input-record { width: 60px; }
         .input-score-only { width: 40px; background-color: #f0f0f0; border: none; }
-        .gam-span, .total-gam-span { color: red; font-size: 11px; font-weight: bold; margin-left: 4px; }
         .save-button-container { text-align: right; margin-top: 15px; }
-        .btn-save { padding: 8px 15px; background-color: var(--dark-gray); color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-save:hover { background-color: #333; }
-                .btn-check {
-            background-color: #ffc107;
-            color: #212529;
-            font-weight: 500;
-            padding: 8px 15px;
-        }
+        .btn-save { padding: 8px 15px; background-color: var(--dark-gray); color: white; border: none; }
+        .btn-check { background-color: #ffc107; color: #212529; font-weight: 500; padding: 8px 15px; border: none; }
+        .pass-fail-container { display: flex; align-items: center; gap: 5px; min-width: 150px; }
+        .input-reserve-number { width: 60px !important; text-align: center; }
+        .btn-score-table { font-size: 11px; padding: 3px 8px; background-color: var(--secondary-color); color: white; border: none; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border-radius: var(--border-radius); width: 90%; max-width: 1200px; position: relative; }
+        .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: black; }
+        #modalTitle { margin-bottom: 20px; color: var(--primary-color); }
+        #modalTableContainer { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 10px; }
+        #modalTableContainer table { min-width: 300px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2 id="main-title">우리 지점 최종 수합 현황</h2>
-    
+    <h2 id="main-title">(교육원명) 교육원 최종수합(실기포함)</h2>
     <div style="margin-bottom: 20px;">
         <button class="btn-check" onclick="checkUnassignedStudents()">아직 수합 안된 학생 확인</button>
     </div>
-    <div class="university-accordion" id="university-accordion">
-        </div>
+    <div class="university-accordion" id="university-accordion"></div>
+</div>
+
+<div id="scoreTableModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3 id="modalTitle"></h3>
+        <div id="modalTableContainer"></div>
+    </div>
 </div>
 
 <script>
@@ -55,15 +68,23 @@
     window.onload = async () => {
         Swal.fire({ title: '데이터를 불러오는 중입니다...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(`${SERVER}/26susi/branch_summary_by_university`, { headers: { 'Authorization': 'Bearer ' + token } });
-            if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
-            const data = await res.json();
-            
-            if (data.success) {
-                allUniversityData = data.universities;
+            const [summaryRes, profileRes] = await Promise.all([
+                fetch(`${SERVER}/26susi/branch_summary_by_university`, { headers: { 'Authorization': 'Bearer ' + token } }),
+                fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } })
+            ]);
+            if (!summaryRes.ok || !profileRes.ok) throw new Error(`서버 응답 오류`);
+            const summaryData = await summaryRes.json();
+            const profileData = await profileRes.json();
+
+            if (profileData.success && profileData.user) {
+                document.getElementById('main-title').textContent = `${profileData.user.branch} 교육원 최종수합(실기포함)`;
+            }
+
+            if (summaryData.success) {
+                allUniversityData = summaryData.universities;
                 renderAccordions(allUniversityData);
             } else {
-                throw new Error(data.message || '데이터 조회에 실패했습니다.');
+                throw new Error(summaryData.message || '데이터 조회에 실패했습니다.');
             }
         } catch (error) {
             Swal.fire('오류', `데이터 조회 중 문제가 발생했습니다: ${error.message}`, 'error');
@@ -79,20 +100,22 @@
             accordionContainer.innerHTML = '<p>아직 수합된 대학 정보가 없습니다.</p>';
             return;
         }
-
         universities.forEach(uni => {
             const details = document.createElement('details');
             details.dataset.collegeId = uni.대학ID;
             details.innerHTML = `
                 <summary>
-                    ${uni.대학명} - ${uni.학과명} (${uni.전형명})
+                    <div class="summary-title">
+                        <span>${uni.대학명} - ${uni.학과명} (${uni.전형명})</span>
+                        ${uni.실기ID ? `<button class="btn-score-table" onclick="event.stopPropagation(); openScoreTablePopup(this)">배점표</button>` : ''}
+                    </div>
                     <span class="summary-info">총 ${uni.학생들.length}명</span>
                 </summary>
                 <div class="table-container"></div>
             `;
             accordionContainer.appendChild(details);
-
-            details.querySelector('summary').addEventListener('click', () => {
+            details.querySelector('summary').addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') return;
                 if (!details.open) {
                     const tableContainer = details.querySelector('.table-container');
                     if (tableContainer.children.length === 0) {
@@ -105,72 +128,119 @@
 
     function renderUniversityTable(container, universityData) {
         const events = universityData.실기종목 || [];
-        let tableHTML = `
-            <table>
-                <thead>
-                    <tr>
-                        <th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th>
-                        ${events.map(e => `<th>${e}</th>`).join('')}
-                        <th>실기총점</th><th>합산점수</th><th>실기일정</th><th>최초합</th><th>최종합</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${universityData.학생들.map(student => {
-                        const scheduleDate = student.실기일정 ? student.실기일정.split(' ')[0] : '';
-                        return `
-                            <tr data-student-id="${student.학생ID}">
-                                <td>${student.이름}</td><td>${student.학년}</td><td>${student.성별}</td>
-                                <td><input class="input-grade" type="text" value="${student.내신등급 || ''}" oninput="onNaesinInputChange(this)"></td>
-                                <td><input class="input-score" type="text" value="${student.내신점수 || ''}" oninput="onNaesinInputChange(this)"></td>
-                                ${events.map((eventName, i) => `
-                                    <td><div class="practical-input-group">
-                                        <input type="text" class="input-record" data-event-name="${eventName}" value="${student[`기록${i+1}`] || ''}" oninput="onRecordInputChange(this)" placeholder="기록">
-                                        <input type="text" class="input-score-only" value="${student[`점수${i+1}`] || ''}" readonly>
-                                    </div></td>
-                                `).join('')}
-                                <td class="total-score-cell">${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'}</td>
-                                <td class="total-sum-cell">${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'}</td>
-                                <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
-                                <td><input class="input-first-pass" type="text" value="${student.최초합여부 || ''}" placeholder="합/불/예비"></td>
-                                <td><input class="input-final-pass" type="text" value="${student.최종합여부 || ''}" placeholder="합/불/예비"></td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-            <div class="save-button-container">
-                <button class="btn-save" onclick="saveUniversityData(this)">${universityData.대학명} 저장</button>
+        
+        universityData.학생들.sort((a, b) => (b.합산점수 || 0) - (a.합산점수 || 0));
+
+        const tableHTML = `
+            <div id="table-wrapper-${universityData.대학ID}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th>
+                            ${events.map(e => `<th>${e}</th>`).join('')}
+                            <th>실기총점</th><th>합산점수</th><th>실기일정</th><th>최초합</th><th>최종합</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${universityData.학생들.map(student => {
+                            const parsePassData = (value) => {
+                                if (!value) return { status: '', number: '' };
+                                if (value.startsWith('예비')) return { status: '예비', number: value.replace('예비', '') };
+                                return { status: value, number: '' };
+                            };
+                            const firstPass = parsePassData(student.최초합여부);
+                            const finalPass = parsePassData(student.최종합여부);
+                            const scheduleDate = student.실기일정 ? student.실기일정.split(' ')[0] : '';
+                            
+                            return `
+                                <tr data-student-id="${student.학생ID}">
+                                    <td>${student.이름}</td><td>${student.학년}</td><td>${student.성별}</td>
+                                    <td><input class="input-grade" type="text" value="${student.내신등급 || ''}" oninput="onNaesinInputChange(this)"></td>
+                                    <td><input class="input-score" type="text" value="${student.내신점수 || ''}" oninput="onNaesinInputChange(this)"></td>
+                                    ${events.map((eventName, i) => `
+                                        <td><div class="practical-input-group">
+                                            <input type="text" class="input-record" data-event-name="${eventName}" value="${student[`기록${i+1}`] || ''}" oninput="onRecordInputChange(this)" placeholder="기록">
+                                            <input type="text" class="input-score-only" value="${student[`점수${i+1}`] || ''}" readonly>
+                                        </div></td>
+                                    `).join('')}
+                                    <td class="total-score-cell">${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'}</td>
+                                    <td class="total-sum-cell">${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'}</td>
+                                    <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
+                                    <td>
+                                        <div class="pass-fail-container">
+                                            <select class="select-pass-status" onchange="handlePassStatusChange(this)">
+                                                <option value="" ${firstPass.status === '' ? 'selected' : ''}>선택</option>
+                                                <option value="1차합격" ${firstPass.status === '1차합격' ? 'selected' : ''}>1차합격</option>
+                                                <option value="합격" ${firstPass.status === '합격' ? 'selected' : ''}>합격</option>
+                                                <option value="불합격" ${firstPass.status === '불합격' ? 'selected' : ''}>불합격</option>
+                                                <option value="예비" ${firstPass.status === '예비' ? 'selected' : ''}>예비</option>
+                                            </select>
+                                            <input type="number" class="input-reserve-number" value="${firstPass.number}" style="display: ${firstPass.status === '예비' ? 'block' : 'none'};" placeholder="번호">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="pass-fail-container">
+                                            <select class="select-pass-status" onchange="handlePassStatusChange(this)">
+                                                <option value="" ${finalPass.status === '' ? 'selected' : ''}>선택</option>
+                                                <option value="최저불합격" ${finalPass.status === '최저불합격' ? 'selected' : ''}>최저불합격</option>
+                                                <option value="합격" ${finalPass.status === '합격' ? 'selected' : ''}>합격</option>
+                                                <option value="불합격" ${finalPass.status === '불합격' ? 'selected' : ''}>불합격</option>
+                                                <option value="예비" ${finalPass.status === '예비' ? 'selected' : ''}>예비</option>
+                                            </select>
+                                            <input type="number" class="input-reserve-number" value="${finalPass.number}" style="display: ${finalPass.status === '예비' ? 'block' : 'none'};" placeholder="번호">
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div class="save-button-container">
+                    <button class="btn-save" onclick="saveUniversityData(this)">${universityData.대학명} 저장</button>
+                </div>
             </div>
         `;
         container.innerHTML = tableHTML;
-        container.querySelectorAll('tbody tr').forEach(row => updateScoresForRow(row));
     }
 
     async function saveUniversityData(button) {
         const detailsElement = button.closest('details');
         const collegeId = parseInt(detailsElement.dataset.collegeId, 10);
-        
-        // ✅ [안정성 강화] universityData를 찾지 못하면 즉시 중단
         const universityData = allUniversityData.find(uni => uni.대학ID == collegeId);
         if (!universityData) {
-            Swal.fire('저장 오류', '저장할 대학 정보를 찾지 못했습니다. 페이지를 새로고침해주세요.', 'error');
+            Swal.fire('저장 오류', '저장할 대학 정보를 찾지 못했습니다.', 'error');
             return;
         }
-        
+
+        let incompleteReserve = false;
+        detailsElement.querySelectorAll('.pass-fail-container').forEach(container => {
+            if (container.querySelector('.select-pass-status').value === '예비' && !container.querySelector('.input-reserve-number').value) {
+                incompleteReserve = true;
+            }
+        });
+        if (incompleteReserve) {
+            Swal.fire('입력 오류', '"예비"를 선택한 경우, 반드시 예비 번호를 입력해야 합니다.', 'warning');
+            return;
+        }
+
         Swal.fire({ title: `${universityData.대학명} 저장 중...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         const studentDataPayload = [];
         detailsElement.querySelectorAll('tbody tr[data-student-id]').forEach(row => {
+            const getPassValue = (container) => {
+                const status = container.querySelector('.select-pass-status').value;
+                const number = container.querySelector('.input-reserve-number').value;
+                if (status === '예비' && number) return `예비${number}`;
+                return status;
+            };
             const data = {
-                학생ID: parseInt(row.dataset.studentId, 10),
-                실기ID: universityData.실기ID,
-                내신등급: row.querySelector('.input-grade').value,
-                내신점수: row.querySelector('.input-score').value,
+                학생ID: parseInt(row.dataset.studentId, 10), 실기ID: universityData.실기ID,
+                내신등급: row.querySelector('.input-grade').value, 내신점수: row.querySelector('.input-score').value,
                 실기총점: parseFloat(row.querySelector('.total-score-cell').textContent) || null,
                 합산점수: parseFloat(row.querySelector('.total-sum-cell').textContent) || null,
                 실기일정: row.querySelector('.input-date').value || null,
-                최초합여부: row.querySelector('.input-first-pass').value,
-                최종합여부: row.querySelector('.input-final-pass').value,
+                최초합여부: getPassValue(row.querySelectorAll('.pass-fail-container')[0]),
+                최종합여부: getPassValue(row.querySelectorAll('.pass-fail-container')[1]),
             };
             row.querySelectorAll('.input-record').forEach((inp, i) => {
                 data[`기록${i+1}`] = inp.value || null;
@@ -187,74 +257,71 @@
             });
             if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
             const result = await res.json();
-            
             if (result.success) Swal.fire('저장 완료!', `${universityData.대학명} 정보가 성공적으로 저장되었습니다.`, 'success');
             else throw new Error(result.message || '알 수 없는 오류가 발생했습니다.');
-
         } catch (error) {
             Swal.fire('저장 실패', `오류가 발생했습니다: ${error.message}`, 'error');
         }
     }
 
-    // ✅ [안정성 강화] 점수 계산 및 업데이트 로직 (try-catch 및 타입 비교 문제 해결)
     async function updateScoresForRow(row) {
         try {
             const studentId = parseInt(row.dataset.studentId, 10);
             const collegeId = parseInt(row.closest('details').dataset.collegeId, 10);
-            
-            // 타입 문제를 해결하기 위해 '==' 사용
             const university = allUniversityData.find(uni => uni.대학ID == collegeId);
-
-            if (!university) return; // 대학 정보 없으면 조용히 종료
-
+            if (!university) return;
             const student = university.학생들.find(s => s.학생ID == studentId);
-
             if (!student || !university.실기ID) return;
 
             const res = await fetch(`${SERVER}/26susi/calculate-final-score`, {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    대학ID: university.대학ID,
-                    gender: student.성별,
+                    대학ID: university.대학ID, gender: student.성별,
                     inputs: Array.from(row.querySelectorAll('input.input-record')).map(inp => ({ 종목명: inp.dataset.eventName, 기록: inp.value.trim() || null })),
                     내신점수: row.querySelector('.input-score').value || 0
                 })
             });
             if (!res.ok) throw new Error(`점수 계산 서버 응답 오류: ${res.status}`);
             const data = await res.json();
-
+            
             if (data.success) {
-                row.querySelectorAll('input.input-record').forEach(recordInput => {
-                    const eventName = recordInput.dataset.eventName;
-                    recordInput.nextElementSibling.value = data.종목별점수[eventName];
+                student.실기총점 = data.실기총점;
+                student.합산점수 = data.합산점수;
+                (university.실기종목 || []).forEach((eventName, i) => {
+                    student[`점수${i+1}`] = data.종목별점수[eventName];
                 });
-                row.querySelector('.total-score-cell').textContent = data.실기총점.toFixed(2);
-                row.querySelector('.total-sum-cell').textContent = data.합산점수.toFixed(2);
+
+                const tableContainer = document.querySelector(`#table-wrapper-${collegeId}`).parentElement;
+                renderUniversityTable(tableContainer, university);
             } else {
-                // 서버가 success:false를 보냈을 경우 콘솔에 로그
                 console.error('점수 계산 실패:', data.message);
             }
         } catch (error) {
-            // 네트워크 오류 등 fetch 자체가 실패했을 경우
             console.error('점수 업데이트 중 에러 발생:', error);
         }
     }
-      async function checkUnassignedStudents() {
+    
+    function onRecordInputChange(input) { updateScoresForRow(input.closest('tr')); }
+    function onNaesinInputChange(input) { updateScoresForRow(input.closest('tr')); }
+
+    function handlePassStatusChange(selectElement) {
+        const numberInput = selectElement.nextElementSibling;
+        if (selectElement.value === '예비') {
+            numberInput.style.display = 'block';
+            numberInput.focus();
+        } else {
+            numberInput.style.display = 'none';
+            numberInput.value = '';
+        }
+    }
+    
+    async function checkUnassignedStudents() {
         Swal.fire({ title: '확인 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
         try {
-            // 1. 서버에 만든 새 API를 호출
-            const res = await fetch(`${SERVER}/26susi/unassigned_students`, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+            const res = await fetch(`${SERVER}/26susi/unassigned_students`, { headers: { 'Authorization': 'Bearer ' + token } });
             const data = await res.json();
-
-            if (!data.success) {
-                throw new Error(data.message || '데이터 조회 실패');
-            }
-
-            // 2. 결과를 받아서 팝업으로 보여줌
+            if (!data.success) throw new Error(data.message || '데이터 조회 실패');
             let contentHTML = '';
             if (data.students.length === 0) {
                 contentHTML = '<p>모든 학생이 최소 1개 이상의 대학에 수합되었습니다! 🎉</p>';
@@ -264,20 +331,61 @@
                                data.students.map(s => `<li>${s.이름} (${s.학년}학년)</li>`).join('') +
                                `</ul>`;
             }
-
-            Swal.fire({
-                title: '미수합 학생 명단',
-                html: contentHTML,
-                icon: data.students.length === 0 ? 'success' : 'info'
-            });
-
+            Swal.fire({ title: '미수합 학생 명단', html: contentHTML, icon: data.students.length === 0 ? 'success' : 'info' });
         } catch (error) {
             Swal.fire('오류', `미수합 학생을 확인하는 중 문제가 발생했습니다: ${error.message}`, 'error');
         }
-    }  
-    
-    function onRecordInputChange(input) { updateScoresForRow(input.closest('tr')); }
-    function onNaesinInputChange(input) { updateScoresForRow(input.closest('tr')); }
+    }
+
+    async function openScoreTablePopup(button) {
+        const detailsElement = button.closest('details');
+        const collegeId = parseInt(detailsElement.dataset.collegeId, 10);
+        const university = allUniversityData.find(uni => uni.대학ID == collegeId);
+        if (!university || !university.실기ID) {
+            Swal.fire('알림', '해당 대학의 실기 정보가 없습니다.', 'warning');
+            return;
+        }
+        const modal = document.getElementById('scoreTableModal');
+        document.getElementById('modalTitle').textContent = `${university.대학명} - ${university.학과명} 배점표`;
+        const container = document.getElementById('modalTableContainer');
+        container.innerHTML = '로딩 중...';
+        modal.style.display = 'block';
+        
+        try {
+            const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${university.실기ID}`);
+            const data = await res.json();
+            if (data.success) {
+                renderPopupScoreTable(data.events, container);
+            } else {
+                container.innerHTML = '배점표를 불러오는 데 실패했습니다: ' + (data.error || '');
+            }
+        } catch(e) {
+            container.innerHTML = '배점표 로드 중 오류 발생.';
+        }
+    }
+
+    function renderPopupScoreTable(events, container) {
+        let finalHTML = '';
+        Object.keys(events).forEach(name => {
+            const { 남, 여 } = events[name];
+            const allScores = new Set([...남.map(i => i.배점), ...여.map(i => i.배점)]);
+            const sortedScores = Array.from(allScores).sort((a,b) => {
+                const numA = parseFloat(a); const numB = parseFloat(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+                return a > b ? -1 : 1;
+            });
+            const scoreMap = { 남: new Map(남.map(i => [i.배점, i.기록])), 여: new Map(여.map(i => [i.배점, i.기록])) };
+            let tableHTML = `<table><thead><tr><th colspan="3">${name}</th></tr><tr><th>배점</th><th>남</th><th>여</th></tr></thead><tbody>`;
+            sortedScores.forEach(score => { tableHTML += `<tr><td>${score}</td><td>${scoreMap.남.get(score) || '-'}</td><td>${scoreMap.여.get(score) || '-'}</td></tr>`; });
+            tableHTML += '</tbody></table>';
+            finalHTML += tableHTML;
+        });
+        container.innerHTML = finalHTML;
+    }
+
+    document.querySelector('#scoreTableModal .close-btn').onclick = () => {
+        document.getElementById('scoreTableModal').style.display = 'none';
+    };
 </script>
 </body>
 </html>
