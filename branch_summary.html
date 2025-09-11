@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>지점별 최종 수합 현황</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-color: #4364f7; --secondary-color: #6a8eff; --dark-gray: #495057; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --border-radius: 8px;}
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--light-gray); padding: 20px; }
+        .container { max-width: 95%; margin: 0 auto; }
+        h2 { color: var(--primary-color); }
+        .university-accordion details { background: white; border-radius: var(--border-radius); margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .university-accordion summary { padding: 15px 20px; font-size: 1.2em; font-weight: 500; cursor: pointer; color: var(--dark-gray); display: flex; justify-content: space-between; align-items: center; }
+        .university-accordion summary:hover { background-color: #fdfdff; }
+        .summary-info { font-size: 0.8em; font-weight: 400; color: #555; }
+        .table-container { padding: 0 20px 20px 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid var(--medium-gray); padding: 8px; text-align: center; font-size: 12px; white-space: nowrap; }
+        th { background-color: var(--primary-color); color: white; font-weight: 500; position: sticky; top: 0; z-index: 1; }
+        input { width: 95%; box-sizing: border-box; text-align: center; border: 1px solid var(--medium-gray); border-radius: 4px; padding: 4px; font-size: 12px; }
+        .practical-input-group { display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .input-record { width: 60px; }
+        .input-score-only { width: 40px; background-color: #f0f0f0; border: none; }
+        .gam-span, .total-gam-span { color: red; font-size: 11px; font-weight: bold; margin-left: 4px; }
+        .save-button-container { text-align: right; margin-top: 15px; }
+        .btn-save { padding: 8px 15px; background-color: var(--dark-gray); color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-save:hover { background-color: #333; }
+                .btn-check {
+            background-color: #ffc107;
+            color: #212529;
+            font-weight: 500;
+            padding: 8px 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 id="main-title">우리 지점 최종 수합 현황</h2>
+    
+    <div style="margin-bottom: 20px;">
+        <button class="btn-check" onclick="checkUnassignedStudents()">아직 수합 안된 학생 확인</button>
+    </div>
+    <div class="university-accordion" id="university-accordion">
+        </div>
+</div>
+
+<script>
+    const SERVER = 'https://supermax.kr';
+    const token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html';
+    let allUniversityData = [];
+
+    window.onload = async () => {
+        Swal.fire({ title: '데이터를 불러오는 중입니다...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const res = await fetch(`${SERVER}/26susi/branch_summary_by_university`, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
+            const data = await res.json();
+            
+            if (data.success) {
+                allUniversityData = data.universities;
+                renderAccordions(allUniversityData);
+            } else {
+                throw new Error(data.message || '데이터 조회에 실패했습니다.');
+            }
+        } catch (error) {
+            Swal.fire('오류', `데이터 조회 중 문제가 발생했습니다: ${error.message}`, 'error');
+        } finally {
+            Swal.close();
+        }
+    };
+
+    function renderAccordions(universities) {
+        const accordionContainer = document.getElementById('university-accordion');
+        accordionContainer.innerHTML = '';
+        if (universities.length === 0) {
+            accordionContainer.innerHTML = '<p>아직 수합된 대학 정보가 없습니다.</p>';
+            return;
+        }
+
+        universities.forEach(uni => {
+            const details = document.createElement('details');
+            details.dataset.collegeId = uni.대학ID;
+            details.innerHTML = `
+                <summary>
+                    ${uni.대학명} - ${uni.학과명} (${uni.전형명})
+                    <span class="summary-info">총 ${uni.학생들.length}명</span>
+                </summary>
+                <div class="table-container"></div>
+            `;
+            accordionContainer.appendChild(details);
+
+            details.querySelector('summary').addEventListener('click', () => {
+                if (!details.open) {
+                    const tableContainer = details.querySelector('.table-container');
+                    if (tableContainer.children.length === 0) {
+                        renderUniversityTable(tableContainer, uni);
+                    }
+                }
+            });
+        });
+    }
+
+    function renderUniversityTable(container, universityData) {
+        const events = universityData.실기종목 || [];
+        let tableHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th>
+                        ${events.map(e => `<th>${e}</th>`).join('')}
+                        <th>실기총점</th><th>합산점수</th><th>실기일정</th><th>최초합</th><th>최종합</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${universityData.학생들.map(student => {
+                        const scheduleDate = student.실기일정 ? student.실기일정.split(' ')[0] : '';
+                        return `
+                            <tr data-student-id="${student.학생ID}">
+                                <td>${student.이름}</td><td>${student.학년}</td><td>${student.성별}</td>
+                                <td><input class="input-grade" type="text" value="${student.내신등급 || ''}" oninput="onNaesinInputChange(this)"></td>
+                                <td><input class="input-score" type="text" value="${student.내신점수 || ''}" oninput="onNaesinInputChange(this)"></td>
+                                ${events.map((eventName, i) => `
+                                    <td><div class="practical-input-group">
+                                        <input type="text" class="input-record" data-event-name="${eventName}" value="${student[`기록${i+1}`] || ''}" oninput="onRecordInputChange(this)" placeholder="기록">
+                                        <input type="text" class="input-score-only" value="${student[`점수${i+1}`] || ''}" readonly>
+                                    </div></td>
+                                `).join('')}
+                                <td class="total-score-cell">${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'}</td>
+                                <td class="total-sum-cell">${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'}</td>
+                                <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
+                                <td><input class="input-first-pass" type="text" value="${student.최초합여부 || ''}" placeholder="합/불/예비"></td>
+                                <td><input class="input-final-pass" type="text" value="${student.최종합여부 || ''}" placeholder="합/불/예비"></td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+            <div class="save-button-container">
+                <button class="btn-save" onclick="saveUniversityData(this)">${universityData.대학명} 저장</button>
+            </div>
+        `;
+        container.innerHTML = tableHTML;
+        container.querySelectorAll('tbody tr').forEach(row => updateScoresForRow(row));
+    }
+
+    async function saveUniversityData(button) {
+        const detailsElement = button.closest('details');
+        const collegeId = parseInt(detailsElement.dataset.collegeId, 10);
+        
+        // ✅ [안정성 강화] universityData를 찾지 못하면 즉시 중단
+        const universityData = allUniversityData.find(uni => uni.대학ID == collegeId);
+        if (!universityData) {
+            Swal.fire('저장 오류', '저장할 대학 정보를 찾지 못했습니다. 페이지를 새로고침해주세요.', 'error');
+            return;
+        }
+        
+        Swal.fire({ title: `${universityData.대학명} 저장 중...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        const studentDataPayload = [];
+        detailsElement.querySelectorAll('tbody tr[data-student-id]').forEach(row => {
+            const data = {
+                학생ID: parseInt(row.dataset.studentId, 10),
+                실기ID: universityData.실기ID,
+                내신등급: row.querySelector('.input-grade').value,
+                내신점수: row.querySelector('.input-score').value,
+                실기총점: parseFloat(row.querySelector('.total-score-cell').textContent) || null,
+                합산점수: parseFloat(row.querySelector('.total-sum-cell').textContent) || null,
+                실기일정: row.querySelector('.input-date').value || null,
+                최초합여부: row.querySelector('.input-first-pass').value,
+                최종합여부: row.querySelector('.input-final-pass').value,
+            };
+            row.querySelectorAll('.input-record').forEach((inp, i) => {
+                data[`기록${i+1}`] = inp.value || null;
+                data[`점수${i+1}`] = inp.nextElementSibling.value || null;
+            });
+            studentDataPayload.push(data);
+        });
+        
+        try {
+            const res = await fetch(`${SERVER}/26susi_final_save`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ college_id: collegeId, studentData: studentDataPayload })
+            });
+            if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
+            const result = await res.json();
+            
+            if (result.success) Swal.fire('저장 완료!', `${universityData.대학명} 정보가 성공적으로 저장되었습니다.`, 'success');
+            else throw new Error(result.message || '알 수 없는 오류가 발생했습니다.');
+
+        } catch (error) {
+            Swal.fire('저장 실패', `오류가 발생했습니다: ${error.message}`, 'error');
+        }
+    }
+
+    // ✅ [안정성 강화] 점수 계산 및 업데이트 로직 (try-catch 및 타입 비교 문제 해결)
+    async function updateScoresForRow(row) {
+        try {
+            const studentId = parseInt(row.dataset.studentId, 10);
+            const collegeId = parseInt(row.closest('details').dataset.collegeId, 10);
+            
+            // 타입 문제를 해결하기 위해 '==' 사용
+            const university = allUniversityData.find(uni => uni.대학ID == collegeId);
+
+            if (!university) return; // 대학 정보 없으면 조용히 종료
+
+            const student = university.학생들.find(s => s.학생ID == studentId);
+
+            if (!student || !university.실기ID) return;
+
+            const res = await fetch(`${SERVER}/26susi/calculate-final-score`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    대학ID: university.대학ID,
+                    gender: student.성별,
+                    inputs: Array.from(row.querySelectorAll('input.input-record')).map(inp => ({ 종목명: inp.dataset.eventName, 기록: inp.value.trim() || null })),
+                    내신점수: row.querySelector('.input-score').value || 0
+                })
+            });
+            if (!res.ok) throw new Error(`점수 계산 서버 응답 오류: ${res.status}`);
+            const data = await res.json();
+
+            if (data.success) {
+                row.querySelectorAll('input.input-record').forEach(recordInput => {
+                    const eventName = recordInput.dataset.eventName;
+                    recordInput.nextElementSibling.value = data.종목별점수[eventName];
+                });
+                row.querySelector('.total-score-cell').textContent = data.실기총점.toFixed(2);
+                row.querySelector('.total-sum-cell').textContent = data.합산점수.toFixed(2);
+            } else {
+                // 서버가 success:false를 보냈을 경우 콘솔에 로그
+                console.error('점수 계산 실패:', data.message);
+            }
+        } catch (error) {
+            // 네트워크 오류 등 fetch 자체가 실패했을 경우
+            console.error('점수 업데이트 중 에러 발생:', error);
+        }
+    }
+      async function checkUnassignedStudents() {
+        Swal.fire({ title: '확인 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            // 1. 서버에 만든 새 API를 호출
+            const res = await fetch(`${SERVER}/26susi/unassigned_students`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || '데이터 조회 실패');
+            }
+
+            // 2. 결과를 받아서 팝업으로 보여줌
+            let contentHTML = '';
+            if (data.students.length === 0) {
+                contentHTML = '<p>모든 학생이 최소 1개 이상의 대학에 수합되었습니다! 🎉</p>';
+            } else {
+                contentHTML = `<p>총 ${data.students.length}명의 학생이 아직 어떤 대학에도 포함되지 않았습니다.</p>
+                               <ul style="text-align: left; max-height: 300px; overflow-y: auto;">` +
+                               data.students.map(s => `<li>${s.이름} (${s.학년}학년)</li>`).join('') +
+                               `</ul>`;
+            }
+
+            Swal.fire({
+                title: '미수합 학생 명단',
+                html: contentHTML,
+                icon: data.students.length === 0 ? 'success' : 'info'
+            });
+
+        } catch (error) {
+            Swal.fire('오류', `미수합 학생을 확인하는 중 문제가 발생했습니다: ${error.message}`, 'error');
+        }
+    }  
+    
+    function onRecordInputChange(input) { updateScoresForRow(input.closest('tr')); }
+    function onNaesinInputChange(input) { updateScoresForRow(input.closest('tr')); }
+</script>
+</body>
+</html>
