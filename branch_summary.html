@@ -206,6 +206,7 @@
     async function saveUniversityData(button) {
         const detailsElement = button.closest('details');
         const collegeId = parseInt(detailsElement.dataset.collegeId, 10);
+        
         const universityData = allUniversityData.find(uni => uni.대학ID == collegeId);
         if (!universityData) {
             Swal.fire('저장 오류', '저장할 대학 정보를 찾지 못했습니다.', 'error');
@@ -257,8 +258,26 @@
             });
             if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
             const result = await res.json();
-            if (result.success) Swal.fire('저장 완료!', `${universityData.대학명} 정보가 성공적으로 저장되었습니다.`, 'success');
-            else throw new Error(result.message || '알 수 없는 오류가 발생했습니다.');
+            
+            if (result.success) {
+                await Swal.fire('저장 완료!', `${universityData.대학명} 정보가 성공적으로 저장되었습니다.`, 'success');
+                
+                // 1. 저장된 최신 정보로 전역 데이터(allUniversityData)를 업데이트
+                const university = allUniversityData.find(uni => uni.대학ID == collegeId);
+                if(university) {
+                    university.학생들 = studentDataPayload.map(payload => {
+                        const originalStudent = university.학생들.find(s => s.학생ID == payload.학생ID);
+                        return {...originalStudent, ...payload}; // 기존 정보에 새 정보를 덮어쓰기
+                    });
+                }
+                
+                // 2. 해당 대학의 테이블 컨테이너를 찾아서 다시 렌더링 (재정렬)
+                const tableContainer = document.querySelector(`#table-wrapper-${collegeId}`).parentElement;
+                renderUniversityTable(tableContainer, university);
+
+            } else {
+                throw new Error(result.message || '알 수 없는 오류가 발생했습니다.');
+            }
         } catch (error) {
             Swal.fire('저장 실패', `오류가 발생했습니다: ${error.message}`, 'error');
         }
@@ -271,7 +290,12 @@
             const university = allUniversityData.find(uni => uni.대학ID == collegeId);
             if (!university) return;
             const student = university.학생들.find(s => s.학생ID == studentId);
-            if (!student || !university.실기ID) return;
+            if (!student || !university.실기ID) {
+                // 실기 없는 전형은 내신점수가 합산점수가 됨
+                const naesinScore = parseFloat(row.querySelector('.input-score').value) || 0;
+                row.querySelector('.total-sum-cell').textContent = naesinScore.toFixed(2);
+                return;
+            }
 
             const res = await fetch(`${SERVER}/26susi/calculate-final-score`, {
                 method: 'POST',
@@ -286,14 +310,13 @@
             const data = await res.json();
             
             if (data.success) {
-                student.실기총점 = data.실기총점;
-                student.합산점수 = data.합산점수;
-                (university.실기종목 || []).forEach((eventName, i) => {
-                    student[`점수${i+1}`] = data.종목별점수[eventName];
+                // 행 전체를 새로고침하는 대신, 점수 칸의 내용만 직접 업데이트
+                row.querySelectorAll('input.input-record').forEach(recordInput => {
+                    const eventName = recordInput.dataset.eventName;
+                    recordInput.nextElementSibling.value = data.종목별점수[eventName];
                 });
-
-                const tableContainer = document.querySelector(`#table-wrapper-${collegeId}`).parentElement;
-                renderUniversityTable(tableContainer, university);
+                row.querySelector('.total-score-cell').textContent = data.실기총점.toFixed(2);
+                row.querySelector('.total-sum-cell').textContent = data.합산점수.toFixed(2);
             } else {
                 console.error('점수 계산 실패:', data.message);
             }
