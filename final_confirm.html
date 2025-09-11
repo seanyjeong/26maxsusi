@@ -19,36 +19,25 @@
         .btn-add { background-color: var(--success-color); }
         .btn-save { background-color: var(--dark-gray); }
         .btn-import { background-color: var(--info-color); }
-        .btn-delete { background-color: var(--danger-color); }
+        .btn-delete { background-color: var(--danger-color); font-size: 11px; padding: 4px 8px; }
         #result-title-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; border-bottom: 2px solid var(--medium-gray); padding-bottom: 10px; }
-        #result-title { margin: 0; border: none; padding: 0; font-size: 1.2em; font-weight: 500; color: var(--dark-gray); }
+        #result-title { margin: 0; font-size: 1.2em; font-weight: 500; color: var(--dark-gray); }
         #cut-scores-display { font-size: 0.9em; color: var(--dark-gray); font-weight: 500; }
         #cut-scores-display span { margin-left: 15px; }
         table { width: 100%; border-collapse: collapse; table-layout: auto; }
         th, td { border: 1px solid var(--medium-gray); padding: 8px; text-align: center; font-size: 12px; vertical-align: middle; white-space: nowrap; }
         th { background-color: var(--primary-color); color: white; font-weight: 500; }
         input { width: 95%; box-sizing: border-box; text-align: center; border: 1px solid var(--medium-gray); border-radius: 4px; padding: 4px; font-size: 12px; }
-        .practical-input-group { display: flex; align-items: center; justify-content: center; gap: 4px; }
-        .input-record { width: 60px; }
-        .input-score-only { width: 40px; background-color: #f0f0f0; border: none; }
-        .gam-span, .total-gam-span { color: red; font-size: 11px; font-weight: bold; margin-left: 4px; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 1200px; border-radius: var(--border-radius); position: relative; }
-        .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
-        #modalTitle { margin-bottom: 20px; color: var(--primary-color); }
-        #modalTableContainer { display: flex; gap: 16px; overflow-x: auto; }
-        #modalTableContainer table { min-width: 300px; }
     </style>
 </head>
 <body>
     <div class="section">
-        <h2 id="main-title">2026맥스체대입시 교육원 최종 수합 관리</h2>
+        <h2 id="main-title">교육원 최종 수합 관리</h2>
         <div class="controls-wrap">
             <div class="filter-wrap">
                 <div><label for="sel-college">대학명</label><select id="sel-college" onchange="onCollegeChange()"></select></div>
                 <div><label for="sel-major">학과명</label><select id="sel-major" onchange="onMajorChange()" disabled></select></div>
                 <div><label for="sel-type">전형명</label><select id="sel-type" onchange="onTypeChange()"></select></div>
-                <button id="btn-score-table" onclick="openScoreTablePopup()" disabled>배점표 보기</button>
             </div>
             <div>
                 <button class="btn-import" onclick="importFromCounsel()">+ 상담학생 불러오기</button>
@@ -66,12 +55,10 @@
         <table id="resultTable">
             <thead></thead>
             <tbody id="resultTbody">
-                <tr><td colspan="10">조회할 대학/학과/전형을 선택해주세요.</td></tr>
+                <tr><td colspan="8">조회할 대학/학과/전형을 선택해주세요.</td></tr>
             </tbody>
         </table>
     </div>
-
-    <div id="scoreTableModal" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h3 id="modalTitle"></h3><div id="modalTableContainer"></div></div></div>
 
     <script>
     const SERVER = 'https://supermax.kr';
@@ -81,34 +68,35 @@
     let colleges = [], collegeGroups = {}, allBranchStudents = [];
     let currentCollege = null, currentStudentMap = new Map(), practicalEvents = [];
 
-    // --- 데이터 로딩 및 초기 설정 ---
     async function loadInitialData() {
         const [profileRes, collegeRes, studentRes] = await Promise.all([
             fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
             fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
             fetch(`${SERVER}/26susi_student_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
         ]);
-        if (profileRes.success) document.getElementById('main-title').textContent = `2026맥스체대입시 ${profileRes.user.branch} 교육원 최종 수합`;
+        if (profileRes.success) document.getElementById('main-title').textContent = `${profileRes.user.branch} 교육원 최종 수합 관리`;
         if (collegeRes.success) { colleges = collegeRes.colleges; groupColleges(); populateCollegeSelect(); }
         if (studentRes.success) allBranchStudents = studentRes.students;
     }
+
     function groupColleges() { colleges.forEach(c => { if (!collegeGroups[c.대학명]) collegeGroups[c.대학명] = {}; if (!collegeGroups[c.대학명][c.학과명]) collegeGroups[c.대학명][c.학과명] = []; collegeGroups[c.대학명][c.학과명].push(c.전형명); }); }
     function populateCollegeSelect() { document.getElementById('sel-college').innerHTML = '<option value="">선택</option>' + Object.keys(collegeGroups).sort().map(c => `<option value="${c}">${c}</option>`).join(''); }
-    function onCollegeChange() { const c = document.getElementById('sel-college').value, s = document.getElementById('sel-major'); s.innerHTML = '<option value="">선택</option>'; document.getElementById('sel-type').innerHTML = '<option value="">선택</option>'; if (c && collegeGroups[c]) { s.innerHTML += Object.keys(collegeGroups[c]).sort().map(m => `<option value="${m}">${m}</option>`).join(''); s.disabled = false; } else { s.disabled = true; document.getElementById('sel-type').disabled = true; } document.getElementById('btn-score-table').disabled = true; }
-    function onMajorChange() { const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type'); t.innerHTML = '<option value="">선택</option>'; if (m && collegeGroups[c]?.[m]) { t.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join(''); t.disabled = false; } else { t.disabled = true; } document.getElementById('btn-score-table').disabled = true; }
+    function onCollegeChange() { const c = document.getElementById('sel-college').value, s = document.getElementById('sel-major'); s.innerHTML = '<option value="">선택</option>'; document.getElementById('sel-type').innerHTML = '<option value="">선택</option>'; if (c && collegeGroups[c]) { s.innerHTML += Object.keys(collegeGroups[c]).sort().map(m => `<option value="${m}">${m}</option>`).join(''); s.disabled = false; } else { s.disabled = true; document.getElementById('sel-type').disabled = true; } }
+    function onMajorChange() { const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type'); t.innerHTML = '<option value="">선택</option>'; if (m && collegeGroups[c]?.[m]) { t.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join(''); t.disabled = false; } else { t.disabled = true; } }
     
-    // ✨ 전형 선택 시 바로 조회
-    function onTypeChange() {
-        document.getElementById('btn-score-table').disabled = !document.getElementById('sel-type').value;
-        searchFinalConfirmations();
+    function onTypeChange() { searchFinalConfirmations(); }
+
+    async function fetchPracticalEvents(practicalId) {
+        if (!practicalId) { practicalEvents = []; return; }
+        const res = await fetch(`${SERVER}/26susi_events_by_practical_id?practical_id=${practicalId}&gender=남`, { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        practicalEvents = data.success ? [...new Set(data.events.map(e => e.종목명))] : [];
     }
 
-    // --- 핵심 기능 함수 ---
     async function searchFinalConfirmations() {
         const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type').value;
         if (!c || !m || !t) {
-            // 선택이 완료되지 않으면 테이블 초기화
-            document.getElementById('resultTbody').innerHTML = '<tr><td colspan="10">조회할 대학/학과/전형을 선택해주세요.</td></tr>';
+            document.getElementById('resultTbody').innerHTML = '<tr><td colspan="8">조회할 대학/학과/전형을 선택해주세요.</td></tr>';
             document.getElementById('result-title').textContent = '';
             document.getElementById('cut-scores-display').textContent = '';
             return;
@@ -125,67 +113,55 @@
         const data = await res.json();
         Swal.close();
         
-if (data.success) {
-    document.getElementById('result-title').innerHTML += ` <span style="font-size: 0.9em; color: #555;">(총 ${data.students.length}명)</span><span style="font-size: 0.9em; color: gray; margin-left: 15px;">등급/내신 수정 가능합니다.</span>`;
-    data.students.sort((a, b) => (b.합산점수 || 0) - (a.합산점수 || 0));
-    renderTable(data.students, practicalEvents);
+        if (data.success) {
+            document.getElementById('result-title').innerHTML += ` <span style="font-size: 0.9em; color: #555;">(총 ${data.students.length}명)</span>`;
+            data.students.sort((a, b) => (a.이름 > b.이름) ? 1 : -1); // 이름순으로 정렬
+            renderTable(data.students);
         } else { Swal.fire('오류', '데이터 조회 중 문제가 발생했습니다.', 'error'); }
     }
 
-// 1. renderTable 함수 수정
-function renderTable(students, events) {
-    const thead = document.getElementById('resultTable').querySelector('thead');
-    const tbody = document.getElementById('resultTable').querySelector('tbody');
-    thead.innerHTML = ''; tbody.innerHTML = '';
-    currentStudentMap.clear();
-    students.forEach(s => currentStudentMap.set(s.학생ID, s));
+    function renderTable(students) {
+        const thead = document.getElementById('resultTable').querySelector('thead');
+        const tbody = document.getElementById('resultTable').querySelector('tbody');
+        thead.innerHTML = ''; tbody.innerHTML = '';
+        currentStudentMap.clear();
+        students.forEach(s => currentStudentMap.set(s.학생ID, s));
 
-    // [수정] 헤더에 '실기 일정' 추가
-    let headerHTML = '<tr><th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th>';
-    events.forEach(e => headerHTML += `<th>${e}</th>`);
-    headerHTML += '<th>실기총점</th><th>합산점수</th><th>실기 일정</th><th>최초합</th><th>최종합</th><th>관리</th></tr>';
-    thead.innerHTML = headerHTML;
+        thead.innerHTML = '<tr><th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th><th>실기종목</th><th>실기일정</th><th>합산점수(내신)</th><th>관리</th></tr>';
 
-    if (students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${9 + events.length}">해당 전형으로 수합된 학생이 없습니다.</td></tr>`;
-        return;
+        if (students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9">해당 전형으로 수합된 학생이 없습니다.</td></tr>`;
+            return;
+        }
+        students.forEach(student => addStudentRow(student, false));
     }
-    students.forEach(student => addStudentRow(student, events, false));
-}
 
-// 2. addStudentRow 함수 수정
-function addStudentRow(student, events, isNew = true) {
-    if (!student || (isNew && currentStudentMap.has(student.학생ID))) return;
+    function addStudentRow(student, isNew = true) {
+        if (!student || (isNew && currentStudentMap.has(student.학생ID))) return;
 
-    const tbody = document.getElementById('resultTbody');
-    if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
-    currentStudentMap.set(student.학생ID, student);
+        const tbody = document.getElementById('resultTbody');
+        if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+        currentStudentMap.set(student.학생ID, student);
 
-    const row = document.createElement('tr');
-    row.dataset.studentId = student.학생ID;
-
-    let rowHTML = `<td>${student.이름}</td><td>${student.학년}</td><td>${student.성별}</td>
-        <td><input class="input-grade" type="text" value="${student.내신등급 || ''}" oninput="onNaesinInputChange(this)"></td>
-        <td><input class="input-score" type="text" value="${student.내신점수 || ''}" oninput="onNaesinInputChange(this)"></td>`;
-    
-    events.forEach((eventName, i) => {
-        rowHTML += `<td><div class="practical-input-group">
-            <input type="text" class="input-record" data-event-name="${eventName}" value="${student[`기록${i+1}`] || ''}" oninput="onRecordInputChange(this)" placeholder="기록">
-            <input type="text" class="input-score-only" readonly></div></td>`;
-    });
-    
-    // [수정] 날짜 입력 필드(type="date") 추가
-    const scheduleDate = student.실기일정 ? student.실기일정.split(' ')[0] : ''; // YYYY-MM-DD 형식으로 변환
-    rowHTML += `<td class="total-score-cell">-</td><td class="total-sum-cell">-</td>
-        <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
-        <td><input class="input-first-pass" type="text" value="${student.최초합여부 || ''}" placeholder="합/불/예비"></td>
-        <td><input class="input-final-pass" type="text" value="${student.최종합여부 || ''}" placeholder="합/불/예비"></td>
-        <td><button class="btn-delete" onclick="deleteRow(this)">삭제</button></td>`;
-    
-    row.innerHTML = rowHTML;
-    tbody.appendChild(row);
-    updateScoresForRow(row);
-}
+        const row = document.createElement('tr');
+        row.dataset.studentId = student.학생ID;
+        
+        const scheduleDate = student.실기일정 ? student.실기일정.split(' ')[0] : '';
+        
+        row.innerHTML = `
+            <td>${student.이름}</td>
+            <td>${student.학년}</td>
+            <td>${student.성별}</td>
+            <td><input class="input-grade" type="text" value="${student.내신등급 || ''}"></td>
+            <td><input class="input-score" type="text" value="${student.내신점수 || ''}"></td>
+            <td>${practicalEvents.length > 0 ? practicalEvents.join(', ') : '비실기'}</td>
+            <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
+            <td>${student.내신점수 || '0'}</td>
+            <td><button class="btn-delete" onclick="deleteRow(this)">삭제</button></td>
+        `;
+        
+        tbody.appendChild(row);
+    }
     
     function deleteRow(button) {
         Swal.fire({
@@ -194,152 +170,89 @@ function addStudentRow(student, events, isNew = true) {
         }).then((result) => {
             if (result.isConfirmed) {
                 const row = button.closest('tr');
-                const studentId = parseInt(row.dataset.studentId, 10);
-                currentStudentMap.delete(studentId);
+                currentStudentMap.delete(parseInt(row.dataset.studentId, 10));
                 row.remove();
             }
         });
     }
 
-    // ✨ 상담학생 불러오기 (다중 선택 가능하게 수정)
     async function importFromCounsel() {
         if (!currentCollege) { Swal.fire('알림', '먼저 조회할 대학을 선택해주세요.', 'warning'); return; }
-        
         const res = await fetch(`${SERVER}/26susi_counsel_candidates?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
-
         if (!data.success || data.candidates.length === 0) { Swal.fire('알림', '불러올 수 있는 상담 학생이 없습니다.', 'info'); return; }
         
         const { value: selectedIds } = await Swal.fire({
             title: '수합 명단에 추가할 학생 선택',
-            html: `<p style="font-size:14px; color:gray;">상담 하셨을때, 저장된 학생들만 불러올수있습니다.</p>
-            <p style="font-size:14px; color:gray;">Ctrl 또는 Shift 키를 눌러 여러 명을 선택할 수 있습니다.</p>
+            html: `<p style="font-size:14px; color:gray;">Ctrl 키를 눌러 여러 명을 선택할 수 있습니다.</p>
                    <select id="swal-select" class="swal2-select" multiple style="min-height: 200px;">
                      ${data.candidates.map(s => `<option value="${s.학생ID}">${s.이름} (${s.학년||'N/A'})</option>`).join('')}
                    </select>`,
-            showCancelButton: true, confirmButtonText: '추가',cancelButtonText: '취소',
+            showCancelButton: true, confirmButtonText: '추가', cancelButtonText: '취소',
             preConfirm: () => Array.from(document.getElementById('swal-select').selectedOptions).map(option => option.value)
         });
 
         if (selectedIds && selectedIds.length > 0) {
             selectedIds.forEach(id => {
                 const studentToAdd = data.candidates.find(s => s.학생ID == id);
-                if (studentToAdd) addStudentRow(studentToAdd, practicalEvents);
+                if (studentToAdd) addStudentRow(studentToAdd);
             });
         }
     }
 
-async function openStudentAddModal() {
-    // 1. 먼저 상담할 대학이 선택되었는지 확인
-    if (!currentCollege) {
-        Swal.fire('알림', '먼저 조회할 대학을 선택해주세요.', 'warning');
-        return;
-    }
-    // 2. 이미 명단에 있는 학생을 제외한 '추가 가능한' 학생 목록을 준비
-    const availableStudents = allBranchStudents.filter(s => !currentStudentMap.has(s.학생ID));
-    if (availableStudents.length === 0) {
-        Swal.fire('알림', '추가할 수 있는 학생이 없습니다.', 'info');
-        return;
-    }
-    
-    // 3. SweetAlert2를 이용해 '다중 선택'이 가능한 목록 팝업을 띄움
-    const { value: selectedIds } = await Swal.fire({
-        title: '명단에 추가할 학생 선택',
-        // select 태그에 'multiple' 속성을 넣어 다중 선택을 활성화
-        html: `<p style="font-size:14px; color:gray;">Ctrl 또는 Shift 키를 눌러 여러 명을 선택할 수 있습니다.</p>
-               <select id="swal-select-add" class="swal2-select" multiple style="min-height: 200px;">
-                 ${availableStudents.map(s => `<option value="${s.학생ID}">${s.이름} (${s.학년||'N/A'})</option>`).join('')}
-               </select>`,
-        showCancelButton: true,
-        confirmButtonText: '추가', // '확인' 대신 '추가'로 문구 통일
-        cancelButtonText: '취소',
-        // '추가' 버튼을 누르면 선택된 모든 학생의 ID를 배열로 가져옴
-        preConfirm: () => Array.from(document.getElementById('swal-select-add').selectedOptions).map(option => option.value)
-    });
-
-    // 4. 선택된 학생이 있으면, 각 학생을 테이블에 한 명씩 추가
-    if (selectedIds && selectedIds.length > 0) {
-        selectedIds.forEach(id => {
-            const studentToAdd = availableStudents.find(s => s.학생ID == id);
-            if (studentToAdd) {
-                // 이 함수가 학생 한 명을 테이블에 추가하고, 삭제 버튼도 만들어 줌
-                addStudentRow(studentToAdd, practicalEvents);
-            }
+    async function openStudentAddModal() {
+        if (!currentCollege) { Swal.fire('알림', '먼저 조회할 대학을 선택해주세요.', 'warning'); return; }
+        const availableStudents = allBranchStudents.filter(s => !currentStudentMap.has(s.학생ID));
+        if (availableStudents.length === 0) { Swal.fire('알림', '추가할 수 있는 학생이 없습니다.', 'info'); return; }
+        
+        const { value: selectedIds } = await Swal.fire({
+            title: '명단에 추가할 학생 선택',
+            html: `<p style="font-size:14px; color:gray;">Ctrl 키를 눌러 여러 명을 선택할 수 있습니다.</p>
+                   <select id="swal-select-add" class="swal2-select" multiple style="min-height: 200px;">
+                     ${availableStudents.map(s => `<option value="${s.학생ID}">${s.이름} (${s.학년||'N/A'})</option>`).join('')}
+                   </select>`,
+            showCancelButton: true, confirmButtonText: '추가', cancelButtonText: '취소',
+            preConfirm: () => Array.from(document.getElementById('swal-select-add').selectedOptions).map(option => option.value)
         });
-    }
-}
- async function saveFinalData() {
-    if (!currentCollege) { Swal.fire('알림', '저장할 데이터가 없습니다.', 'warning'); return; }
-    Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    
-    const studentDataPayload = [];
-    document.querySelectorAll('#resultTbody tr[data-student-id]').forEach(row => {
-        // [수정] '실기일정' 값을 payload에 추가
-        const data = {
-            학생ID: parseInt(row.dataset.studentId, 10),
-            실기ID: currentCollege.실기ID,
-            내신등급: row.querySelector('.input-grade').value,
-            내신점수: row.querySelector('.input-score').value,
-            실기총점: parseFloat(row.querySelector('.total-score-cell').textContent) || null,
-            합산점수: parseFloat(row.querySelector('.total-sum-cell').textContent) || null,
-            실기일정: row.querySelector('.input-date').value || null, // 이 줄 추가
-            최초합여부: row.querySelector('.input-first-pass').value,
-            최종합여부: row.querySelector('.input-final-pass').value,
-        };
-        row.querySelectorAll('.input-record').forEach((inp, i) => {
-            data[`기록${i+1}`] = inp.value || null;
-            data[`점수${i+1}`] = inp.nextElementSibling.value || null;
-        });
-        studentDataPayload.push(data);
-    });
 
-    const res = await fetch(`${SERVER}/26susi_final_save`, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ college_id: currentCollege.대학ID, studentData: studentDataPayload })
-    });
-    const result = await res.json();
-    
-    if (result.success) Swal.fire('저장 완료!', '성공적으로 저장되었습니다.', 'success');
-    else Swal.fire('저장 실패', result.message || '오류가 발생했습니다.', 'error');
-}
-
-    // --- 점수 계산 및 유틸리티 함수 (counsel_group.html과 거의 동일) ---
-    async function fetchPracticalEvents(practicalId) { if (!practicalId) { practicalEvents = []; return; } const res = await fetch(`${SERVER}/26susi_events_by_practical_id?practical_id=${practicalId}&gender=남`, { headers: { 'Authorization': 'Bearer ' + token } }); const data = await res.json(); practicalEvents = data.success ? [...new Set(data.events.map(e => e.종목명))] : []; }
-    async function updateScoresForRow(row) { const student = currentStudentMap.get(parseInt(row.dataset.studentId, 10)); if (!currentCollege || !student) return; if (!currentCollege.실기ID) { row.querySelector('.total-score-cell').textContent = '0.00'; row.querySelector('.total-sum-cell').textContent = (parseFloat(row.querySelector('.input-score').value) || 0).toFixed(2); return; } const res = await fetch(`${SERVER}/26susi/calculate-final-score`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ 대학ID: currentCollege.대학ID, gender: student.성별, inputs: Array.from(row.querySelectorAll('input.input-record')).map(inp => ({ 종목명: inp.dataset.eventName, 기록: inp.value.trim() || null })), 내신점수: row.querySelector('.input-score').value || 0 }) }); const data = await res.json(); if (data.success) { row.querySelectorAll('input.input-record').forEach(recordInput => { const eventName = recordInput.dataset.eventName; recordInput.nextElementSibling.value = data.종목별점수[eventName]; let gamSpan = recordInput.parentElement.querySelector('.gam-span'); const gam = data.종목별감수[eventName]; if (gam > 0) { if (!gamSpan) { gamSpan = document.createElement('span'); gamSpan.className = 'gam-span'; recordInput.parentElement.appendChild(gamSpan); } gamSpan.textContent = `(${gam}감)`; } else if (gamSpan) { gamSpan.remove(); } }); const totalScoreCell = row.querySelector('.total-score-cell'); totalScoreCell.textContent = data.실기총점.toFixed(2); let totalGamSpan = totalScoreCell.querySelector('.total-gam-span'); if (data.총감수 > 0) { if (!totalGamSpan) { totalGamSpan = document.createElement('span'); totalGamSpan.className = 'total-gam-span'; totalScoreCell.appendChild(totalGamSpan); } totalGamSpan.textContent = `(총 ${data.총감수}감)`; } else if (totalGamSpan) { totalGamSpan.remove(); } row.querySelector('.total-sum-cell').textContent = data.합산점수.toFixed(2); } }
-    function onRecordInputChange(input) { updateScoresForRow(input.closest('tr')); }
-    function onNaesinInputChange(input) { updateScoresForRow(input.closest('tr')); }
-  async function openScoreTablePopup() { /* 이전과 동일, 생략하지 않음 */ 
-    if (!currentCollege || !currentCollege.실기ID) return;
-    const modal = document.getElementById('scoreTableModal');
-    document.getElementById('modalTitle').textContent = `${currentCollege.대학명} - ${currentCollege.학과명} (${currentCollege.전형명}) 배점표`;
-    const container = document.getElementById('modalTableContainer');
-    container.innerHTML = '로딩 중...';
-    modal.style.display = 'block';
-    try {
-        const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${currentCollege.실기ID}`);
-        const data = await res.json();
-        if (data.success) {
-            let finalHTML = '';
-            Object.keys(data.events).forEach(name => {
-                const { 남, 여 } = data.events[name];
-                const allScores = new Set([...남.map(i => i.배점), ...여.map(i => i.배점)]);
-                const sortedScores = Array.from(allScores).sort((a,b)=>Number(b)-Number(a));
-                const scoreMap = { 남: new Map(남.map(i=>[i.배점, i.기록])), 여: new Map(여.map(i=>[i.배점, i.기록])) };
-                let tableHTML = `<table><thead><tr><th colspan="3">${name}</th></tr><tr><th>배점</th><th>남</th><th>여</th></tr></thead><tbody>`;
-                sortedScores.forEach(score => { tableHTML += `<tr><td>${score}</td><td>${scoreMap.남.get(score) || '-'}</td><td>${scoreMap.여.get(score) || '-'}</td></tr>`; });
-                tableHTML += '</tbody></table>';
-                finalHTML += tableHTML;
+        if (selectedIds && selectedIds.length > 0) {
+            selectedIds.forEach(id => {
+                const studentToAdd = availableStudents.find(s => s.학생ID == id);
+                if (studentToAdd) addStudentRow(studentToAdd);
             });
-            container.innerHTML = finalHTML;
-        } else { container.innerHTML = '배점표를 불러오는 데 실패했습니다.'; }
-    } catch(e) { container.innerHTML = '배점표 로드 중 오류 발생.'; }
-}
-document.querySelector('#scoreTableModal .close-btn').onclick = () => { document.getElementById('scoreTableModal').style.display = 'none'; };
+        }
+    }
 
-    document.querySelector('#scoreTableModal .close-btn').onclick = () => { document.getElementById('scoreTableModal').style.display = 'none'; };
+    async function saveFinalData() {
+        if (!currentCollege) { Swal.fire('알림', '저장할 데이터가 없습니다.', 'warning'); return; }
+        Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        const studentDataPayload = [];
+        document.querySelectorAll('#resultTbody tr[data-student-id]').forEach(row => {
+            studentDataPayload.push({
+                학생ID: parseInt(row.dataset.studentId, 10),
+                실기ID: currentCollege.실기ID,
+                내신등급: row.querySelector('.input-grade').value,
+                내신점수: row.querySelector('.input-score').value,
+                실기일정: row.querySelector('.input-date').value || null,
+            });
+        });
 
-    // --- 페이지 시작 ---
+        const res = await fetch(`${SERVER}/26susi_final_save`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ college_id: currentCollege.대학ID, studentData: studentDataPayload })
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+            await Swal.fire('저장 완료!', '성공적으로 저장되었습니다.', 'success');
+            searchFinalConfirmations(); // 저장 후 데이터 다시 불러오기
+        } else {
+            Swal.fire('저장 실패', result.message || '오류가 발생했습니다.', 'error');
+        }
+    }
+
     loadInitialData();
     </script>
 </body>
