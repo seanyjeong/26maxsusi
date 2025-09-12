@@ -93,7 +93,18 @@
     .student-name { font-weight: 500; }
     .student-scores { font-size: 0.85rem; color: #475569; }
     .status-badge { font-size: 0.75rem; font-weight: 700; color: var(--success-color); border: 1px solid var(--success-color); padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
-
+/* 화면 가로 폭이 420px 이하일 때 적용되는 스타일 */
+@media (max-width: 420px) {
+    #main-title {
+        /* 기존 글자 크기(1.5rem)보다 작게 조절 */
+        font-size: 1.2rem; 
+        
+        /* 만약을 위해 줄바꿈을 강제로 막는 코드 */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* 글자가 너무 길면 ...으로 표시 */
+    }
+}
 </style>
 </head>
 <body>
