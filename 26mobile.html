@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>모바일 실기 기록</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary-color: #4364f7; --light-gray: #f1f5f9; --dark-gray: #1e293b; --success-color: #28a745; --card-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; background-color: var(--light-gray); }
+        .container { padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: var(--card-shadow); }
+        h2 { color: var(--dark-gray); margin-top: 0; font-size: 1.5rem; }
+        label { display: block; font-size: 0.9rem; color: #475569; margin-bottom: 5px; font-weight: 500; }
+        select { width: 100%; padding: 12px; font-size: 1rem; border-radius: 6px; border: 1px solid #cbd5e1; font-family: 'Noto Sans KR', sans-serif; -webkit-appearance: none; appearance: none; background: #fff url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') no-repeat right 15px center; background-size: 12px; }
+        #student-list { margin-top: 20px; }
+        .student-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: var(--card-shadow); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+                :root { --primary-color: #4364f7; --light-gray: #f1f5f9; --dark-gray: #1e293b; --card-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        .swal2-html-container { text-align: left !important; }
+        .swal-record-label { font-weight: 500; margin-top: 15px; margin-bottom: 5px; font-size: 1rem; }
+        .swal-record-input { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .swal-results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        .swal-results-table th, .swal-results-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .swal-results-table th { background-color: #f2f2f2; }
+        .swal-results-table .total-score { font-weight: bold; color: var(--primary-color); }
+        /* ✅ 1. 학생 정보 표시 스타일 추가 */
+        .student-info { font-size: 1.1rem; line-height: 1.5; }
+        .student-name { font-weight: 500; }
+        .student-scores { font-size: 0.85rem; color: #475569; }
+        .status-badge { font-size: 0.75rem; font-weight: 700; color: var(--success-color); border: 1px solid var(--success-color); padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
+
+        .swal2-html-container { text-align: left !important; }
+        .swal-record-label { font-weight: 500; margin-top: 15px; margin-bottom: 5px; font-size: 1rem; }
+        .swal-record-input { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div class="container">
+<div class="card">
+    <h2 id="main-title">26수시 맥스실기수합</h2>
+            <div><label for="sel-college">대학명</label><select id="sel-college"></select></div>
+            <div style="margin-top:15px"><label for="sel-major">학과명</label><select id="sel-major" disabled></select></div>
+            <div style="margin-top:15px"><label for="sel-type">전형명</label><select id="sel-type" disabled></select></div>
+        </div>
+        <div id="student-list" class="card" style="padding-top:10px; padding-bottom:10px; display:none;">
+            <h3 style="margin-bottom:15px; font-size: 1.2rem; color:#334155; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">학생 목록</h3>
+            <div id="student-list-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER = 'https://supermax.kr';
+        const token = localStorage.getItem('token');
+        if (!token) location.href = 'login.html';
+
+        let colleges = [], collegeGroups = {};
+        let selectedCollege = null;
+
+        const selCollege = document.getElementById('sel-college');
+        const selMajor = document.getElementById('sel-major');
+        const selType = document.getElementById('sel-type');
+        const studentListDiv = document.getElementById('student-list');
+        const studentListContainer = document.getElementById('student-list-container');
+
+        // 기존 init 함수를 이걸로 통째로 교체해줘
+
+async function init() {
+    Swal.fire({ title: '초기 데이터를 불러오는 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        // ▼▼▼ 이 부분이 추가되었어 ▼▼▼
+        // 1. 서버에서 프로필 정보(지점명 포함)를 먼저 가져오기
+        const profileRes = await fetch(`${SERVER}/26susi/profile`, { headers: { Authorization: 'Bearer ' + token } });
+        const profileData = await profileRes.json();
+        
+        // 2. 받아온 지점명으로 제목을 동적으로 변경하기
+        if (profileData.success && profileData.user.branch) {
+            document.getElementById('main-title').textContent = `-26학년도 (${profileData.user.branch}) 교육원 수시 실기수합-`;
+        }
+        // ▲▲▲ 여기까지 추가 ▲▲▲
+
+        // 3. 기존 대학 목록 가져오는 로직은 그대로 실행
+        const collegeRes = await fetch(`${SERVER}/26susi_college_list`, { headers: { Authorization: 'Bearer ' + token } });
+        const collegeData = await collegeRes.json();
+        if (collegeData.success) {
+            colleges = collegeData.colleges;
+            collegeGroups = colleges.reduce((acc, c) => {
+                if (!acc[c.대학명]) acc[c.대학명] = {};
+                if (!acc[c.대학명][c.학과명]) acc[c.대학명][c.학과명] = [];
+                acc[c.대학명][c.학과명].push(c.전형명);
+                return acc;
+            }, {});
+            selCollege.innerHTML = '<option value="">선택</option>' + Object.keys(collegeGroups).sort().map(c => `<option value="${c}">${c}</option>`).join('');
+        } else { throw new Error('대학 목록을 불러오지 못했습니다.'); }
+
+    } catch(e) {
+        Swal.fire('오류', `데이터 로딩 중 문제가 발생했습니다: ${e.message}`, 'error');
+    } finally {
+        Swal.close();
+    }
+}
+
+        selCollege.onchange = () => {
+            const c = selCollege.value;
+            selMajor.innerHTML = '<option value="">선택</option>'; selType.innerHTML = '<option value="">선택</option>';
+            selMajor.disabled = true; selType.disabled = true;
+            studentListDiv.style.display = 'none';
+            if (c && collegeGroups[c]) {
+                selMajor.innerHTML += Object.keys(collegeGroups[c]).sort().map(m => `<option value="${m}">${m}</option>`).join('');
+                selMajor.disabled = false;
+            }
+        };
+
+        selMajor.onchange = () => {
+            const c = selCollege.value, m = selMajor.value;
+            selType.innerHTML = '<option value="">선택</option>'; selType.disabled = true;
+            studentListDiv.style.display = 'none';
+            if (m && collegeGroups[c]?.[m]) {
+                selType.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join('');
+                selType.disabled = false;
+            }
+        };
+        
+        selType.onchange = async () => {
+            const c = selCollege.value, m = selMajor.value, t = selType.value;
+            selectedCollege = colleges.find(col => col.대학명 === c && col.학과명 === m && col.전형명 === t) || null;
+            if (selectedCollege) {
+                await loadAndRenderStudents();
+            } else {
+                studentListDiv.style.display = 'none';
+            }
+        };
+
+        // ✅ 2. 요청한 모든 기능이 반영된 최종 버전
+        async function loadAndRenderStudents() {
+            studentListDiv.style.display = 'block';
+            studentListContainer.innerHTML = '<p>학생 목록을 불러오는 중...</p>';
+            try {
+                const res = await fetch(`${SERVER}/26susi_final_list?college_id=${selectedCollege.대학ID}`, { headers: { Authorization: 'Bearer ' + token } });
+                const data = await res.json();
+                if (!data.success) throw new Error('학생 목록 조회 실패');
+                
+                if (data.students.length === 0) {
+                    studentListContainer.innerHTML = '<p>해당 대학에 수합된 학생이 없습니다.</p>';
+                    return;
+                }
+                
+                // 서버에서 이미 합산점수 높은 순으로 정렬되어 오지만, 확실하게 한번 더 정렬
+                data.students.sort((a, b) => (b.합산점수 || 0) - (a.합산점수 || 0));
+
+                studentListContainer.innerHTML = data.students.map(s => {
+                    // 기록1 값이 있으면 '입력완료'로 판단
+                    const isComplete = s.기록1 ? true : false;
+                    
+                    return `
+                    <div class="student-item" onclick="openRecordModal(${s.학생ID}, '${s.이름}', '${s.성별}', ${s.내신점수})">
+                        <div class="student-info">
+                            <div class="student-name">
+                                ${s.이름}
+                                ${isComplete ? '<span class="status-badge">✔ 입력완료</span>' : ''}
+                            </div>
+                    <div class="student-scores">
+                        내신: ${s.내신점수 !== null ? s.내신점수 : '-'} | 
+                        실기: ${s.실기총점 !== null ? s.실기총점.toFixed(2) : '-'} | 
+                        합산: ${s.합산점수 !== null ? s.합산점수.toFixed(2) : '-'}
+                    </div>
+                        </div>
+                        <span style="color:#888; font-size:1rem;">&gt;</span>
+                    </div>
+                `}).join('');
+            } catch (e) {
+                studentListContainer.innerHTML = `<p style="color:red;">학생 목록을 불러오는 데 실패했습니다: ${e.message}</p>`;
+            }
+        }
+        
+
+async function openRecordModal(studentId, studentName, gender, naesinScore) {
+    if (!selectedCollege || !selectedCollege.실기ID) {
+        Swal.fire('알림', '선택한 전형은 실기 종목이 없습니다.', 'info');
+        return;
+    }
+    
+    const loadingSwal = Swal.fire({ title: `${studentName} 학생 정보 로딩중...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+        // 이 부분은 기존과 동일
+        const [eventsRes, finalDataRes] = await Promise.all([
+            fetch(`${SERVER}/26susi_events_by_practical_id?practical_id=${selectedCollege.실기ID}&gender=${gender}`, { headers: { Authorization: 'Bearer ' + token } }),
+            fetch(`${SERVER}/26susi_final_list?college_id=${selectedCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } })
+        ]);
+        const eventsData = await eventsRes.json();
+        const finalData = await finalDataRes.json();
+        
+        loadingSwal.close();
+
+        const events = eventsData.success ? eventsData.events.map(e => e.종목명) : [];
+        const studentData = finalData.success ? finalData.students.find(s => s.학생ID === studentId) : {};
+        const currentRecords = studentData || {};
+        
+        if (events.length === 0) throw new Error('실기 종목을 불러오지 못했습니다.');
+        
+        let formHTML = '';
+        events.forEach((event, i) => {
+            formHTML += `<label class="swal-record-label">${event}</label><input type="text" id="record-${i+1}" class="swal-record-input" value="${currentRecords[`기록${i+1}`] || ''}" placeholder="기록 입력">`;
+        });
+
+        const { value: formValues } = await Swal.fire({
+            title: `${studentName} 학생 기록 입력`,
+            html: formHTML,
+            confirmButtonText: '저장',
+            showCancelButton: true,
+            cancelButtonText: '취소',
+            preConfirm: () => {
+                const records = { inputs: [] };
+                events.forEach((e, i) => {
+                    records.inputs.push({
+                        종목명: e,
+                        기록: document.getElementById(`record-${i+1}`).value.trim() || null
+                    });
+                });
+                return records;
+            }
+        });
+
+        if (formValues) {
+            Swal.fire({ title: '계산 및 저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            // 1단계: 계산 API 호출 (기존과 동일)
+            const calcRes = await fetch(`${SERVER}/26susi/calculate-final-score`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    대학ID: selectedCollege.대학ID,
+                    gender: gender,
+                    inputs: formValues.inputs,
+                    내신점수: naesinScore || 0
+                })
+            });
+            const calcResult = await calcRes.json();
+            if (!calcResult.success) throw new Error(calcResult.message || "점수 계산 실패");
+
+            // 2단계: 저장 API 호출 (기존과 동일)
+            const studentDataToSave = {
+                학생ID: studentId, 대학ID: selectedCollege.대학ID, 실기ID: selectedCollege.실기ID,
+                합산점수: calcResult.합산점수, 실기총점: calcResult.실기총점,
+            };
+            events.forEach((eventName, i) => {
+                studentDataToSave[`기록${i+1}`] = formValues.inputs[i].기록;
+                studentDataToSave[`점수${i+1}`] = calcResult.종목별점수[eventName];
+            });
+            
+            const saveRes = await fetch(`${SERVER}/26susi/save_single_student_record`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentData: studentDataToSave })
+            });
+            const saveResult = await saveRes.json();
+            if (!saveResult.success) throw new Error(saveResult.message || "최종 저장 실패");
+            
+            // 최종 성공 팝업 HTML (기존과 동일)
+            let resultHTML = `<p><b>${studentName}</b> 학생의 기록이 저장되었습니다.</p><table class="swal-results-table"><thead><tr><th>종목</th><th>기록</th><th>점수</th><th>감수</th></tr></thead><tbody>`;
+            events.forEach((eventName, i) => {
+                resultHTML += `<tr><td>${eventName}</td><td>${formValues.inputs[i].기록 || '-'}</td><td>${calcResult.종목별점수[eventName] || '0'}</td><td>${calcResult.종목별감수[eventName] || '0'}</td></tr>`;
+            });
+            resultHTML += `</tbody></table><table class="swal-results-table" style="margin-top: 10px;"><tr><th>실기 총점</th><td class="total-score">${calcResult.실기총점.toFixed(2)} 점</td></tr><tr><th>합산 총점</th><td class="total-score">${calcResult.합산점수.toFixed(2)} 점</td></tr></table>`;
+            
+            // ▼▼▼ 1. 이 부분 수정 ▼▼▼
+            // Swal.fire 앞에 await를 붙여서 팝업이 닫힐 때까지 기다리게 함
+            await Swal.fire({ title: '저장 및 계산 완료', html: resultHTML, icon: 'success' });
+
+            // ▼▼▼ 2. 이 부분 추가 ▼▼▼
+            // 팝업이 닫히면 학생 목록을 새로고침
+            loadAndRenderStudents();
+        }
+    } catch(e) {
+        Swal.fire('오류', `작업 중 문제가 발생했습니다: ${e.message}`, 'error');
+    }
+}
+        
+        init();
+    </script>
+</body>
+</html>
