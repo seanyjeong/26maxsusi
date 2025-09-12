@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>26수시실기기록</title>
+    <title>모바일 실기 기록</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -128,32 +128,37 @@
 
 // 기존 init 함수를 이걸로 통째로 교체해줘
 
+// 기존 init 함수를 이걸로 통째로 교체해줘
+
+// 모바일 실기 기록 HTML 파일의 init 함수를 이걸로 교체!
+
 async function init() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        // ▼▼▼ 1. 'redirect'를 'next'로 수정 ▼▼▼
+        location.href = 'login.html?next=' + encodeURIComponent(window.location.href);
+        return;
+    }
+
     Swal.fire({ title: '사용자 정보 확인 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
-        // 1. 서버에서 프로필 정보(지점명 포함)를 먼저 가져오기
         const profileRes = await fetch(`${SERVER}/26susi/profile`, { headers: { Authorization: 'Bearer ' + token } });
         const profileData = await profileRes.json();
         
-        // ▼▼▼ 이 부분이 수정되었어 ▼▼▼
-        // 2. 프로필 정보나 지점명이 유효한지 확인
         if (profileData.success && profileData.user && profileData.user.branch) {
-            // 성공: 지점 정보가 있으면 제목 업데이트
             document.getElementById('main-title').textContent = `-26학년도 (${profileData.user.branch}) 교육원 수시 실기수합-`;
         } else {
-            // 실패: 지점 정보가 없으면 에러 알림 후 로그인 페이지로 튕겨내기
             await Swal.fire({
                 title: '인증 오류',
                 text: '사용자 정보(지점)를 확인할 수 없습니다. 다시 로그인해주세요.',
                 icon: 'error'
             });
-            location.href = 'login.html';
-            return; // 여기서 함수 실행을 중단해야 아래 코드가 실행 안 됨
+            // ▼▼▼ 2. 'redirect'를 'next'로 수정 ▼▼▼
+            location.href = 'login.html?next=' + encodeURIComponent(window.location.href);
+            return;
         }
-        // ▲▲▲ 여기까지 수정 ▲▲▲
 
-        // 3. 대학 목록 가져오는 로직은 사용자 정보 확인이 성공했을 때만 실행됨
-        Swal.update({ title: '대학 목록을 불러오는 중...' }); // 로딩 메시지 변경
+        Swal.update({ title: '대학 목록을 불러오는 중...' });
 
         const collegeRes = await fetch(`${SERVER}/26susi_college_list`, { headers: { Authorization: 'Bearer ' + token } });
         const collegeData = await collegeRes.json();
@@ -169,10 +174,9 @@ async function init() {
         } else { throw new Error('대학 목록을 불러오지 못했습니다.'); }
 
     } catch(e) {
-        // ▼▼▼ 에러 처리 부분도 강화 ▼▼▼
-        // 네트워크 오류 등이 발생해도 로그인 페이지로 보냄
         await Swal.fire('오류', `데이터 로딩 중 문제가 발생했습니다. 다시 로그인해주세요.`, 'error');
-        location.href = 'login.html';
+        // ▼▼▼ 3. 'redirect'를 'next'로 수정 ▼▼▼
+        location.href = 'login.html?next=' + encodeURIComponent(window.location.href);
     } finally {
         Swal.close();
     }
