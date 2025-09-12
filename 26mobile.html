@@ -2,39 +2,99 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>모바일 실기 기록</title>
+    <title>26수시실기기록</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root { --primary-color: #4364f7; --light-gray: #f1f5f9; --dark-gray: #1e293b; --success-color: #28a745; --card-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; background-color: var(--light-gray); }
-        .container { padding: 15px; }
-        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: var(--card-shadow); }
-        h2 { color: var(--dark-gray); margin-top: 0; font-size: 1.5rem; }
-        label { display: block; font-size: 0.9rem; color: #475569; margin-bottom: 5px; font-weight: 500; }
-        select { width: 100%; padding: 12px; font-size: 1rem; border-radius: 6px; border: 1px solid #cbd5e1; font-family: 'Noto Sans KR', sans-serif; -webkit-appearance: none; appearance: none; background: #fff url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') no-repeat right 15px center; background-size: 12px; }
-        #student-list { margin-top: 20px; }
-        .student-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: var(--card-shadow); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-                :root { --primary-color: #4364f7; --light-gray: #f1f5f9; --dark-gray: #1e293b; --card-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        
-        .swal2-html-container { text-align: left !important; }
-        .swal-record-label { font-weight: 500; margin-top: 15px; margin-bottom: 5px; font-size: 1rem; }
-        .swal-record-input { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .swal-results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
-        .swal-results-table th, .swal-results-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        .swal-results-table th { background-color: #f2f2f2; }
-        .swal-results-table .total-score { font-weight: bold; color: var(--primary-color); }
-        /* ✅ 1. 학생 정보 표시 스타일 추가 */
-        .student-info { font-size: 1.1rem; line-height: 1.5; }
-        .student-name { font-weight: 500; }
-        .student-scores { font-size: 0.85rem; color: #475569; }
-        .status-badge { font-size: 0.75rem; font-weight: 700; color: var(--success-color); border: 1px solid var(--success-color); padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
+   <style>
+    :root { 
+        --primary-color: #4364f7; 
+        --light-gray: #f1f5f9; 
+        --dark-gray: #1e293b; 
+        --success-color: #28a745; 
+        --card-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    }
+    
+    body { 
+        font-family: 'Noto Sans KR', sans-serif; 
+        margin: 0; 
+        /* ▼▼ 1. 배경을 은은한 그라데이션으로 변경 ▼▼ */
+        background: linear-gradient(to bottom, #f0f4ff, #ffffff);
+        min-height: 100vh; /* 콘텐츠가 적어도 화면 전체 높이를 차지하도록 설정 */
+    }
+    
+    /* ▼▼ 2. 콘텐츠를 가운데 정렬하기 위한 스타일 추가 ▼▼ */
+    .container { 
+        padding: 15px; 
+        max-width: 768px; /* 화면이 커져도 콘텐츠가 너무 넓어지지 않게 최대 폭 설정 */
+        margin: 0 auto;   /* 컨테이너를 수평 중앙에 위치시킴 */
+    }
 
-        .swal2-html-container { text-align: left !important; }
-        .swal-record-label { font-weight: 500; margin-top: 15px; margin-bottom: 5px; font-size: 1rem; }
-        .swal-record-input { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-    </style>
+    .card { 
+        background: white; 
+        padding: 20px; 
+        border-radius: 8px; 
+        margin-bottom: 15px; 
+        box-shadow: var(--card-shadow); 
+    }
+    
+    h2 { 
+        color: var(--dark-gray); 
+        margin-top: 0; 
+        font-size: 1.5rem; 
+    }
+    
+    label { 
+        display: block; 
+        font-size: 0.9rem; 
+        color: #475569; 
+        margin-bottom: 5px; 
+        font-weight: 500; 
+    }
+    
+    select { 
+        width: 100%; 
+        padding: 12px; 
+        font-size: 1rem; 
+        border-radius: 6px; 
+        border: 1px solid #cbd5e1; 
+        font-family: 'Noto Sans KR', sans-serif; 
+        -webkit-appearance: none; 
+        appearance: none; 
+        background: #fff url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') no-repeat right 15px center; 
+        background-size: 12px; 
+    }
+    
+    #student-list { 
+        margin-top: 20px; 
+    }
+    
+    .student-item { 
+        background: white; 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 10px; 
+        box-shadow: var(--card-shadow); 
+        cursor: pointer; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    }
+
+    .swal2-html-container { text-align: left !important; }
+    .swal-record-label { font-weight: 500; margin-top: 15px; margin-bottom: 5px; font-size: 1rem; }
+    .swal-record-input { width: 100%; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    .swal-results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+    .swal-results-table th, .swal-results-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    .swal-results-table th { background-color: #f2f2f2; }
+    .swal-results-table .total-score { font-weight: bold; color: var(--primary-color); }
+    
+    .student-info { font-size: 1.1rem; line-height: 1.5; }
+    .student-name { font-weight: 500; }
+    .student-scores { font-size: 0.85rem; color: #475569; }
+    .status-badge { font-size: 0.75rem; font-weight: 700; color: var(--success-color); border: 1px solid var(--success-color); padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
+
+</style>
 </head>
 <body>
     <div class="container">
@@ -66,21 +126,35 @@
 
         // 기존 init 함수를 이걸로 통째로 교체해줘
 
+// 기존 init 함수를 이걸로 통째로 교체해줘
+
 async function init() {
-    Swal.fire({ title: '초기 데이터를 불러오는 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: '사용자 정보 확인 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
-        // ▼▼▼ 이 부분이 추가되었어 ▼▼▼
         // 1. 서버에서 프로필 정보(지점명 포함)를 먼저 가져오기
         const profileRes = await fetch(`${SERVER}/26susi/profile`, { headers: { Authorization: 'Bearer ' + token } });
         const profileData = await profileRes.json();
         
-        // 2. 받아온 지점명으로 제목을 동적으로 변경하기
-        if (profileData.success && profileData.user.branch) {
+        // ▼▼▼ 이 부분이 수정되었어 ▼▼▼
+        // 2. 프로필 정보나 지점명이 유효한지 확인
+        if (profileData.success && profileData.user && profileData.user.branch) {
+            // 성공: 지점 정보가 있으면 제목 업데이트
             document.getElementById('main-title').textContent = `-26학년도 (${profileData.user.branch}) 교육원 수시 실기수합-`;
+        } else {
+            // 실패: 지점 정보가 없으면 에러 알림 후 로그인 페이지로 튕겨내기
+            await Swal.fire({
+                title: '인증 오류',
+                text: '사용자 정보(지점)를 확인할 수 없습니다. 다시 로그인해주세요.',
+                icon: 'error'
+            });
+            location.href = 'login.html';
+            return; // 여기서 함수 실행을 중단해야 아래 코드가 실행 안 됨
         }
-        // ▲▲▲ 여기까지 추가 ▲▲▲
+        // ▲▲▲ 여기까지 수정 ▲▲▲
 
-        // 3. 기존 대학 목록 가져오는 로직은 그대로 실행
+        // 3. 대학 목록 가져오는 로직은 사용자 정보 확인이 성공했을 때만 실행됨
+        Swal.update({ title: '대학 목록을 불러오는 중...' }); // 로딩 메시지 변경
+
         const collegeRes = await fetch(`${SERVER}/26susi_college_list`, { headers: { Authorization: 'Bearer ' + token } });
         const collegeData = await collegeRes.json();
         if (collegeData.success) {
@@ -95,7 +169,10 @@ async function init() {
         } else { throw new Error('대학 목록을 불러오지 못했습니다.'); }
 
     } catch(e) {
-        Swal.fire('오류', `데이터 로딩 중 문제가 발생했습니다: ${e.message}`, 'error');
+        // ▼▼▼ 에러 처리 부분도 강화 ▼▼▼
+        // 네트워크 오류 등이 발생해도 로그인 페이지로 보냄
+        await Swal.fire('오류', `데이터 로딩 중 문제가 발생했습니다. 다시 로그인해주세요.`, 'error');
+        location.href = 'login.html';
     } finally {
         Swal.close();
     }
