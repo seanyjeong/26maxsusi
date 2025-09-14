@@ -29,7 +29,7 @@
             border-radius: var(--border-radius); 
             margin-bottom: 20px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
-            overflow-x: auto; /* 가로 스크롤을 위해 필수 */
+            overflow-x: auto;
         }
         .controls-wrap { 
             display: flex; 
@@ -90,19 +90,25 @@
             color: var(--primary-color); 
         }
         
-        /* ▼▼▼▼▼ 여기부터 수정/추가된 스타일 ▼▼▼▼▼ */
-        
-        /* 2줄 헤더의 두 번째 줄이 스크롤 시 첫 줄 아래에 붙도록 설정 */
         thead tr:nth-child(2) th {
-            top: 41px; /* 첫 번째 헤더 높이값(padding+font+border)에 맞춰 조정 */
+            top: 41px;
         }
         
-        /* 기록과 점수 열의 너비를 좁게 설정 */
         .col-record, .col-score {
             width: 70px;
             min-width: 60px;
         }
-        /* ▲▲▲▲▲ 여기까지 수정/추가된 스타일 ▲▲▲▲▲ */
+
+        /* ▼▼▼▼▼ 여기 추가된 하이라이트 스타일 ▼▼▼▼▼ */
+        .my-branch-row {
+            background-color: #eef2ff; /* 은은한 파란색 계열 배경 */
+            font-weight: 500; /* 글씨를 살짝 두껍게 */
+        }
+        .my-branch-row td {
+            /* 기본 셀보다 미세하게 진한 테두리 색으로 구분감 부여 */
+            border-color: #c7d2fe;
+        }
+        /* ▲▲▲▲▲ 여기까지 추가된 하이라이트 스타일 ▲▲▲▲▲ */
     </style>
 </head>
 <body>
@@ -122,10 +128,8 @@
             <h3 id="result-title">대학/학과/전형을 선택해주세요.</h3>
         </div>
         <table id="resultTable">
-            <thead>
-                </thead>
-            <tbody id="resultTbody">
-                </tbody>
+            <thead></thead>
+            <tbody id="resultTbody"></tbody>
         </table>
     </div>
 
@@ -135,14 +139,30 @@
     if (!token) location.href = 'login.html';
 
     let colleges = [], collegeGroups = {};
+    let loggedInUserBranch = ''; // ▼▼▼ 1. 로그인한 원장님 지점명을 저장할 변수 추가 ▼▼▼
 
     async function loadInitialData() {
-        const collegeRes = await fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json());
-        if (collegeRes.success) {
-            colleges = collegeRes.colleges;
-            groupColleges();
-            populateCollegeSelect();
-            onTypeChange(); // 페이지 로딩 시 초기 렌더링 호출
+        try {
+            // Promise.all로 프로필 정보와 대학 목록을 동시에 요청
+            const [profileRes, collegeRes] = await Promise.all([
+                fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+                fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
+            ]);
+
+            // ▼▼▼ 2. API 응답에서 지점명을 가져와 변수에 저장 ▼▼▼
+            if (profileRes.success && profileRes.user) {
+                loggedInUserBranch = profileRes.user.branch;
+            }
+
+            if (collegeRes.success) {
+                colleges = collegeRes.colleges;
+                groupColleges();
+                populateCollegeSelect();
+                onTypeChange();
+            }
+        } catch (error) {
+            console.error("초기 데이터 로딩 실패:", error);
+            Swal.fire('오류', '초기 데이터를 불러오는 데 실패했습니다.', 'error');
         }
     }
 
@@ -176,7 +196,7 @@
         const c = document.getElementById('sel-college').value;
         const m = document.getElementById('sel-major').value;
         const t = document.getElementById('sel-type');
-t.innerHTML = '<option value="">선택</option>';
+        t.innerHTML = '<option value="">선택</option>';
         if (m && collegeGroups[c]?.[m]) {
             t.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join('');
             t.disabled = false;
@@ -196,7 +216,7 @@ t.innerHTML = '<option value="">선택</option>';
         const resultTitle = document.getElementById('result-title');
         
         if (!c || !m || !t) {
-            renderTable([], []); // 빈 배열로 renderTable 호출하여 초기화
+            renderTable([], []);
             resultTitle.textContent = '대학/학과/전형을 선택해주세요.';
             return;
         }
@@ -222,67 +242,51 @@ t.innerHTML = '<option value="">선택</option>';
         }
     }
 
-    // ▼▼▼▼▼ 여기가 수정된 renderTable 함수 ▼▼▼▼▼
     function renderTable(rankingData, events = []) {
         const thead = document.getElementById('resultTable').querySelector('thead');
         const tbody = document.getElementById('resultTable').querySelector('tbody');
         
-        // --- 1. 테이블 헤더(thead) 2줄로 동적 생성 ---
-        let headerRow1HTML = `<tr>
-                                <th rowspan="2">순위</th>
-                                <th rowspan="2">지점</th>
-                                <th rowspan="2">이름</th>
-                                <th rowspan="2">성별</th>`;
-        let headerRow2HTML = `<tr>`; // 두 번째 헤더 줄
-
-        // 실기 종목이 있으면 종목별 헤더 추가
+        let headerRow1HTML = `<tr><th rowspan="2">순위</th><th rowspan="2">지점</th><th rowspan="2">이름</th><th rowspan="2">성별</th>`;
+        let headerRow2HTML = `<tr>`;
         events.forEach(event => {
             headerRow1HTML += `<th colspan="2">${event}</th>`;
             headerRow2HTML += `<th class="col-record">기록</th><th class="col-score">점수</th>`;
         });
-
-        headerRow1HTML += `<th rowspan="2">내신점수</th>
-                           <th rowspan="2">실기총점</th>
-                           <th rowspan="2">합산점수</th>
-                         </tr>`;
+        headerRow1HTML += `<th rowspan="2">내신점수</th><th rowspan="2">실기총점</th><th rowspan="2">합산점수</th></tr>`;
         headerRow2HTML += `</tr>`;
-        
         thead.innerHTML = headerRow1HTML + headerRow2HTML;
         
         const totalColumns = 4 + (events.length * 2) + 3;
 
-        // --- 2. 테이블 내용(tbody) 생성 ---
         if (rankingData.length === 0) {
             tbody.innerHTML = `<tr><td colspan="${totalColumns}">조회할 대학을 선택했거나, 해당 전형에 수합된 학생이 없습니다.</td></tr>`;
             return;
         }
         
         tbody.innerHTML = rankingData.map(student => {
+            // ▼▼▼ 3. 학생 지점명과 로그인한 원장님 지점명을 비교해서 클래스 추가 ▼▼▼
+            const isMyBranch = student.지점명 === loggedInUserBranch;
+            const rowClass = isMyBranch ? 'my-branch-row' : '';
             const rankClass = student.순위 <= 3 ? 'rank-top3' : '';
             
-            let rowHTML = `
-                <tr>
-                    <td class="${rankClass}">${student.순위}</td>
-                    <td>${student.지점명}</td>
-                    <td>${student.이름}</td>
-                    <td>${student.성별}</td>`;
+            let rowHTML = `<tr class="${rowClass}">
+                                <td class="${rankClass}">${student.순위}</td>
+                                <td>${student.지점명}</td>
+                                <td>${student.이름}</td>
+                                <td>${student.성별}</td>`;
             
-            // 실기 종목 수만큼 기록/점수 셀 추가
             for (let i = 1; i <= events.length; i++) {
                 rowHTML += `<td class="col-record">${student['기록'+i] || '-'}</td>`;
                 rowHTML += `<td class="col-score">${student['점수'+i] || '-'}</td>`;
             }
             
-            rowHTML += `
-                    <td>${student.내신점수 || '-'}</td>
-                    <td>${student.실기총점 !== null ? parseFloat(student.실기총점).toFixed(2) : '-'}</td>
-                    <td><strong>${student.합산점수 !== null ? parseFloat(student.합산점수).toFixed(2) : '-'}</strong></td>
-                </tr>
-            `;
+            rowHTML += `    <td>${student.내신점수 || '-'}</td>
+                                <td>${student.실기총점 !== null ? parseFloat(student.실기총점).toFixed(2) : '-'}</td>
+                                <td><strong>${student.합산점수 !== null ? parseFloat(student.합산점수).toFixed(2) : '-'}</strong></td>
+                           </tr>`;
             return rowHTML;
         }).join('');
     }
-    // ▲▲▲▲▲ 여기가 수정된 renderTable 함수 ▲▲▲▲▲
 
     loadInitialData();
     </script>
