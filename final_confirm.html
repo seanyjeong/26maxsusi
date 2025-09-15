@@ -55,7 +55,7 @@
         <table id="resultTable">
             <thead></thead>
             <tbody id="resultTbody">
-                <tr><td colspan="8">조회할 대학/학과/전형을 선택해주세요.</td></tr>
+                <tr><td colspan="9">조회할 대학/학과/전형을 선택해주세요.</td></tr>
             </tbody>
         </table>
     </div>
@@ -88,6 +88,7 @@
 
     async function fetchPracticalEvents(practicalId) {
         if (!practicalId) { practicalEvents = []; return; }
+        // gender 필터를 제거하여 남/녀 공통 종목을 가져오도록 수정 (필요 시)
         const res = await fetch(`${SERVER}/26susi_events_by_practical_id?practical_id=${practicalId}&gender=남`, { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
         practicalEvents = data.success ? [...new Set(data.events.map(e => e.종목명))] : [];
@@ -96,7 +97,7 @@
     async function searchFinalConfirmations() {
         const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type').value;
         if (!c || !m || !t) {
-            document.getElementById('resultTbody').innerHTML = '<tr><td colspan="8">조회할 대학/학과/전형을 선택해주세요.</td></tr>';
+            document.getElementById('resultTbody').innerHTML = '<tr><td colspan="9">조회할 대학/학과/전형을 선택해주세요.</td></tr>';
             document.getElementById('result-title').textContent = '';
             document.getElementById('cut-scores-display').textContent = '';
             return;
@@ -115,7 +116,7 @@
         
         if (data.success) {
             document.getElementById('result-title').innerHTML += ` <span style="font-size: 0.9em; color: #555;">(총 ${data.students.length}명)</span>`;
-            data.students.sort((a, b) => (a.이름 > b.이름) ? 1 : -1); // 이름순으로 정렬
+            data.students.sort((a, b) => (b.합산점수 || 0) - (a.합산점수 || 0)); // 합산점수 높은 순으로 정렬
             renderTable(data.students);
         } else { Swal.fire('오류', '데이터 조회 중 문제가 발생했습니다.', 'error'); }
     }
@@ -127,7 +128,7 @@
         currentStudentMap.clear();
         students.forEach(s => currentStudentMap.set(s.학생ID, s));
 
-        thead.innerHTML = '<tr><th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th><th>실기종목</th><th>실기일정</th><th>합산점수(내신)</th><th>관리</th></tr>';
+        thead.innerHTML = '<tr><th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th><th>실기종목</th><th>실기일정</th><th>합산점수</th><th>관리</th></tr>';
 
         if (students.length === 0) {
             tbody.innerHTML = `<tr><td colspan="9">해당 전형으로 수합된 학생이 없습니다.</td></tr>`;
@@ -156,7 +157,7 @@
             <td><input class="input-score" type="text" value="${student.내신점수 || ''}"></td>
             <td>${practicalEvents.length > 0 ? practicalEvents.join(', ') : '비실기'}</td>
             <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
-            <td>${student.내신점수 || '0'}</td>
+            <td>${student.합산점수 ? parseFloat(student.합산점수).toFixed(2) : '-'}</td>
             <td><button class="btn-delete" onclick="deleteRow(this)">삭제</button></td>
         `;
         
@@ -200,6 +201,7 @@
         }
     }
 
+    // ▼▼▼▼▼ 여기가 수정된 함수 ▼▼▼▼▼
     async function openStudentAddModal() {
         if (!currentCollege) { Swal.fire('알림', '먼저 조회할 대학을 선택해주세요.', 'warning'); return; }
         const availableStudents = allBranchStudents.filter(s => !currentStudentMap.has(s.학생ID));
@@ -216,16 +218,45 @@
         });
 
         if (selectedIds && selectedIds.length > 0) {
-            selectedIds.forEach(id => {
-                const studentToAdd = availableStudents.find(s => s.학생ID == id);
-                if (studentToAdd) addStudentRow(studentToAdd);
+            Swal.fire({ title: '학생 내신 정보 조회 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            // 선택된 모든 학생의 내신 정보를 한 번에 조회하기 위한 Promise 배열 생성
+            const gradeFetchPromises = selectedIds.map(id => 
+                fetch(`${SERVER}/26susi_student_grade?student_id=${id}`, { headers: { 'Authorization': 'Bearer ' + token } })
+                .then(res => res.json())
+            );
+            
+            // 모든 학생의 내신 정보 조회가 완료될 때까지 기다림
+            const results = await Promise.all(gradeFetchPromises);
+            
+            Swal.close(); // 로딩 팝업 닫기
+
+            selectedIds.forEach((id, index) => {
+                // 기본 학생 정보 찾기 (이름, 학년 등)
+                const studentToAdd = { ...availableStudents.find(s => s.학생ID == id) };
+                if (!studentToAdd) return;
+
+                // 해당 학생의 내신 정보 결과 가져오기
+                const gradeData = results[index];
+
+                if (gradeData.success && gradeData.grades) {
+                    // 현재 선택된 대학에 해당하는 내신 정보 찾기
+                    const specificGrade = gradeData.grades.find(g => g.대학ID === currentCollege.대학ID);
+                    if (specificGrade) {
+                        // 찾았으면 학생 정보 객체에 등급과 점수를 추가
+                        studentToAdd.내신등급 = specificGrade.등급;
+                        studentToAdd.내신점수 = specificGrade.내신점수;
+                    }
+                }
+                // 내신 정보가 추가된 학생 객체로 테이블에 행 추가
+                addStudentRow(studentToAdd);
             });
         }
     }
+    // ▲▲▲▲▲ 여기가 수정된 함수 ▲▲▲▲▲
 
     async function saveFinalData() {
         if (!currentCollege) { Swal.fire('알림', '저장할 데이터가 없습니다.', 'warning'); return; }
-        Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         const studentDataPayload = [];
         document.querySelectorAll('#resultTbody tr[data-student-id]').forEach(row => {
@@ -237,6 +268,23 @@
                 실기일정: row.querySelector('.input-date').value || null,
             });
         });
+        
+        if (studentDataPayload.length === 0) {
+            const result = await Swal.fire({
+                title: '정말 저장할까요?',
+                text: "현재 명단에 학생이 없습니다. 이대로 저장하면 해당 전형의 모든 학생 데이터가 삭제됩니다.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonText: '취소',
+                confirmButtonText: '네, 모두 삭제하고 저장합니다.'
+            });
+            if (!result.isConfirmed) {
+                return; 
+            }
+        }
+
+        Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         const res = await fetch(`${SERVER}/26susi_final_save`, {
             method: 'POST',
@@ -247,7 +295,7 @@
         
         if (result.success) {
             await Swal.fire('저장 완료!', '성공적으로 저장되었습니다.', 'success');
-            searchFinalConfirmations(); // 저장 후 데이터 다시 불러오기
+            searchFinalConfirmations();
         } else {
             Swal.fire('저장 실패', result.message || '오류가 발생했습니다.', 'error');
         }
