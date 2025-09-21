@@ -7,208 +7,220 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root {
-            --primary-color: #4364f7;
-            --secondary-color: #6a8eff;
-            --sidebar-bg: #1e293b;
-            --sidebar-text: #f8fafc;
-            --content-bg: #f1f5f9;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
+<style>
+    :root {
+        --primary-color: #4364f7;
+        --secondary-color: #6a8eff;
+        --sidebar-bg: #1e293b;
+        --sidebar-text: #f8fafc;
+        --content-bg: #f1f5f9;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
 
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            margin: 0;
-            background-color: var(--content-bg);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            color: #1e293b;
-        }
+    body {
+        font-family: 'Noto Sans KR', sans-serif;
+        margin: 0;
+        background-color: var(--content-bg);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        color: #1e293b;
+    }
 
-        /* --- 사이드바 스타일 --- */
+    /* --- 사이드바 스타일 --- */
+    .sidebar {
+        width: 240px;
+        background-color: var(--sidebar-bg);
+        color: var(--sidebar-text);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+        position: fixed;
+        height: 100%;
+        left: 0;
+        top: 0;
+        box-shadow: var(--card-shadow);
+        z-index: 100;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-header { 
+        padding: 0 20px 20px 20px; 
+        text-align: center; 
+        border-bottom: 1px solid rgba(255,255,255,0.1); 
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-header h1 {
+        font-size: 1.2rem;
+        margin: 0;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .sidebar-header h1 img {
+        width: 140px;
+        margin-bottom: 10px;
+    }
+    
+    #user-info { 
+        padding: 20px; 
+        background-color: rgba(255,255,255,0.05); 
+        text-align: center; 
+        margin: 0 15px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    #user-info:hover {
+        background-color: rgba(255,255,255,0.1);
+    }
+    
+    #user-info #user-name { 
+        font-weight: 700; 
+        font-size: 1.1rem; 
+        margin-bottom: 5px;
+    }
+    
+    #user-info #user-branch { 
+        font-size: 0.85rem; 
+        color: var(--secondary-color);
+        opacity: 0.9;
+    }
+    
+    /* ▼▼▼▼▼ 1. 여기가 수정된 부분 (스크롤 추가) ▼▼▼▼▼ */
+    .sidebar-nav {  
+        list-style: none; 
+        padding: 0 15px; 
+        margin: 0; 
+        flex-grow: 1;
+        overflow-y: auto; /* 메뉴가 길어지면 세로 스크롤 자동 생성 */
+    }
+    
+    /* 스크롤바 디자인 (선택 사항이지만, 더 예쁘게 보임) */
+    .sidebar-nav::-webkit-scrollbar {
+        width: 6px;
+    }
+    .sidebar-nav::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background-color: var(--primary-color);
+        border-radius: 3px;
+    }
+    /* ▲▲▲▲▲ 여기까지 수정된 부분 ▲▲▲▲▲ */
+    
+    /* ▼▼▼▼▼ 2. 여기가 수정된 부분 (간격 미세 조정) ▼▼▼▼▼ */
+    .sidebar-nav li a { 
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 15px; /* 세로 간격을 12px -> 10px로 줄임 */
+        color: var(--sidebar-text); 
+        text-decoration: none; 
+        font-size: 0.95rem; 
+        transition: all 0.3s ease;
+        border-radius: 6px;
+        margin-bottom: 4px; /* 아래 간격을 5px -> 4px로 줄임 */
+    }
+    /* ▲▲▲▲▲ 여기까지 수정된 부분 ▲▲▲▲▲ */
+    
+    .sidebar-nav li a i {
+        width: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .sidebar-nav li a.active,
+    .sidebar-nav li a:hover { 
+        background-color: var(--primary-color); 
+        color: white;
+        transform: translateX(3px);
+    }
+    
+    .sidebar-nav li a.active i,
+    .sidebar-nav li a:hover i {
+        opacity: 1;
+    }
+    
+    .sidebar-footer { 
+        margin-bottom: 15px;
+        padding: 20px; 
+        text-align: center; 
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    #logout-btn { 
+        background-color: transparent; 
+        color: var(--sidebar-text); 
+        border: 1px solid rgba(255,255,255,0.2); 
+        width: 100%; 
+        padding: 10px; 
+        border-radius: 6px; 
+        cursor: pointer; 
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        margin-top: 15px;
+    }
+    
+    #logout-btn:hover { 
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .copyright {
+        margin-top: 0;
+        font-size: 0.75rem;
+        color: rgba(248, 250, 252, 0.5);
+        text-align: center;
+    }
+
+    #content-frame {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        height: 100vh;
+        border: none;
+        background-color: var(--content-bg);
+        transition: all 0.3s ease;
+    }
+
+    @media (max-width: 600px) { /* 기준을 768px -> 600px으로 수정 */
         .sidebar {
+            width: 70px;
+        }
+        
+        .sidebar:hover {
             width: 240px;
-            background-color: var(--sidebar-bg);
-            color: var(--sidebar-text);
-            display: flex;
-            flex-direction: column;
-            padding: 20px 0;
-            position: fixed;
-            height: 100%;
-            left: 0;
-            top: 0;
-            box-shadow: var(--card-shadow);
-            z-index: 100;
-            transition: all 0.3s ease;
         }
-        
-        .sidebar-header { 
-            padding: 0 20px 20px 20px; 
-            text-align: center; 
-            border-bottom: 1px solid rgba(255,255,255,0.1); 
-            margin-bottom: 20px;
+
+        .sidebar:not(:hover) .sidebar-header h1 span,
+        .sidebar:not(:hover) .sidebar-nav li a span,
+        .sidebar:not(:hover) #user-info,
+        .sidebar:not(:hover) .copyright {
+            display: none;
         }
-        
+
         .sidebar-header h1 {
-            font-size: 1.2rem;
-            margin: 0;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .sidebar-header h1 img {
-            width: 140px;
-            margin-bottom: 10px;
-        }
-        
-        #user-info { 
-            padding: 20px; 
-            background-color: rgba(255,255,255,0.05); 
-            text-align: center; 
-            margin: 0 15px 20px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        #user-info:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-        
-        #user-info #user-name { 
-            font-weight: 700; 
-            font-size: 1.1rem; 
-            margin-bottom: 5px;
-        }
-        
-        #user-info #user-branch { 
-            font-size: 0.85rem; 
-            color: var(--secondary-color);
-            opacity: 0.9;
-        }
-        
-        .sidebar-nav {  
-            list-style: none; 
-            padding: 0 15px; 
-            margin: 0; 
-            flex-grow: 1;
-        }
-        
-        .sidebar-nav li a { 
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 15px; 
-            color: var(--sidebar-text); 
-            text-decoration: none; 
-            font-size: 0.95rem; 
-            transition: all 0.3s ease;
-            border-radius: 6px;
-            margin-bottom: 5px;
-        }
-        
-        .sidebar-nav li a i {
-            width: 20px;
-            text-align: center;
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-        
-        .sidebar-nav li a.active,
-        .sidebar-nav li a:hover { 
-            background-color: var(--primary-color); 
-            color: white;
-            transform: translateX(3px);
-        }
-        
-        .sidebar-nav li a.active i,
-        .sidebar-nav li a:hover i {
-            opacity: 1;
-        }
-        
-        /* ✅ 수정: sidebar-footer는 카피라이트 전용으로 사용 */
-        .sidebar-footer { 
-            margin-bottom: 15px;
-            padding: 20px; 
-            text-align: center; 
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        /* ✅ 수정: 로그아웃 버튼 스타일을 user-info 내부로 이동 및 조정 */
-        #logout-btn { 
-            background-color: transparent; 
-            color: var(--sidebar-text); 
-            border: 1px solid rgba(255,255,255,0.2); 
-            width: 100%; 
-            padding: 10px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            margin-top: 15px; /* user-branch와 간격 추가 */
-        }
-        
-        #logout-btn:hover { 
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
         }
 
-        .copyright {
-            margin-top: 0; /* 푸터 패딩으로 간격 조절 */
-            font-size: 0.75rem;
-            color: rgba(248, 250, 252, 0.5);
-            text-align: center;
+        .sidebar-header h1 img {
+            width: 36px;
+            margin-bottom: 0;
         }
 
-        /* --- 메인 콘텐츠 프레임 스타일 --- */
         #content-frame {
-            margin-left: 240px;
-            width: calc(100% - 240px);
-            height: 100vh;
-            border: none;
-            background-color: var(--content-bg);
-            transition: all 0.3s ease;
+            margin-left: 70px;
+            width: calc(100% - 70px);
         }
-
-        /* 반응형 디자인 */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-            }
-            
-            .sidebar:hover {
-                width: 240px;
-            }
-
-            /* ✅ 수정: user-info가 숨겨지면 내부의 로그아웃 버튼도 같이 숨겨짐 */
-            .sidebar:not(:hover) .sidebar-header h1 span,
-            .sidebar:not(:hover) .sidebar-nav li a span,
-            .sidebar:not(:hover) #user-info,
-            .sidebar:not(:hover) .copyright {
-                display: none;
-            }
-
-            .sidebar-header h1 {
-                justify-content: center;
-            }
-
-            .sidebar-header h1 img {
-                width: 36px;
-                margin-bottom: 0;
-            }
-
-            #content-frame {
-                margin-left: 70px;
-                width: calc(100% - 70px);
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
 
@@ -320,4 +332,5 @@
     </script>
 </body>
 </html>
+
 
