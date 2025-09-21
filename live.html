@@ -5,218 +5,117 @@
     <title>26수시 실시간 현황</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            --primary-color: #4364f7; 
-            --secondary-color: #6a8eff; 
-            --light-gray: #f8f9fa; 
-            --medium-gray: #e9ecef; 
-            --dark-gray: #495057; 
-            --border-radius: 6px; 
+            --primary-color: #4364f7; --primary-light: #eef2ff; --secondary-color: #6a8eff; 
+            --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #1e293b; 
+            --text-primary: #334155; --text-secondary: #64748b; --border-radius: 8px; 
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        body { 
-            font-family: 'Noto Sans KR', sans-serif; 
-            background-color: var(--light-gray); 
-            padding: 20px; 
-        }
-        h2 { 
-            color: var(--primary-color); 
-        }
-        .section { 
-            background-color: white; 
-            padding: 20px; 
-            border-radius: var(--border-radius); 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
-            overflow-x: auto;
-        }
-        .controls-wrap { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-end; 
-            flex-wrap: wrap; 
-            gap: 10px; 
-        }
-        .filter-wrap { 
-            display: flex; 
-            gap: 15px; 
-            align-items: flex-end; 
-            flex-wrap: wrap; 
-        }
-        select, button { 
-            padding: 8px 12px; 
-            border-radius: 4px; 
-            border: 1px solid var(--medium-gray); 
-            font-size: 14px; 
-        }
-        #result-title-container { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 15px; 
-            border-bottom: 2px solid var(--medium-gray); 
-            padding-bottom: 10px; 
-        }
-        #result-title { 
-            margin: 0; 
-            font-size: 1.3em; 
-            font-weight: 500; 
-            color: var(--dark-gray); 
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            table-layout: auto; 
-        }
-        th, td { 
-            border: 1px solid var(--medium-gray); 
-            padding: 10px; 
-            text-align: center; 
-            font-size: 13px; 
-            vertical-align: middle; 
-            white-space: nowrap; 
-        }
-        th { 
-            background-color: var(--primary-color); 
-            color: white; 
-            font-weight: 500; 
-            position: sticky; 
-            top: 0;
-            z-index: 10;
-        }
-        .rank-top3 { 
-            font-weight: bold; 
-            color: var(--primary-color); 
-        }
-        
-        thead tr:nth-child(2) th {
-            top: 41px;
-        }
-        
-        .col-record, .col-score {
-            width: 70px;
-            min-width: 60px;
-        }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--light-gray); padding: 20px; }
+        .section { background-color: white; padding: 20px; border-radius: var(--border-radius); margin-bottom: 20px; box-shadow: var(--card-shadow); }
+        .controls-wrap { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+        .filter-wrap { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+        select, button { padding: 8px 12px; border-radius: 4px; border: 1px solid var(--medium-gray); font-size: 14px; }
+        #result-title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--medium-gray); padding-bottom: 10px; }
+        #result-title { margin: 0; font-size: 1.3em; font-weight: 500; color: var(--dark-gray); }
+        .swal2-html-container { text-align: left !important; }
 
-        /* ▼▼▼▼▼ 여기 추가된 하이라이트 스타일 ▼▼▼▼▼ */
-        .my-branch-row {
-            background-color: #eef2ff; /* 은은한 파란색 계열 배경 */
-            font-weight: 500; /* 글씨를 살짝 두껍게 */
+        /* --- 데스크탑 테이블 스타일 --- */
+        #desktop-view { overflow-x: auto; }
+        #desktop-view table { width: 100%; border-collapse: collapse; }
+        #desktop-view th, #desktop-view td { border: 1px solid var(--medium-gray); padding: 10px; text-align: center; font-size: 13px; vertical-align: middle; white-space: nowrap; }
+        #desktop-view th { background-color: var(--primary-color); color: white; font-weight: 500; position: sticky; top: -1px; z-index: 10; }
+        #desktop-view thead tr:nth-child(2) th { top: 40px; }
+        #desktop-view .col-record, #desktop-view .col-score { width: 70px; min-width: 60px; }
+        #desktop-view .rank-top3 { font-weight: bold; color: var(--primary-color); }
+        #desktop-view .my-branch-row { background-color: var(--primary-light); font-weight: 500; }
+
+        /* --- 모바일 카드 스타일 --- */
+        #mobile-view { display: none; }
+        #mobile-view .student-item { background: white; padding: 18px; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--card-shadow); cursor: pointer; display: flex; align-items: center; gap: 15px; }
+        #mobile-view .rank { font-size: 1.2rem; font-weight: 700; color: var(--primary-color); width: 40px; text-align: center; }
+        #mobile-view .student-info { flex: 1; }
+        #mobile-view .student-main-info { display: flex; align-items: center; font-weight: 600; font-size: 1.05rem; margin-bottom: 6px; }
+        #mobile-view .student-branch { font-size: 0.8rem; color: var(--text-secondary); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+        #mobile-view .student-scores { font-size: 0.85rem; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 10px; }
+        #mobile-view .my-branch-item { background-color: var(--primary-light); border: 1px solid var(--primary-color); }
+        .swal-results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        .swal-results-table th, .swal-results-table td { border: 1px solid var(--medium-gray); padding: 10px; text-align: center; }
+        .swal-results-table th { background-color: var(--primary-light); color: var(--primary-color); font-weight: 600; }
+        .swal-results-table .total-score { font-weight: bold; color: var(--primary-color); }
+
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .section { padding: 12px; }
+            #desktop-view { display: none; }
+            #mobile-view { display: block; }
         }
-        .my-branch-row td {
-            /* 기본 셀보다 미세하게 진한 테두리 색으로 구분감 부여 */
-            border-color: #c7d2fe;
-        }
-        /* ▲▲▲▲▲ 여기까지 추가된 하이라이트 스타일 ▲▲▲▲▲ */
     </style>
 </head>
 <body>
-    <div class="section">
-        <h2 id="main-title">26수시 실시간 현황 (전체 교육원)</h2>
-        <div class="controls-wrap">
-            <div class="filter-wrap">
-                <div><label for="sel-college">대학명</label><select id="sel-college" onchange="onCollegeChange()"></select></div>
-                <div><label for="sel-major">학과명</label><select id="sel-major" onchange="onMajorChange()" disabled></select></div>
-                <div><label for="sel-type">전형명</label><select id="sel-type" onchange="onTypeChange()"></select></div>
+    <div class="container">
+        <div class="section">
+             <h2 id="main-title">26수시 실시간 현황 (전체 교육원)</h2>
+            <div class="controls-wrap">
+                <div class="filter-wrap">
+                    <div><label for="sel-college">대학명</label><select id="sel-college" onchange="onCollegeChange()"></select></div>
+                    <div><label for="sel-major">학과명</label><select id="sel-major" onchange="onMajorChange()" disabled></select></div>
+                    <div><label for="sel-type">전형명</label><select id="sel-type" onchange="onTypeChange()"></select></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+             <div id="result-title-container">
+                <h3 id="result-title">대학/학과/전형을 선택해주세요.</h3>
+            </div>
+            <div id="desktop-view">
+                <table id="resultTable">
+                    <thead></thead>
+                    <tbody id="resultTbody"></tbody>
+                </table>
+            </div>
+            <div id="mobile-view">
+                <div id="student-list-container"></div>
             </div>
         </div>
     </div>
-    
-    <div class="section">
-        <div id="result-title-container">
-            <h3 id="result-title">대학/학과/전형을 선택해주세요.</h3>
-        </div>
-        <table id="resultTable">
-            <thead></thead>
-            <tbody id="resultTbody"></tbody>
-        </table>
-    </div>
 
-    <script>
+<script>
     const SERVER = 'https://supermax.kr';
     const token = localStorage.getItem('token');
     if (!token) location.href = 'login.html';
 
     let colleges = [], collegeGroups = {};
-    let loggedInUserBranch = ''; // ▼▼▼ 1. 로그인한 원장님 지점명을 저장할 변수 추가 ▼▼▼
+    let loggedInUserBranch = '';
+    let studentDataMap = new Map();
+    let currentEvents = [];
 
-    async function loadInitialData() {
-        try {
-            // Promise.all로 프로필 정보와 대학 목록을 동시에 요청
-            const [profileRes, collegeRes] = await Promise.all([
-                fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-                fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
-            ]);
-
-            // ▼▼▼ 2. API 응답에서 지점명을 가져와 변수에 저장 ▼▼▼
-            if (profileRes.success && profileRes.user) {
-                loggedInUserBranch = profileRes.user.branch;
-            }
-
-            if (collegeRes.success) {
-                colleges = collegeRes.colleges;
-                groupColleges();
-                populateCollegeSelect();
-                onTypeChange();
-            }
-        } catch (error) {
-            console.error("초기 데이터 로딩 실패:", error);
-            Swal.fire('오류', '초기 데이터를 불러오는 데 실패했습니다.', 'error');
-        }
+    // init 및 드롭다운 관련 함수들은 이전과 동일 (생략)
+    async function init() {
+        const [profileRes, collegeRes] = await Promise.all([
+            fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+            fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
+        ]);
+        if (profileRes.success && profileRes.user) { loggedInUserBranch = profileRes.user.branch; }
+        if (collegeRes.success) { colleges = collegeRes.colleges; groupColleges(); populateCollegeSelect(); onTypeChange(); }
     }
-
-    function groupColleges() {
-        colleges.forEach(c => {
-            if (!collegeGroups[c.대학명]) collegeGroups[c.대학명] = {};
-            if (!collegeGroups[c.대학명][c.학과명]) collegeGroups[c.대학명][c.학과명] = [];
-            collegeGroups[c.대학명][c.학과명].push(c.전형명);
-        });
-    }
-
-    function populateCollegeSelect() {
-        document.getElementById('sel-college').innerHTML = '<option value="">선택</option>' + Object.keys(collegeGroups).sort().map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-
-    function onCollegeChange() {
-        const c = document.getElementById('sel-college').value;
-        const s = document.getElementById('sel-major');
-        s.innerHTML = '<option value="">선택</option>';
-        document.getElementById('sel-type').innerHTML = '<option value="">선택</option>';
-        if (c && collegeGroups[c]) {
-            s.innerHTML += Object.keys(collegeGroups[c]).sort().map(m => `<option value="${m}">${m}</option>`).join('');
-            s.disabled = false;
-        } else {
-            s.disabled = true;
-            document.getElementById('sel-type').disabled = true;
-        }
-    }
-
-    function onMajorChange() {
-        const c = document.getElementById('sel-college').value;
-        const m = document.getElementById('sel-major').value;
-        const t = document.getElementById('sel-type');
-        t.innerHTML = '<option value="">선택</option>';
-        if (m && collegeGroups[c]?.[m]) {
-            t.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join('');
-            t.disabled = false;
-        } else {
-            t.disabled = true;
-        }
-    }
-    
-    function onTypeChange() {
-        searchRanking();
-    }
+    function groupColleges() { colleges.forEach(c => { if (!collegeGroups[c.대학명]) collegeGroups[c.대학명] = {}; if (!collegeGroups[c.대학명][c.학과명]) collegeGroups[c.대학명][c.학과명] = []; collegeGroups[c.대학명][c.학과명].push(c.전형명); }); }
+    function populateCollegeSelect() { document.getElementById('sel-college').innerHTML = '<option value="">선택</option>' + Object.keys(collegeGroups).sort().map(c => `<option value="${c}">${c}</option>`).join(''); }
+    function onCollegeChange() { const c = document.getElementById('sel-college').value; const s = document.getElementById('sel-major'); s.innerHTML = '<option value="">선택</option>'; document.getElementById('sel-type').innerHTML = '<option value="">선택</option>'; if (c && collegeGroups[c]) { s.innerHTML += Object.keys(collegeGroups[c]).sort().map(m => `<option value="${m}">${m}</option>`).join(''); s.disabled = false; } else { s.disabled = true; document.getElementById('sel-type').disabled = true; } onTypeChange(); }
+    function onMajorChange() { const c = document.getElementById('sel-college').value; const m = document.getElementById('sel-major').value; const t = document.getElementById('sel-type'); t.innerHTML = '<option value="">선택</option>'; if (m && collegeGroups[c]?.[m]) { t.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join(''); t.disabled = false; } else { t.disabled = true; } onTypeChange(); }
+    function onTypeChange() { searchRanking(); }
 
     async function searchRanking() {
-        const c = document.getElementById('sel-college').value;
-        const m = document.getElementById('sel-major').value;
-        const t = document.getElementById('sel-type').value;
+        const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type').value;
         const resultTitle = document.getElementById('result-title');
         
         if (!c || !m || !t) {
-            renderTable([], []);
+            renderDesktopTable([], []);
+            renderMobileList([]);
             resultTitle.textContent = '대학/학과/전형을 선택해주세요.';
             return;
         }
@@ -224,71 +123,140 @@
         const currentCollege = colleges.find(col => col.대학명 === c && col.학과명 === m && col.전형명 === t);
         if (!currentCollege) return;
         
-        Swal.fire({ title: '전체 지점 데이터 조회 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        resultTitle.textContent = `[${c} ${m} (${t})] 실시간 순위`;
+        resultTitle.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 전체 지점 데이터 조회 중...`;
         
-        const res = await fetch(`${SERVER}/26susi/realtime-rank-by-college?college_id=${currentCollege.대학ID}`, { 
-            headers: { 'Authorization': 'Bearer ' + token } 
-        });
+        const res = await fetch(`${SERVER}/26susi/realtime-rank-by-college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
-        Swal.close();
         
         if (data.success) {
-            resultTitle.textContent += ` (총 ${data.ranking.length}명)`;
-            renderTable(data.ranking, data.events);
+            currentEvents = data.events;
+            resultTitle.textContent = `[${c} ${m} (${t})] 실시간 순위 (총 ${data.ranking.length}명)`;
+            renderDesktopTable(data.ranking, data.events);
+            renderMobileList(data.ranking);
         } else {
             Swal.fire('오류', '데이터 조회 중 문제가 발생했습니다.', 'error');
-            renderTable([], []);
+            renderDesktopTable([], []);
+            renderMobileList([]);
         }
     }
 
-    function renderTable(rankingData, events = []) {
+    // ▼▼▼▼▼ 여기가 수정된 renderDesktopTable 함수 ▼▼▼▼▼
+    function renderDesktopTable(rankingData, events = []) {
         const thead = document.getElementById('resultTable').querySelector('thead');
         const tbody = document.getElementById('resultTable').querySelector('tbody');
         
         let headerRow1HTML = `<tr><th rowspan="2">순위</th><th rowspan="2">지점</th><th rowspan="2">이름</th><th rowspan="2">성별</th>`;
-        let headerRow2HTML = `<tr>`;
         events.forEach(event => {
             headerRow1HTML += `<th colspan="2">${event}</th>`;
+        });
+        headerRow1HTML += `<th rowspan="2">내신점수</th><th rowspan="2">실기총점</th><th rowspan="2">합산점수</th><th rowspan="2">최초합</th><th rowspan="2">최종합</th></tr>`;
+
+        let headerRow2HTML = `<tr>`;
+        events.forEach(event => {
             headerRow2HTML += `<th class="col-record">기록</th><th class="col-score">점수</th>`;
         });
-        headerRow1HTML += `<th rowspan="2">내신점수</th><th rowspan="2">실기총점</th><th rowspan="2">합산점수</th></tr>`;
         headerRow2HTML += `</tr>`;
+        
         thead.innerHTML = headerRow1HTML + headerRow2HTML;
         
-        const totalColumns = 4 + (events.length * 2) + 3;
+        const totalColumns = 4 + (events.length * 2) + 5;
 
         if (rankingData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${totalColumns}">조회할 대학을 선택했거나, 해당 전형에 수합된 학생이 없습니다.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${totalColumns}">해당 전형에 수합된 학생이 없습니다.</td></tr>`;
             return;
         }
         
         tbody.innerHTML = rankingData.map(student => {
-            // ▼▼▼ 3. 학생 지점명과 로그인한 원장님 지점명을 비교해서 클래스 추가 ▼▼▼
             const isMyBranch = student.지점명 === loggedInUserBranch;
             const rowClass = isMyBranch ? 'my-branch-row' : '';
             const rankClass = student.순위 <= 3 ? 'rank-top3' : '';
             
-            let rowHTML = `<tr class="${rowClass}">
-                                <td class="${rankClass}">${student.순위}</td>
-                                <td>${student.지점명}</td>
-                                <td>${student.이름}</td>
-                                <td>${student.성별}</td>`;
-            
+            let rowHTML = `<tr class="${rowClass}"><td class="${rankClass}">${student.순위}</td><td>${student.지점명}</td><td>${student.이름}</td><td>${student.성별}</td>`;
             for (let i = 1; i <= events.length; i++) {
-                rowHTML += `<td class="col-record">${student['기록'+i] || '-'}</td>`;
-                rowHTML += `<td class="col-score">${student['점수'+i] || '-'}</td>`;
+                rowHTML += `<td class="col-record">${student['기록'+i] || '-'}</td><td class="col-score">${student['점수'+i] || '-'}</td>`;
             }
-            
-            rowHTML += `    <td>${student.내신점수 || '-'}</td>
-                                <td>${student.실기총점 !== null ? parseFloat(student.실기총점).toFixed(2) : '-'}</td>
-                                <td><strong>${student.합산점수 !== null ? parseFloat(student.합산점수).toFixed(2) : '-'}</strong></td>
-                           </tr>`;
+            rowHTML += `
+                <td>${student.내신점수 || '-'}</td>
+                <td>${student.실기총점 !== null ? parseFloat(student.실기총점).toFixed(2) : '-'}</td>
+                <td><strong>${student.합산점수 !== null ? parseFloat(student.합산점수).toFixed(2) : '-'}</strong></td>
+                <td>${student.최초합여부 || '-'}</td>
+                <td>${student.최종합여부 || '-'}</td>
+            </tr>`;
             return rowHTML;
         }).join('');
     }
 
-    loadInitialData();
-    </script>
+    // renderMobileList 함수는 이전과 동일 (팝업에서 보여줄 것이므로)
+    function renderMobileList(rankingData) {
+        const container = document.getElementById('student-list-container');
+        studentDataMap.clear();
+
+        if (rankingData.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">해당 전형에 수합된 학생이 없습니다.</p>';
+            return;
+        }
+
+        container.innerHTML = rankingData.map(student => {
+            studentDataMap.set(student.학생ID, student);
+            const isMyBranch = student.지점명 === loggedInUserBranch;
+            return `
+                <div class="student-item ${isMyBranch ? 'my-branch-item' : ''}" onclick="openDetailModal(${student.학생ID})">
+                    <div class="rank">${student.순위}</div>
+                    <div class="student-info">
+                        <div class="student-main-info">
+                            <span>${student.이름} (${student.성별})</span>
+                            <span class="student-branch">${student.지점명}</span>
+                        </div>
+                        <div class="student-scores">
+                            <span>내신: ${student.내신점수 || '-'}</span>
+                            <span>실기: ${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'}</span>
+                            <span>합산: ${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'}</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ▼▼▼▼▼ 여기가 수정된 openDetailModal 함수 ▼▼▼▼▼
+    function openDetailModal(studentId) {
+        const student = studentDataMap.get(studentId);
+        if (!student) return;
+
+        let detailHTML = ``;
+        if (currentEvents.length > 0) {
+            detailHTML += `<table class="swal-results-table"><thead><tr><th>종목</th><th>기록</th><th>점수</th></tr></thead><tbody>`;
+            for (let i = 0; i < currentEvents.length; i++) {
+                const eventName = currentEvents[i];
+                detailHTML += `<tr><td>${eventName}</td><td>${student['기록'+(i+1)] || '-'}</td><td>${student['점수'+(i+1)] || '-'}</td></tr>`;
+            }
+            detailHTML += `</tbody></table>`;
+        }
+        
+        detailHTML += `<table class="swal-results-table" style="margin-top: 10px;">
+            <tr><th>실기 총점</th><td class="total-score">${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'} 점</td></tr>
+            <tr><th>합산 총점</th><td class="total-score">${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'} 점</td></tr>
+        </table>`;
+
+        // 합격 현황 테이블 추가
+        detailHTML += `<div style="margin-top:20px; text-align:center; font-weight:bold; color:var(--dark-gray);">합격 현황</div>
+        <table class="swal-results-table" style="margin-top: 5px;">
+            <thead><tr><th>최초 합격</th><th>최종 합격</th></tr></thead>
+            <tbody><tr>
+                <td>${student.최초합여부 || '-'}</td>
+                <td>${student.최종합여부 || '-'}</td>
+            </tr></tbody>
+        </table>`;
+
+        Swal.fire({
+            title: `${student.이름} 학생 상세 정보`,
+            html: detailHTML,
+            confirmButtonText: '닫기'
+        });
+    }
+    
+    init();
+</script>
 </body>
 </html>
