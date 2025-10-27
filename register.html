@@ -43,15 +43,43 @@
 
         .input-group { position: relative; margin-bottom: 5px; }
         .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #adb5bd; }
-        .input-group input { width: 100%; padding: 13px 15px 13px 45px; border: 1px solid var(--medium-gray); border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        .input-group input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(67, 100, 247, 0.1); }
+        /* ⭐️ input과 select 스타일 통합 */
+        .input-group input,
+        .input-group select {
+             width: 100%;
+             padding: 13px 15px 13px 45px;
+             border: 1px solid var(--medium-gray);
+             border-radius: 8px;
+             font-size: 1rem;
+             box-sizing: border-box;
+             /* ⭐️ select 화살표 보이게 */
+             appearance: none;
+             background-color: white; /* select 배경색 */
+        }
+        /* ⭐️ select 아이콘 위치 조정 */
+        .input-group select + i { /* select 다음에 오는 아이콘만 */
+            right: 15px; /* 오른쪽으로 */
+            left: auto; /* 왼쪽 위치 해제 */
+            pointer-events: none; /* 아이콘 클릭 방지 */
+        }
+        /* ⭐️ select 내부 여백 조정 (아이콘 공간 확보) */
+        .input-group select {
+            padding-right: 40px; /* 오른쪽 아이콘 공간 */
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+             outline: none;
+             border-color: var(--primary-color);
+             box-shadow: 0 0 0 4px rgba(67, 100, 247, 0.1);
+        }
         .input-group input::placeholder { color: #adb5bd; }
-        
+
         /* 피드백 메시지 스타일 */
         .feedback { font-size: 0.85rem; margin-top: 3px; margin-bottom: 12px; height: 1em; padding-left: 5px; }
         .feedback.success { color: var(--success-color); }
         .feedback.error { color: var(--danger-color); }
-        
+
         /* 전화번호 입력칸 레이아웃 수정 */
         .phone-verify-group { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
         .phone-verify-group .input-group { flex-grow: 1; margin: 0; }
@@ -61,7 +89,7 @@
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-primary:hover { background-color: #3a52c4; }
         .btn-primary:disabled { background-color: #aeb8d0; cursor: not-allowed; }
-        
+
         .btn-full { width: 100%; padding: 14px; margin-top: 10px; font-size: 1.1rem; }
         #registerMsg { color: var(--danger-color); text-align: center; margin-top: 15px; height: 1em; font-weight: 500; }
         .card-footer { margin-top: 25px; text-align: center; font-size: 0.9rem; color: #666; }
@@ -85,24 +113,33 @@
             <div class="input-group"><i class="fas fa-id-badge"></i><input name="name" placeholder="이름" required></div>
             <div class="feedback"></div>
 
+            <div class="input-group">
+                <i class="fas fa-user-tie"></i>
+                <select name="position" required>
+                    <option value="" disabled selected>직급 선택</option>
+                    <option value="원장">원장</option>
+                    <option value="부원장">부원장</option>
+                    <option value="팀장">팀장</option>
+                    <option value="강사">강사</option>
+                    </select>
+                <i class="fas fa-chevron-down"></i> </div>
+            <div class="feedback"></div>
             <div class="input-group"><i class="fas fa-store"></i><input name="branch" placeholder="지점명" required></div>
             <div class="feedback"></div>
-            
+
             <div class="phone-verify-group">
                 <div class="input-group"><i class="fas fa-phone"></i><input id="phone" name="phone" placeholder="전화번호 ('-' 제외)" required></div>
                 <button type="button" class="btn btn-primary" id="btnSendCode" onclick="sendVerificationCode()">인증요청</button>
             </div>
-            
+
             <div class="phone-verify-group" style="margin-top:10px;">
                 <div class="input-group"><i class="fas fa-hashtag"></i><input id="verificationCode" placeholder="인증번호 4자리" disabled></div>
                 <button type="button" class="btn btn-primary" id="btnVerifyCode" onclick="verifyCode()" disabled>확인</button>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-full" id="btnRegister" disabled>가입 신청</button>
+             <div class="feedback" id="phone-feedback"></div> <button type="submit" class="btn btn-primary btn-full" id="btnRegister" disabled>가입 신청</button>
             <div id="registerMsg"></div>
         </form>
-        <div class="card-footer"> 이미 계정이 있다면? <a href="login.html">로그인</a> </div>
-    </div>
+        <div class="card-footer"> 이미 계정이 있다면? <a href="admin_login.html">로그인</a> </div> </div>
 
 <script>
     const SERVER_URL = 'https://supermax.kr';
@@ -112,12 +149,13 @@
     const passwordConfirm = document.getElementById('passwordConfirm');
     const useridFeedback = document.getElementById('userid-feedback');
     const passwordFeedback = document.getElementById('password-feedback');
+    const phoneFeedback = document.getElementById('phone-feedback'); // 전화번호 피드백 요소
     const btnRegister = document.getElementById('btnRegister');
 
     let isIdAvailable = false;
     let isPasswordMatch = false;
     let isVerified = false;
-    
+
     // 아이디 중복 체크 (입력창에서 포커스가 벗어날 때)
     useridInput.addEventListener('blur', async () => {
         const userid = useridInput.value.trim();
@@ -128,8 +166,9 @@
             checkFormValidity();
             return;
         }
-        
+
         try {
+            // ⭐️ API 경로 수정: /26susi/check-userid 사용
             const res = await fetch(`${SERVER_URL}/26susi/check-userid`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -153,7 +192,7 @@
     });
 
     // 비밀번호 일치 여부 실시간 확인
-    passwordConfirm.addEventListener('keyup', () => {
+    function checkPasswordMatch() {
         if (password.value && passwordConfirm.value) {
             if (password.value === passwordConfirm.value) {
                 passwordFeedback.textContent = '비밀번호가 일치합니다.';
@@ -166,25 +205,31 @@
             }
         } else {
             passwordFeedback.textContent = '';
+            isPasswordMatch = false; // 둘 중 하나라도 비어있으면 불일치
         }
         checkFormValidity();
-    });
-    
+    }
+    password.addEventListener('keyup', checkPasswordMatch);
+    passwordConfirm.addEventListener('keyup', checkPasswordMatch);
+
     // 인증번호 발송 요청
     async function sendVerificationCode() {
-        if (!isIdAvailable) {
-            Swal.fire('알림', '먼저 사용 가능한 아이디를 입력해주세요.', 'warning');
-            return;
-        }
-        const phone = document.getElementById('phone').value.replace(/-/g, '');
+        // ID 사용 가능 여부 먼저 체크 안 해도 됨 (선택 사항)
+        // if (!isIdAvailable) { ... }
+        const phoneInput = document.getElementById('phone');
+        const phone = phoneInput.value.replace(/-/g, '');
         if (!/^\d{10,11}$/.test(phone)) {
-            Swal.fire('알림', '올바른 전화번호를 입력해주세요.', 'warning');
+            Swal.fire('알림', '올바른 전화번호를 입력해주세요. (10~11자리 숫자)', 'warning');
             return;
         }
-        // ... (이하 인증번호 발송 로직은 이전과 동일)
+
         const btnSend = document.getElementById('btnSendCode');
         btnSend.disabled = true;
+        phoneFeedback.textContent = '인증번호 발송 중...';
+        phoneFeedback.className = 'feedback';
+
         try {
+            // ⭐️ API 경로 수정: /26susi/send-verification-sms 사용
             const res = await fetch(`${SERVER_URL}/26susi/send-verification-sms`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -192,9 +237,14 @@
             });
             const data = await res.json();
             if (data.success) {
-                Swal.fire('성공', '인증번호가 발송되었습니다.', 'success');
+                Swal.fire('성공', '인증번호가 발송되었습니다. 3분 안에 입력해주세요.', 'success');
+                phoneFeedback.textContent = '인증번호가 발송되었습니다.';
+                phoneFeedback.className = 'feedback success';
                 document.getElementById('verificationCode').disabled = false;
                 document.getElementById('btnVerifyCode').disabled = false;
+                document.getElementById('verificationCode').focus(); // 인증번호 입력칸으로 포커스
+
+                // 타이머 로직
                 let timer = 180;
                 btnSend.textContent = `재요청 (${timer}s)`;
                 const interval = setInterval(() => {
@@ -204,24 +254,51 @@
                         clearInterval(interval);
                         btnSend.textContent = '인증요청';
                         btnSend.disabled = false;
+                        phoneFeedback.textContent = '인증 시간이 만료되었습니다. 재요청하세요.';
+                        phoneFeedback.className = 'feedback error';
+                        // 인증번호 입력칸 다시 비활성화 (선택)
+                        // document.getElementById('verificationCode').disabled = true;
+                        // document.getElementById('btnVerifyCode').disabled = true;
                     }
                 }, 1000);
+                 // 타이머 ID 저장 (나중에 인증 성공 시 중지하기 위함)
+                 btnSend.dataset.intervalId = interval;
+
             } else {
-                Swal.fire('실패', data.message, 'error');
+                Swal.fire('실패', data.message || '인증번호 발송 실패', 'error');
+                phoneFeedback.textContent = data.message || '인증번호 발송 실패';
+                phoneFeedback.className = 'feedback error';
                 btnSend.disabled = false;
             }
         } catch(e) {
-             Swal.fire('오류', '서버 통신 중 오류.', 'error');
+             Swal.fire('오류', '서버 통신 중 오류가 발생했습니다.', 'error');
+             phoneFeedback.textContent = '서버 통신 오류';
+             phoneFeedback.className = 'feedback error';
              btnSend.disabled = false;
         }
     }
+    // 전역 스코프에 함수 노출 (HTML onclick에서 호출하기 위해)
+    window.sendVerificationCode = sendVerificationCode;
+
 
     // 인증번호 확인 요청
     async function verifyCode() {
         const phone = document.getElementById('phone').value.replace(/-/g, '');
-        const code = document.getElementById('verificationCode').value;
-        if (code.length !== 4) { return; }
+        const codeInput = document.getElementById('verificationCode');
+        const code = codeInput.value.trim();
+        const btnVerify = document.getElementById('btnVerifyCode');
+
+        if (code.length !== 4 || !/^\d{4}$/.test(code)) {
+            Swal.fire('알림', '인증번호 4자리를 입력해주세요.', 'warning');
+            return;
+        }
+
+        btnVerify.disabled = true;
+        phoneFeedback.textContent = '인증번호 확인 중...';
+        phoneFeedback.className = 'feedback';
+
         try {
+             // ⭐️ API 경로 수정: /26susi/verify-code 사용
             const res = await fetch(`${SERVER_URL}/26susi/verify-code`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -230,53 +307,99 @@
             const data = await res.json();
             if (data.success) {
                 Swal.fire('인증 성공!', '휴대폰 인증이 완료되었습니다.', 'success');
+                phoneFeedback.textContent = '휴대폰 인증 완료';
+                phoneFeedback.className = 'feedback success';
                 isVerified = true;
                 document.getElementById('phone').readOnly = true;
-                document.getElementById('verificationCode').readOnly = true;
-                document.getElementById('btnVerifyCode').disabled = true;
-                document.getElementById('btnSendCode').disabled = true;
+                codeInput.readOnly = true;
+                btnVerify.disabled = true;
+                // 인증 성공 시 재요청 버튼과 타이머 중지
+                const btnSend = document.getElementById('btnSendCode');
+                const intervalId = btnSend.dataset.intervalId;
+                if (intervalId) {
+                    clearInterval(intervalId);
+                }
+                btnSend.textContent = '인증완료';
+                btnSend.disabled = true;
+
             } else {
-                Swal.fire('인증 실패', data.message, 'error');
+                Swal.fire('인증 실패', data.message || '인증번호가 올바르지 않습니다.', 'error');
+                phoneFeedback.textContent = data.message || '인증번호 불일치';
+                phoneFeedback.className = 'feedback error';
                 isVerified = false;
+                btnVerify.disabled = false; // 확인 버튼 다시 활성화
+                codeInput.focus(); // 다시 입력하도록 포커스
             }
         } catch(e) {
-             Swal.fire('오류', '서버 통신 중 오류.', 'error');
+             Swal.fire('오류', '서버 통신 중 오류가 발생했습니다.', 'error');
+             phoneFeedback.textContent = '서버 통신 오류';
+             phoneFeedback.className = 'feedback error';
+             isVerified = false;
+             btnVerify.disabled = false; // 확인 버튼 다시 활성화
         }
         checkFormValidity();
     }
-    
+    // 전역 스코프에 함수 노출
+    window.verifyCode = verifyCode;
+
     // 모든 조건 충족 시 가입 버튼 활성화
     function checkFormValidity() {
-        btnRegister.disabled = !(isIdAvailable && isPasswordMatch && isVerified);
+        // ⭐️ 직급 선택 여부도 확인 조건에 추가
+        const positionSelected = form.position.value !== "";
+        btnRegister.disabled = !(isIdAvailable && isPasswordMatch && isVerified && positionSelected);
     }
-    
+    // ⭐️ 직급 select 요소에도 change 이벤트 리스너 추가
+    form.position.addEventListener('change', checkFormValidity);
+
     // 최종 가입 신청
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!isIdAvailable || !isPasswordMatch || !isVerified) {
-            Swal.fire('알림', '아이디, 비밀번호, 휴대폰 인증을 모두 완료해야 합니다.', 'warning');
+        // ⭐️ 직급 선택 여부 최종 확인
+        if (!isIdAvailable || !isPasswordMatch || !isVerified || form.position.value === "") {
+            Swal.fire('알림', '아이디, 비밀번호, 직급, 휴대폰 인증을 모두 완료해야 합니다.', 'warning');
             return;
         }
+        const registerButton = document.getElementById('btnRegister');
+        registerButton.disabled = true;
+        registerButton.textContent = '처리 중...';
+        document.getElementById('registerMsg').textContent = '';
+
+
         const data = {
-            userid: form.userid.value,
+            userid: form.userid.value.trim(),
             password: form.password.value,
-            name: form.name.value,
-            branch: form.branch.value,
-            phone: form.phone.value,
+            name: form.name.value.trim(),
+            position: form.position.value, // ⭐️ 직급 값 추가
+            branch: form.branch.value.trim(),
+            phone: form.phone.value.replace(/-/g, ''),
         };
-        const res = await fetch(`${SERVER_URL}/26susi/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const json = await res.json();
-        if (json.success) {
-            await Swal.fire('가입 신청 완료!', '관리자 승인 후 로그인이 가능합니다.', 'success');
-            location.href = 'login.html';
-        } else {
-            document.getElementById('registerMsg').textContent = json.message || '가입 실패';
+
+        try {
+            // ⭐️ API 경로 수정: /26susi/register 사용 (백엔드에서 직급 처리하도록 수정 필요)
+            const res = await fetch(`${SERVER_URL}/26susi/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (json.success) {
+                await Swal.fire('가입 신청 완료!', '관리자 승인 후 로그인이 가능합니다.', 'success');
+                location.href = 'admin_login.html'; // 로그인 페이지 경로 수정
+            } else {
+                document.getElementById('registerMsg').textContent = json.message || '가입 신청 실패';
+            }
+        } catch(e) {
+            document.getElementById('registerMsg').textContent = '서버 통신 오류 발생';
+        } finally {
+            registerButton.disabled = false;
+            registerButton.textContent = '가입 신청';
         }
     });
+
+    // 페이지 로드 시 초기 유효성 검사 실행 (버튼 초기 상태 결정)
+    checkPasswordMatch();
+    checkFormValidity();
+
 </script>
 </body>
 </html>
