@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수합 데이터 엑셀 추출 (로그인)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        #app { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+        h1 { border-bottom: 2px solid #007bff; padding-bottom: 10px; color: #333; margin-top: 0; }
+        div { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="password"], select {
+            width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;
+        }
+        button {
+            width: 100%; padding: 15px; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.2s;
+        }
+        
+        /* 버튼 색깔 지정 */
+        #loginBtn { background-color: #007bff; }
+        #loginBtn:hover { background-color: #0056b3; }
+        
+        #downloadBtnOwner, #downloadBtnAdmin { 
+            background-color: #28a745; /* 초록색 */
+            margin-bottom: 10px; /* 버튼 사이 간격 */
+        }
+        #downloadBtnOwner:hover, #downloadBtnAdmin:hover { background-color: #218838; }
+
+        /* 전 지점 다운로드 버튼 스타일 */
+        #downloadBtnAdminAll { background-color: #17a2b8; } /* 파랑-초록 계열 */
+        #downloadBtnAdminAll:hover { background-color: #138496; }
+
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+        
+        #status {
+            margin-top: 20px; font-size: 16px; text-align: center; font-weight: bold; color: #555; padding: 15px; border-radius: 5px; background-color: #eee;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div id="login-view">
+            <h1>수합 데이터 추출</h1>
+            <div>
+                <label for="userid">아이디:</label>
+                <input type="text" id="userid" value="admin">
+            </div>
+            <div>
+                <label for="password">비밀번호:</label>
+                <input type="password" id="password">
+            </div>
+            <button id="loginBtn">로그인</button>
+        </div>
+
+        <div id="owner-view" class="hidden">
+            <h1 id="welcome-msg-owner"></h1>
+            <p>본인 지점의 수합 데이터를 엑셀로 다운로드합니다.</p>
+            <button id="downloadBtnOwner">내 지점 데이터 다운로드</button>
+        </div>
+
+        <div id="admin-view" class="hidden">
+            <h1>Admin 데이터 추출</h1>
+            <p><strong>'admin'</strong> 계정입니다. 엑셀로 추출할 지점을 선택하세요.</p>
+            <div>
+                <label for="branch-select">지점 선택:</label>
+                <select id="branch-select"></select>
+            </div>
+            <button id="downloadBtnAdmin">선택한 지점 데이터 다운로드</button>
+            
+            <button id="downloadBtnAdminAll">전 지점 데이터 (대학명 역순) 다운로드</button>
+        </div>
+
+        <div id="status">로그인을 진행해주세요.</div>
+    </div>
+
+    <script>
+        // [수정 1] 네 서버 주소를 여기에 추가!
+        const API_BASE_URL = 'https://supermax.kr';
+
+        // 전역 변수로 토큰과 유저 정보 저장
+        let appState = {
+            token: null,
+            user: null
+        };
+
+        // DOM 요소
+        const loginView = document.getElementById('login-view');
+        const ownerView = document.getElementById('owner-view');
+        const adminView = document.getElementById('admin-view');
+        const statusEl = document.getElementById('status');
+        
+        // 로그인 버튼
+        document.getElementById('loginBtn').addEventListener('click', handleLogin);
+
+        // 다운로드 버튼
+        document.getElementById('downloadBtnOwner').addEventListener('click', handleOwnerDownload);
+        document.getElementById('downloadBtnAdmin').addEventListener('click', handleAdminDownload);
+        // [신규] 전 지점 다운로드 버튼
+        document.getElementById('downloadBtnAdminAll').addEventListener('click', handleAdminAllDownload);
+
+        // 1. 로그인 처리
+        async function handleLogin() {
+            const userid = document.getElementById('userid').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+
+            if (!userid || !password) {
+                updateStatus("❌ 아이디와 비밀번호를 모두 입력하세요.", 'red');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "로그인 중...";
+            updateStatus("로그인 시도 중...", '#333');
+
+            try {
+                // [수정 2] /26susi/owner_login API 사용
+                const response = await fetch(`${API_BASE_URL}/26susi/owner_login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userid, password })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || "로그인 실패");
+                }
+
+                // 로그인 성공!
+                appState.token = data.token;
+                appState.user = parseJwt(data.token); // 토큰 까서 유저 정보 저장
+
+                updateStatus("✅ 로그인 성공!", 'green');
+                showDashboard();
+
+            } catch (err) {
+                updateStatus(`❌ 로그인 실패: ${err.message}`, 'red');
+                btn.disabled = false;
+                btn.textContent = "로그인";
+            }
+        }
+
+        // 2. 로그인 후 대시보드 표시
+        function showDashboard() {
+            loginView.classList.add('hidden'); // 로그인 창 숨기기
+
+            if (appState.user.role === 'admin') {
+                // admin일 경우
+                adminView.classList.remove('hidden');
+                updateStatus("Admin 대시보드: 지점을 선택하세요.", '#333');
+                loadAdminBranchList(); // 지점 목록 불러오기
+            } else {
+                // 일반 owner일 경우
+                ownerView.classList.remove('hidden');
+                document.getElementById('welcome-msg-owner').textContent = `환영합니다, ${appState.user.name} 원장님!`;
+                updateStatus(`${appState.user.branch} 지점 데이터 준비 완료.`, '#333');
+            }
+        }
+        
+        // 3. (Admin 전용) 지점 목록 불러오기
+        async function loadAdminBranchList() {
+            const selectEl = document.getElementById('branch-select');
+            selectEl.innerHTML = "<option>지점 목록 불러오는 중...</option>";
+
+            try {
+                // [수정 3] /26susi/branch-data-status API로 지점 목록 가져오기
+                const response = await fetch(`${API_BASE_URL}/26susi/branch-data-status`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                const data = await response.json();
+
+                if (!data.success) throw new Error("지점 목록 로드 실패");
+
+                selectEl.innerHTML = ""; // 초기화
+                data.status.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch.지점명;
+                    option.textContent = `${branch.지점명} (학생: ${branch.학생_수}명)`;
+                    selectEl.appendChild(option);
+                });
+            } catch (err) {
+                updateStatus(`❌ ${err.message}`, 'red');
+            }
+        }
+
+        // 4. (Owner 전용) 다운로드
+        async function handleOwnerDownload() {
+            const btn = document.getElementById('downloadBtnOwner');
+            btn.disabled = true;
+            btn.textContent = "데이터 생성 중...";
+            updateStatus("서버에서 데이터를 가져오는 중입니다...", '#333');
+
+            try {
+                // [수정 4] /26susi/branch_summary_by_university API 호출
+                const response = await fetch(`${API_BASE_URL}/26susi/branch_summary_by_university`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error("데이터 가져오기 실패");
+                
+                await generateExcel(data.universities, appState.user.branch); // 엑셀 생성
+
+            } catch (err) {
+                updateStatus(`❌ 에러: ${err.message}`, 'red');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "내 지점 데이터 다운로드";
+            }
+        }
+
+        // 5. (Admin 전용) "선택 지점" 다운로드
+        async function handleAdminDownload() {
+            const btn = document.getElementById('downloadBtnAdmin');
+            const selectedBranch = document.getElementById('branch-select').value;
+            
+            if (!selectedBranch) {
+                updateStatus("❌ 지점을 선택하세요.", 'red');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "데이터 생성 중...";
+            updateStatus(`[${selectedBranch}] 지점 데이터를 가져오는 중...`, '#333');
+
+            try {
+                // [수정 5] /26susi/admin/branch_summary API 호출
+                const response = await fetch(`${API_BASE_URL}/26susi/admin/branch_summary?branch=${selectedBranch}`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error("데이터 가져오기 실패");
+
+                await generateExcel(data.universities, selectedBranch); // 엑셀 생성
+
+            } catch (err) {
+                updateStatus(`❌ 에러: ${err.message}`, 'red');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "선택한 지점 데이터 다운로드";
+            }
+        }
+
+        // [신규] 5-1. (Admin 전용) "전 지점" 다운로드
+        async function handleAdminAllDownload() {
+            const btn = document.getElementById('downloadBtnAdminAll');
+            
+            btn.disabled = true;
+            btn.textContent = "전 지점 데이터 생성 중...";
+            updateStatus("서버에서 [전 지점] 데이터를 모두 가져오는 중... (시간이 걸릴 수 있음)", '#333');
+
+            try {
+                // [신규] 1단계에서 만든 /26susi/admin/all_branch_summary API 호출
+                const response = await fetch(`${API_BASE_URL}/26susi/admin/all_branch_summary`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error("전 지점 데이터 가져오기 실패");
+
+                // 파일 이름만 다르게 해서 엑셀 생성
+                await generateExcel(data.universities, "전지점_대학명역순"); 
+
+            } catch (err) {
+                updateStatus(`❌ 에러: ${err.message}`, 'red');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "전 지점 데이터 (대학명 역순) 다운로드";
+            }
+        }
+
+        // 6. (공통) 엑셀 생성 및 다운로드 함수
+        async function generateExcel(universities, branchName) {
+            updateStatus("데이터 평탄화 작업 중...", '#333');
+            
+            const flatData = [];
+            universities.forEach(uni => {
+                const universityName = uni.대학명;
+                const departmentName = uni.학과명;
+                const events = (uni.실기종목 || []);
+
+                uni.학생들.forEach(stu => {
+                    const studentRow = {
+                        "지점 이름": stu.지점명,
+                        "학교": stu.학교명,
+                        "학생명": stu.이름,
+                        "성별": stu.성별,
+                        "학년": stu.학년,
+                        "지원대학": universityName,
+                        "지원대학과": departmentName,
+                        "내신등급": stu.내신등급,
+                        "내신총점": stu.내신점수,
+                        "실기총점": stu.실기총점,
+                        "수합총점": stu.합산점수,
+                        "최초결과": stu.최초합여부,
+                        "최종결과": stu.최종합여부,
+                        "실기종목1": events[0] || null, 
+                        "실기기록1": stu.기록1,
+                        "실기점수1": stu.점수1,
+                        "실기종목2": events[1] || null, 
+                        "실기기록2": stu.기록2,
+                        "실기점수2": stu.점수2,
+                        "실기종목3": events[2] || null, 
+                        "실기기록3": stu.기록3,
+                        "실기점수3": stu.점수3,
+                        "실기종목4": events[3] || null, 
+                        "실기기록4": stu.기록4,
+                        "실기점수4": stu.점수4,
+                        "실기종목5": events[4] || null,
+                        "실기기록5": stu.기록5,
+                        "실기점수5": stu.점수5,
+                        "실기종목6": events[5] || null,
+                        "실기기록6": stu.기록6,
+                        "실기점수6": stu.점수6,
+                        "실기종목7": events[6] || null,
+                        "실기기록7": stu.기록7,
+                        "실기점수7": stu.점수7,
+                    };
+                    
+                    flatData.push(studentRow);
+                });
+            });
+
+            if (flatData.length === 0) {
+                updateStatus("⚠️ 해당 지점은 수합된 데이터가 0건입니다.", 'orange');
+                return;
+            }
+
+            updateStatus(`🔄 ${flatData.length}개 행 엑셀 파일 생성 중...`, '#333');
+
+            const worksheet = XLSX.utils.json_to_sheet(flatData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "최종수합데이터");
+
+            const fileName = `${branchName}_최종수합데이터_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+
+            updateStatus(`🎉 엑셀 다운로드 성공! (${fileName})`, 'green');
+        }
+
+        // 7. (공통) 상태 업데이트 유틸
+        function updateStatus(message, color) {
+            statusEl.textContent = message;
+            statusEl.style.color = color;
+        }
+
+        // 8. (공통) JWT 토큰 디코더 (btoa/atob 사용)
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error("JWT 디코딩 실패", e);
+                return null;
+            }
+        }
+
+    </script>
+</body>
+</html>
