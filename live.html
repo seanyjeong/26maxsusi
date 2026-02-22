@@ -51,6 +51,13 @@
         .swal-results-table th { background-color: var(--primary-light); color: var(--primary-color); font-weight: 600; }
         .swal-results-table .total-score { font-weight: bold; color: var(--primary-color); }
 
+        .grade-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; color: white; min-width: 28px; text-align: center; }
+        .grade-1, .grade-2 { background: #4364f7; }
+        .grade-3, .grade-4 { background: #28a745; }
+        .grade-5, .grade-6 { background: #f59e0b; }
+        .grade-7, .grade-8, .grade-9 { background: #ef4444; }
+        .grade-none { background: #cbd5e1; color: #64748b; }
+
         @media (max-width: 768px) {
             body { padding: 8px; }
             .section { padding: 12px; }
@@ -98,6 +105,13 @@
     let loggedInUserBranch = '';
     let studentDataMap = new Map();
     let currentEvents = [];
+
+    function gradeBadge(grade) {
+        if (!grade && grade !== 0) return '<span class="grade-badge grade-none">-</span>';
+        const g = Math.round(parseFloat(grade));
+        const cls = (g >= 1 && g <= 9) ? 'grade-' + g : 'grade-none';
+        return `<span class="grade-badge ${cls}">${grade}</span>`;
+    }
 
     // init 및 드롭다운 관련 함수들은 이전과 동일 (생략)
     async function init() {
@@ -154,7 +168,7 @@
         events.forEach(event => {
             headerRow1HTML += `<th colspan="2">${event}</th>`;
         });
-        headerRow1HTML += `<th rowspan="2">내신점수</th><th rowspan="2">실기총점</th><th rowspan="2">합산점수</th><th rowspan="2">최초합</th><th rowspan="2">최종합</th></tr>`;
+        headerRow1HTML += `<th rowspan="2">내신등급</th><th rowspan="2">내신점수</th><th rowspan="2">실기총점</th><th rowspan="2">합산점수</th><th rowspan="2">최초합</th><th rowspan="2">최종합</th></tr>`;
 
         let headerRow2HTML = `<tr>`;
         events.forEach(event => {
@@ -164,7 +178,7 @@
         
         thead.innerHTML = headerRow1HTML + headerRow2HTML;
         
-        const totalColumns = 4 + (events.length * 2) + 5;
+        const totalColumns = 4 + (events.length * 2) + 6;
 
         if (rankingData.length === 0) {
             tbody.innerHTML = `<tr><td colspan="${totalColumns}">해당 전형에 수합된 학생이 없습니다.</td></tr>`;
@@ -181,6 +195,7 @@
                 rowHTML += `<td class="col-record">${student['기록'+i] || '-'}</td><td class="col-score">${student['점수'+i] || '-'}</td>`;
             }
             rowHTML += `
+                <td>${gradeBadge(student.내신등급)}</td>
                 <td>${student.내신점수 || '-'}</td>
                 <td>${student.실기총점 !== null ? parseFloat(student.실기총점).toFixed(2) : '-'}</td>
                 <td><strong>${student.합산점수 !== null ? parseFloat(student.합산점수).toFixed(2) : '-'}</strong></td>
@@ -213,6 +228,7 @@
                             <span class="student-branch">${student.지점명}</span>
                         </div>
                         <div class="student-scores">
+                            <span>${gradeBadge(student.내신등급)}</span>
                             <span>내신: ${student.내신점수 || '-'}</span>
                             <span>실기: ${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'}</span>
                             <span>합산: ${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'}</span>
@@ -240,6 +256,8 @@
         }
         
         detailHTML += `<table class="swal-results-table" style="margin-top: 10px;">
+            <tr><th>내신등급</th><td>${gradeBadge(student.내신등급)}</td></tr>
+            <tr><th>내신점수</th><td>${student.내신점수 || '-'}</td></tr>
             <tr><th>실기 총점</th><td class="total-score">${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'} 점</td></tr>
             <tr><th>합산 총점</th><td class="total-score">${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'} 점</td></tr>
         </table>`;
