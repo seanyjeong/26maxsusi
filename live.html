@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <style>
         :root { 
             --primary-color: #4364f7; --primary-light: #eef2ff; --secondary-color: #6a8eff; 
@@ -22,6 +23,9 @@
         #result-title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--medium-gray); padding-bottom: 10px; }
         #result-title { margin: 0; font-size: 1.3em; font-weight: 500; color: var(--dark-gray); }
         .swal2-html-container { text-align: left !important; }
+
+        .btn-excel { background: linear-gradient(135deg, #1D6F42, #28a745); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .btn-excel:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(29,111,66,0.3); }
 
         /* --- 데스크탑 테이블 스타일 --- */
         #desktop-view { overflow-x: auto; }
@@ -65,9 +69,10 @@
                     <div><label for="sel-major">학과명</label><select id="sel-major" onchange="onMajorChange()" disabled></select></div>
                     <div><label for="sel-type">전형명</label><select id="sel-type" onchange="onTypeChange()"></select></div>
                 </div>
+                <button class="btn-excel" onclick="downloadAllExcel()"><i class="fas fa-file-excel"></i> 전체 수합 엑셀 다운로드</button>
             </div>
         </div>
-        
+
         <div class="section">
              <div id="result-title-container">
                 <h3 id="result-title">대학/학과/전형을 선택해주세요.</h3>
@@ -256,6 +261,358 @@
         });
     }
     
+    async function downloadAllExcel() {
+        Swal.fire({
+            title: '📊 전체 수합 데이터 수집 중...',
+            html: `<div style="margin-top:10px">
+                <div id="dl-text" style="font-size:14px;color:#334155">준비 중...</div>
+                <div style="background:#e9ecef;border-radius:8px;height:20px;margin-top:10px;overflow:hidden">
+                    <div id="dl-bar" style="background:linear-gradient(90deg,#1D6F42,#28a745);height:100%;width:0%;transition:width 0.3s;border-radius:8px"></div>
+                </div>
+            </div>`,
+            allowOutsideClick: false,
+            showConfirmButton: false
+        });
+
+        try {
+            const allData = [];
+            for (let i = 0; i < colleges.length; i++) {
+                const col = colleges[i];
+                const pct = Math.round(((i + 1) / colleges.length) * 100);
+                const dt = document.getElementById('dl-text');
+                const db = document.getElementById('dl-bar');
+                if (dt) dt.textContent = `${i + 1}/${colleges.length} — ${col.대학명} ${col.학과명}`;
+                if (db) db.style.width = pct + '%';
+
+                try {
+                    const res = await fetch(`${SERVER}/26susi/realtime-rank-by-college?college_id=${col.대학ID}`, {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    if (data.success && data.ranking && data.ranking.length > 0) {
+                        allData.push({ 대학명: col.대학명, 학과명: col.학과명, 전형명: col.전형명, ranking: data.ranking, events: data.events || [] });
+                    }
+                } catch (e) { console.error('Fetch fail:', col.대학명, e); }
+            }
+
+            if (allData.length === 0) {
+                Swal.fire('안내', '수합된 데이터가 없습니다.', 'info');
+                return;
+            }
+
+            // Sort by 대학명 > 학과명
+            allData.sort((a, b) => a.대학명.localeCompare(b.대학명, 'ko') || a.학과명.localeCompare(b.학과명, 'ko'));
+
+            const wb = new ExcelJS.Workbook();
+            wb.creator = 'MAX 수시 시스템';
+            wb.created = new Date();
+
+            // Color palette
+            const C = {
+                primary: 'FF4364F7', white: 'FFFFFFFF', dark: 'FF1E293B',
+                gray: 'FF64748B', lightBg: 'FFF8FAFC', border: 'FFD1D5DB',
+                green: 'FF1D6F42', accent: 'FFEEF2FF'
+            };
+            const border = {
+                top: { style: 'thin', color: { argb: C.border } },
+                left: { style: 'thin', color: { argb: C.border } },
+                bottom: { style: 'thin', color: { argb: C.border } },
+                right: { style: 'thin', color: { argb: C.border } }
+            };
+
+            // Group by 대학명
+            const byUniv = {};
+            allData.forEach(d => {
+                if (!byUniv[d.대학명]) byUniv[d.대학명] = [];
+                byUniv[d.대학명].push(d);
+            });
+            const univNames = Object.keys(byUniv).sort((a, b) => a.localeCompare(b, 'ko'));
+
+            // Sheet name sanitizer (Excel: max 31 chars, no []:*?/\)
+            const sanitize = (name) => name.replace(/[[\]:*?/\\]/g, '').substring(0, 31);
+
+            // ========== 1) 목차 시트 ==========
+            const tocWs = wb.addWorksheet('목차', { properties: { defaultRowHeight: 24 } });
+            const tocTitle = tocWs.addRow(['26수시 전체 수합결과 — 목차']);
+            tocTitle.height = 42;
+            tocWs.mergeCells(tocTitle.number, 1, tocTitle.number, 5);
+            tocTitle.getCell(1).font = { name: 'Noto Sans KR', size: 18, bold: true, color: { argb: C.primary } };
+            tocTitle.getCell(1).alignment = { vertical: 'middle' };
+
+            const tocDate = tocWs.addRow([`다운로드: ${new Date().toLocaleString('ko-KR')}`]);
+            tocWs.mergeCells(tocDate.number, 1, tocDate.number, 5);
+            tocDate.getCell(1).font = { name: 'Noto Sans KR', size: 10, color: { argb: C.gray } };
+
+            const totalStudents = allData.reduce((s, d) => s + d.ranking.length, 0);
+            const tocSummary = tocWs.addRow([`총 ${univNames.length}개 대학  |  ${allData.length}개 학과/전형  |  ${totalStudents}명`]);
+            tocWs.mergeCells(tocSummary.number, 1, tocSummary.number, 5);
+            tocSummary.getCell(1).font = { name: 'Noto Sans KR', size: 11, bold: true };
+
+            tocWs.addRow([]);
+
+            // 합격자 명단 바로가기 (목차 상단 - 대학 목록 위)
+            const passLinkRow = tocWs.addRow(['']);
+            tocWs.mergeCells(passLinkRow.number, 1, passLinkRow.number, 5);
+            const passLink = passLinkRow.getCell(1);
+            passLink.value = { text: '합격자 명단 시트로 이동 →', hyperlink: "#'합격자 명단'!A1" };
+            passLink.font = { name: 'Noto Sans KR', size: 13, bold: true, color: { argb: C.white }, underline: true };
+            passLink.alignment = { horizontal: 'center', vertical: 'middle' };
+            passLinkRow.height = 38;
+            passLink.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.green } };
+            passLink.border = border;
+
+            tocWs.addRow([]);
+
+            // Table header
+            const tocHeader = tocWs.addRow(['No.', '대학명', '학과 수', '총 인원', '바로가기']);
+            tocHeader.height = 30;
+            tocHeader.eachCell(cell => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.primary } };
+                cell.font = { name: 'Noto Sans KR', size: 11, bold: true, color: { argb: C.white } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                cell.border = border;
+            });
+
+            univNames.forEach((uName, idx) => {
+                const sections = byUniv[uName];
+                const stuCount = sections.reduce((s, d) => s + d.ranking.length, 0);
+                const sheetName = sanitize(uName);
+                const tocRow = tocWs.addRow([idx + 1, uName, sections.length, stuCount, uName]);
+                const isEven = idx % 2 === 0;
+                tocRow.eachCell((cell, colNum) => {
+                    cell.font = { name: 'Noto Sans KR', size: 10 };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    cell.border = border;
+                    if (isEven) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.lightBg } };
+                });
+                // Hyperlink on 바로가기 column
+                const linkCell = tocRow.getCell(5);
+                linkCell.value = { text: '→ 이동', hyperlink: `#'${sheetName}'!A1` };
+                linkCell.font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.primary }, underline: true };
+            });
+
+            tocWs.getColumn(1).width = 6;
+            tocWs.getColumn(2).width = 25;
+            tocWs.getColumn(3).width = 10;
+            tocWs.getColumn(4).width = 10;
+            tocWs.getColumn(5).width = 12;
+
+            // ========== 2) 대학별 시트 ==========
+            for (const uName of univNames) {
+                const sections = byUniv[uName];
+                const sheetName = sanitize(uName);
+                const ws = wb.addWorksheet(sheetName, { properties: { defaultRowHeight: 22 } });
+
+                // Sheet title
+                const r1 = ws.addRow([uName]);
+                r1.height = 38;
+                ws.mergeCells(r1.number, 1, r1.number, 13);
+                r1.getCell(1).font = { name: 'Noto Sans KR', size: 16, bold: true, color: { argb: C.primary } };
+                r1.getCell(1).alignment = { vertical: 'middle' };
+
+                // Back to TOC link
+                const backRow = ws.addRow(['← 목차로 돌아가기']);
+                ws.mergeCells(backRow.number, 1, backRow.number, 4);
+                backRow.getCell(1).value = { text: '← 목차로 돌아가기', hyperlink: "#'목차'!A1" };
+                backRow.getCell(1).font = { name: 'Noto Sans KR', size: 10, color: { argb: C.primary }, underline: true };
+
+                ws.addRow([]);
+
+                let maxCols = 0;
+
+                for (const section of sections) {
+                    const evtCount = section.events.length;
+                    const totalCols = 4 + evtCount * 2 + 6;
+                    if (totalCols > maxCols) maxCols = totalCols;
+
+                    // Section header
+                    const secRow = ws.addRow([`${section.학과명}  ▸  ${section.전형명}    (${section.ranking.length}명)`]);
+                    secRow.height = 32;
+                    ws.mergeCells(secRow.number, 1, secRow.number, totalCols);
+                    const secCell = secRow.getCell(1);
+                    secCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.dark } };
+                    secCell.font = { name: 'Noto Sans KR', size: 12, bold: true, color: { argb: C.white } };
+                    secCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+                    // Column headers
+                    const headers = ['순위', '지점', '이름', '성별'];
+                    section.events.forEach(evt => { headers.push(evt + ' 기록', evt + ' 점수'); });
+                    headers.push('내신등급', '내신점수', '실기총점', '합산점수', '최초합', '최종합');
+
+                    const hRow = ws.addRow(headers);
+                    hRow.height = 28;
+                    hRow.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.primary } };
+                        cell.font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.white } };
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        cell.border = border;
+                    });
+
+                    // Data rows
+                    const totalColIdx = headers.indexOf('합산점수') + 1;
+                    const firstPassIdx = headers.indexOf('최초합') + 1;
+                    const finalPassIdx = headers.indexOf('최종합') + 1;
+
+                    section.ranking.forEach((stu, idx) => {
+                        const row = [stu.순위, stu.지점명, stu.이름, stu.성별];
+                        for (let i = 1; i <= evtCount; i++) {
+                            row.push(stu['기록' + i] || '-');
+                            row.push(stu['점수' + i] != null ? Number(stu['점수' + i]) : '-');
+                        }
+                        row.push(
+                            stu.내신등급 || '-',
+                            stu.내신점수 != null ? Number(stu.내신점수) : '-',
+                            stu.실기총점 != null ? Number(parseFloat(stu.실기총점).toFixed(2)) : '-',
+                            stu.합산점수 != null ? Number(parseFloat(stu.합산점수).toFixed(2)) : '-',
+                            stu.최초합여부 || '-',
+                            stu.최종합여부 || '-'
+                        );
+
+                        const dRow = ws.addRow(row);
+                        const isEven = idx % 2 === 0;
+                        dRow.eachCell((cell) => {
+                            cell.font = { name: 'Noto Sans KR', size: 10 };
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                            cell.border = border;
+                            if (isEven) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.lightBg } };
+                        });
+
+                        if (totalColIdx > 0) {
+                            dRow.getCell(totalColIdx).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.primary } };
+                        }
+                        if (stu.순위 <= 3) {
+                            dRow.getCell(1).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.primary } };
+                        }
+                        [firstPassIdx, finalPassIdx].forEach(ci => {
+                            if (ci > 0 && dRow.getCell(ci).value === '합격') {
+                                dRow.getCell(ci).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.green } };
+                            }
+                        });
+                    });
+
+                    ws.addRow([]); // separator
+                }
+
+                // Column widths
+                const widths = [6, 14, 10, 6];
+                for (let i = 4; i < maxCols - 6; i++) widths.push(i % 2 === 0 ? 12 : 10);
+                widths.push(10, 10, 10, 12, 8, 8);
+                widths.forEach((w, i) => { if (ws.columns[i]) ws.columns[i].width = w; });
+            }
+
+            // ========== 3) 합격자 명단 시트 ==========
+            const passWs = wb.addWorksheet('합격자 명단', { properties: { defaultRowHeight: 22 } });
+
+            // Title
+            const passTitle = passWs.addRow(['합격자 명단']);
+            passTitle.height = 42;
+            passWs.mergeCells(passTitle.number, 1, passTitle.number, 6);
+            passTitle.getCell(1).font = { name: 'Noto Sans KR', size: 18, bold: true, color: { argb: C.green } };
+            passTitle.getCell(1).alignment = { vertical: 'middle' };
+
+            const passBack = passWs.addRow(['← 목차로 돌아가기']);
+            passWs.mergeCells(passBack.number, 1, passBack.number, 4);
+            passBack.getCell(1).value = { text: '← 목차로 돌아가기', hyperlink: "#'목차'!A1" };
+            passBack.getCell(1).font = { name: 'Noto Sans KR', size: 10, color: { argb: C.primary }, underline: true };
+
+            // Collect all passers by 대학/학과/전형
+            const passSections = [];
+            let totalPassCount = 0;
+            for (const section of allData) {
+                const passers = section.ranking.filter(s =>
+                    s.최초합여부 === '합격' || s.최종합여부 === '합격'
+                );
+                if (passers.length > 0) {
+                    passSections.push({ 대학명: section.대학명, 학과명: section.학과명, 전형명: section.전형명, passers });
+                    totalPassCount += passers.length;
+                }
+            }
+
+            const passSummary = passWs.addRow([`총 ${passSections.length}개 학과/전형  |  합격자 ${totalPassCount}명`]);
+            passWs.mergeCells(passSummary.number, 1, passSummary.number, 6);
+            passSummary.getCell(1).font = { name: 'Noto Sans KR', size: 11, bold: true };
+
+            passWs.addRow([]);
+
+            if (passSections.length === 0) {
+                const noData = passWs.addRow(['합격자 데이터가 없습니다.']);
+                passWs.mergeCells(noData.number, 1, noData.number, 6);
+                noData.getCell(1).font = { name: 'Noto Sans KR', size: 12, color: { argb: C.gray } };
+                noData.getCell(1).alignment = { horizontal: 'center' };
+            } else {
+                for (const sec of passSections) {
+                    // Section header
+                    const secRow = passWs.addRow([`${sec.대학명}  ▸  ${sec.학과명}  ▸  ${sec.전형명}    (${sec.passers.length}명 합격)`]);
+                    secRow.height = 32;
+                    passWs.mergeCells(secRow.number, 1, secRow.number, 6);
+                    secRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.dark } };
+                    secRow.getCell(1).font = { name: 'Noto Sans KR', size: 12, bold: true, color: { argb: C.white } };
+                    secRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+
+                    // Column headers
+                    const pH = passWs.addRow(['No.', '지점', '이름', '성별', '최초합', '최종합']);
+                    pH.height = 28;
+                    pH.eachCell(cell => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.green } };
+                        cell.font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.white } };
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        cell.border = border;
+                    });
+
+                    // Data rows
+                    sec.passers.forEach((stu, idx) => {
+                        const pRow = passWs.addRow([idx + 1, stu.지점명, stu.이름, stu.성별, stu.최초합여부 || '-', stu.최종합여부 || '-']);
+                        const isEven = idx % 2 === 0;
+                        pRow.eachCell(cell => {
+                            cell.font = { name: 'Noto Sans KR', size: 10 };
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                            cell.border = border;
+                            if (isEven) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.lightBg } };
+                        });
+                        // Green highlight for 합격 only
+                        [5, 6].forEach(ci => {
+                            if (pRow.getCell(ci).value === '합격') {
+                                pRow.getCell(ci).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.green } };
+                            }
+                        });
+                    });
+
+                    passWs.addRow([]); // separator
+                }
+            }
+
+            // Column widths for 합격자 시트
+            passWs.getColumn(1).width = 6;
+            passWs.getColumn(2).width = 14;
+            passWs.getColumn(3).width = 10;
+            passWs.getColumn(4).width = 6;
+            passWs.getColumn(5).width = 10;
+            passWs.getColumn(6).width = 10;
+
+            // Generate and download
+            const buffer = await wb.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `26수시_전체수합결과_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            Swal.fire({
+                icon: 'success',
+                title: '다운로드 완료!',
+                html: `총 <b>${allData.length}개</b> 대학/학과<br><b>${totalStudents}명</b> 수합 완료`,
+                confirmButtonColor: '#4364f7'
+            });
+        } catch (err) {
+            console.error('Excel error:', err);
+            Swal.fire('오류', '엑셀 생성 중 오류가 발생했습니다:\n' + err.message, 'error');
+        }
+    }
+
     init();
 </script>
 </body>
