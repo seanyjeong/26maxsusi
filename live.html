@@ -26,6 +26,16 @@
 
         .btn-excel { background: linear-gradient(135deg, #1D6F42, #28a745); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
         .btn-excel:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(29,111,66,0.3); }
+        .btn-score-table { background: linear-gradient(135deg, #4364f7, #6a8eff); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
+        .btn-score-table:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(67,100,247,0.3); }
+
+        .score-modal-wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+        .score-modal-table { flex: 1; min-width: 260px; }
+        .score-modal-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .score-modal-table th, .score-modal-table td { border: 1px solid var(--medium-gray); padding: 6px 10px; text-align: center; }
+        .score-modal-table .evt-header { background: var(--primary-color); color: white; font-weight: 600; font-size: 14px; padding: 10px; }
+        .score-modal-table thead th { background: #f1f5f9; font-weight: 500; color: var(--dark-gray); }
+        .score-modal-table tbody tr:nth-child(even) { background: #f8fafc; }
 
         /* --- 데스크탑 테이블 스타일 --- */
         #desktop-view { overflow-x: auto; }
@@ -83,6 +93,7 @@
         <div class="section">
              <div id="result-title-container">
                 <h3 id="result-title">대학/학과/전형을 선택해주세요.</h3>
+                <button id="btn-score-table" class="btn-score-table" onclick="showScoreTable()" style="display:none;"><i class="fas fa-table"></i> 배점표</button>
             </div>
             <div id="desktop-view">
                 <table id="resultTable">
@@ -105,6 +116,7 @@
     let loggedInUserBranch = '';
     let studentDataMap = new Map();
     let currentEvents = [];
+    let scoreTableMap = {}; // "대학명_학과명_전형명" -> 실기ID
 
     function gradeBadge(grade) {
         if (!grade && grade !== 0) return '<span class="grade-badge grade-none">-</span>';
@@ -115,11 +127,15 @@
 
     // init 및 드롭다운 관련 함수들은 이전과 동일 (생략)
     async function init() {
-        const [profileRes, collegeRes] = await Promise.all([
+        const [profileRes, collegeRes, practicalRes] = await Promise.all([
             fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
+            fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+            fetch(`${SERVER}/26susi_get_practical_colleges`).then(res => res.json()).catch(() => [])
         ]);
         if (profileRes.success && profileRes.user) { loggedInUserBranch = profileRes.user.branch; }
+        if (Array.isArray(practicalRes)) {
+            practicalRes.forEach(p => { scoreTableMap[`${p.대학명}_${p.학과명}_${p.전형명}`] = p.실기ID; });
+        }
         if (collegeRes.success) { colleges = collegeRes.colleges; groupColleges(); populateCollegeSelect(); onTypeChange(); }
     }
     function groupColleges() { colleges.forEach(c => { if (!collegeGroups[c.대학명]) collegeGroups[c.대학명] = {}; if (!collegeGroups[c.대학명][c.학과명]) collegeGroups[c.대학명][c.학과명] = []; collegeGroups[c.대학명][c.학과명].push(c.전형명); }); }
@@ -132,12 +148,19 @@
         const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type').value;
         const resultTitle = document.getElementById('result-title');
         
+        const scoreBtn = document.getElementById('btn-score-table');
+
         if (!c || !m || !t) {
             renderDesktopTable([], []);
             renderMobileList([]);
             resultTitle.textContent = '대학/학과/전형을 선택해주세요.';
+            scoreBtn.style.display = 'none';
             return;
         }
+
+        // Show score table button if 실기ID exists for this college
+        const scoreKey = `${c}_${m}_${t}`;
+        scoreBtn.style.display = scoreTableMap[scoreKey] ? 'inline-flex' : 'none';
 
         const currentCollege = colleges.find(col => col.대학명 === c && col.학과명 === m && col.전형명 === t);
         if (!currentCollege) return;
@@ -628,6 +651,53 @@
         } catch (err) {
             console.error('Excel error:', err);
             Swal.fire('오류', '엑셀 생성 중 오류가 발생했습니다:\n' + err.message, 'error');
+        }
+    }
+
+    async function showScoreTable() {
+        const c = document.getElementById('sel-college').value;
+        const m = document.getElementById('sel-major').value;
+        const t = document.getElementById('sel-type').value;
+        const 실기ID = scoreTableMap[`${c}_${m}_${t}`];
+        if (!실기ID) { Swal.fire('안내', '해당 학교의 배점표가 없습니다.', 'info'); return; }
+
+        Swal.fire({ title: '배점표 로딩 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${실기ID}`);
+            const data = await res.json();
+            if (!data.success || !data.events || Object.keys(data.events).length === 0) {
+                Swal.fire('안내', '배점표 데이터가 없습니다.', 'info');
+                return;
+            }
+
+            let html = '<div class="score-modal-wrap">';
+            for (const [eventName, eventData] of Object.entries(data.events)) {
+                const scoreMap = { 남: new Map(), 여: new Map() };
+                const scores = new Set();
+                eventData.남.forEach(item => { scoreMap.남.set(item.배점, item.기록); scores.add(item.배점); });
+                eventData.여.forEach(item => { scoreMap.여.set(item.배점, item.기록); scores.add(item.배점); });
+                const sorted = Array.from(scores).sort((a, b) => parseFloat(b) - parseFloat(a));
+
+                html += `<div class="score-modal-table"><table>
+                    <thead><tr><th colspan="3" class="evt-header">${eventName}</th></tr>
+                    <tr><th>배점</th><th>남</th><th>여</th></tr></thead><tbody>`;
+                sorted.forEach(score => {
+                    html += `<tr><td style="font-weight:600;">${score}</td><td>${scoreMap.남.get(score) || '-'}</td><td>${scoreMap.여.get(score) || '-'}</td></tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+            html += '</div>';
+
+            Swal.fire({
+                title: `${c} ${m} 배점표`,
+                html: html,
+                width: Math.min(Object.keys(data.events).length * 320 + 80, 960),
+                confirmButtonText: '닫기',
+                confirmButtonColor: '#4364f7'
+            });
+        } catch (err) {
+            Swal.fire('오류', '배점표를 불러오는 중 오류가 발생했습니다.', 'error');
         }
     }
 
