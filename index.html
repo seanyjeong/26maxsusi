@@ -227,6 +227,13 @@
 
     <aside class="sidebar">
         <div class="sidebar-header">
+        <div style="background:#6366f1; color:white; text-align:center; padding:8px; font-size:13px;">
+          <select id="year-sidebar-select" onchange="setSusiYear(this.value)" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:4px 12px; font-weight:bold; font-size:13px; border-radius:4px; cursor:pointer;">
+            <option value="26">2026학년도</option>
+            <option value="27">2027학년도</option>
+          </select>
+          <script>document.getElementById("year-sidebar-select").value=SUSI_YEAR;</script>
+        </div>
             <h1>
                 <img src="https://github.com/seanyjeong/26maxsusi/blob/main/%EB%A7%A5%EC%8A%A4%EB%A1%9C%EA%B3%A0.png?raw=true" alt="logo">
                 <span id="susi-year-badge">20<span id="susi-year-num"></span>수시상담엔진</span>
@@ -242,6 +249,38 @@
             </button>
         </div>
 
+        <div id="year-switcher" style="margin:0 15px 15px;padding:10px 12px;background:rgba(255,255,255,0.05);border-radius:8px;">
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px;text-align:center;">학년도 선택</div>
+            <select id="year-select-sidebar"
+                style="width:100%;padding:6px 8px;border-radius:6px;background:#334155;color:white;border:1px solid #475569;font-size:13px;cursor:pointer;"
+                onchange="switchSusiYear(this.value)">
+                <option value="26">2026학년도</option>
+                <option value="27">2027학년도</option>
+            </select>
+        </div>
+        <script>
+        async function switchSusiYear(year) {
+            const token = localStorage.getItem('token');
+            const res = await fetch(window.SUSI_API + '/switch-year', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ year: year })
+            });
+            const json = await res.json();
+            if (json.success) {
+                localStorage.setItem('token', json.token);
+                window.setSusiYear(year);
+                Swal.fire({ title: '20' + year + '학년도로 전환', icon:'info', timer:1200, showConfirmButton:false })
+                    .then(() => location.reload());
+            } else {
+                alert('연도 전환 실패: ' + (json.message || '알 수 없는 오류'));
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var sel = document.getElementById('year-select-sidebar');
+            if (sel) sel.value = window.SUSI_YEAR || '26';
+        });
+        </script>
         <ul class="sidebar-nav">
             <li><a href="dashboard.html" class="active"><i class="fas fa-home"></i><span>메인 대시보드</span></a></li>
             <li><a href="student.html"><i class="fas fa-list-ol"></i><span>학생 명단관리</span></a></li>
@@ -279,7 +318,7 @@
 
         async function loadUserInfo() {
             try {
-                const res = await fetch(`${SUSI_API}/profile`, {
+                const res = await susicFetch(`${SUSI_API}/profile`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 const json = await res.json();

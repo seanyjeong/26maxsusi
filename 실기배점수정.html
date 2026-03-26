@@ -57,7 +57,7 @@
             return false;
         }
         try {
-            const res = await fetch(`${SUSI_API}/profile`, {
+            const res = await susicFetch(`${SUSI_API}/profile`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const json = await res.json();
@@ -84,7 +84,7 @@
     async function loadColleges() {
         // ... (이 함수는 수정할 필요 없음)
         try {
-            const res = await fetch(`${SUSI_API}_get_practical_colleges`);
+            const res = await susicFetch(`${SUSI_API}_get_practical_colleges`);
             const data = await res.json();
             const select = document.getElementById('collegeSelect');
             data.forEach(row => {
@@ -111,7 +111,7 @@
         }
         container.innerHTML = `<div id="message">배점표를 불러오는 중...</div>`;
         try {
-            const res = await fetch(`${SUSI_API}_get_score_table?실기ID=${실기ID}`);
+            const res = await susicFetch(`${SUSI_API}_get_score_table?실기ID=${실기ID}`);
             const json = await res.json();
             if (!json.success || !json.events || Object.keys(json.events).length === 0) {
                 container.innerHTML = `<div id="message">해당 대학의 배점표 데이터가 없습니다.</div>`;
@@ -163,7 +163,7 @@
         if (!result.isConfirmed) return;
         
         try {
-            const res = await fetch(`${SUSI_API}_update_score_table`, {
+            const res = await susicFetch(`${SUSI_API}_update_score_table`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ 실기ID: 실기ID, data: dataToSend })

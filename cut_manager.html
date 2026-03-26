@@ -219,7 +219,7 @@ function logout() {
             }
 
             try {
-                const res = await fetch(`${SUSI_API}_get_all_cuts`, {
+                const res = await susicFetch(`${SUSI_API}_get_all_cuts`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
@@ -303,7 +303,7 @@ function logout() {
 
                 if (!maxCutInput.readOnly && maxCutInput.value !== initialMaxCut) {
                     promises.push(
-                        fetch(`${SUSI_API}_update_max_cut`, {
+                        susicFetch(`${SUSI_API}_update_max_cut`, {
                             method: 'POST',
                             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 대학ID: collegeID, 맥스예상컷: maxCutInput.value })
@@ -313,7 +313,7 @@ function logout() {
 
                 if (branchCutInput.value !== initialBranchCut) {
                      promises.push(
-                        fetch(`${SUSI_API}_update_branch_cut`, {
+                        susicFetch(`${SUSI_API}_update_branch_cut`, {
                             method: 'POST',
                             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 대학ID: collegeID, 지점예상컷: branchCutInput.value })

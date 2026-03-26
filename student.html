@@ -367,7 +367,7 @@
         return;
       }
       
-      const res = await fetch(SUSI_API + '_student_bulk_insert', {
+      const res = await susicFetch(SUSI_API + '_student_bulk_insert', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer '+token,
@@ -388,7 +388,7 @@
 
     // 학생 목록 불러오기
     async function loadStudents() {
-      const res = await fetch(SUSI_API + '_student_list', {
+      const res = await susicFetch(SUSI_API + '_student_list', {
         headers: { Authorization: 'Bearer ' + token }
       });
       const json = await res.json();
@@ -439,7 +439,7 @@
       const btn = document.getElementById(`editBtn_${sid}`);
       btn.disabled = true; // 중복 클릭 방지
       
-      const res = await fetch(SUSI_API + '_student_update', {
+      const res = await susicFetch(SUSI_API + '_student_update', {
         method:'POST',
         headers:{
           'Authorization':'Bearer '+token,
@@ -476,7 +476,7 @@
             cancelButtonText: '취소'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                const res = await fetch(SUSI_API + '_student_delete', {
+                const res = await susicFetch(SUSI_API + '_student_delete', {
                     method:'POST',
                     headers:{
                         'Authorization':'Bearer '+token,

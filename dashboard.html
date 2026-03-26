@@ -94,7 +94,7 @@ async function loadNotices() {
     const list = document.getElementById('notice-list');
     if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
     try {
-        const res = await fetch(`${SUSI_API}/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
+        const res = await susicFetch(`${SUSI_API}/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
 
         if (data.success && data.announcements.length > 0) {
@@ -178,7 +178,7 @@ function showNoticePopup(title, content) {
         const list = document.getElementById('announcement-list');
         if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
         try {
-            const res = await fetch(`${SUSI_API}/announcement-dates`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const res = await susicFetch(`${SUSI_API}/announcement-dates`, { headers: { 'Authorization': 'Bearer ' + token } });
             const data = await res.json();
             if (data.success && data.dates.length > 0) {
                 list.innerHTML = '';
@@ -202,7 +202,7 @@ function showNoticePopup(title, content) {
         const list = document.getElementById('schedule-list');
         if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
         try {
-            const res = await fetch(`${SUSI_API}/branch-schedule`, { headers: { Authorization: 'Bearer ' + token } });
+            const res = await susicFetch(`${SUSI_API}/branch-schedule`, { headers: { Authorization: 'Bearer ' + token } });
             const data = await res.json();
             if (data.success && data.schedule.length > 0) {
                 list.innerHTML = '';

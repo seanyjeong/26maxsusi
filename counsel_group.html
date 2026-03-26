@@ -203,7 +203,7 @@ async function updateScoresForRow(row) {
     }));
 
     // 서버에 딱 한 번만 요청해서 모든 계산 결과 받기
-    const res = await fetch(`${SUSI_API}/calculate-final-score`, {
+    const res = await susicFetch(`${SUSI_API}/calculate-final-score`, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ 대학ID: currentCollege.대학ID, gender: student.성별, inputs, 내신점수 })
@@ -266,9 +266,9 @@ function onNaesinInputChange(input) {
 
 async function loadInitialData() {
     const [profileData, collegeData, studentData] = await Promise.all([
-        fetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-        fetch(`${SUSI_API}_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-        fetch(`${SUSI_API}_student_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
+        susicFetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+        susicFetch(`${SUSI_API}_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+        susicFetch(`${SUSI_API}_student_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
     ]);
     if (profileData.success && profileData.user.branch) { document.getElementById('main-title').textContent = `2026맥스체대입시 ${profileData.user.branch} 교육원 수시상담 (전체)`; }
     if (collegeData.success) { colleges = collegeData.colleges; groupColleges(); populateCollegeSelect(); }
@@ -291,7 +291,7 @@ async function searchConsultations() {
     titleEl.innerHTML = `<strong>${c} ${m} (${t})</strong>`;
     cutScoresEl.innerHTML = `<span>맥스컷: ${currentCollege['26맥스예상컷'] || '-'}</span><span>지점컷: ${currentCollege['지점예상컷'] || '-'}</span>`;
     await fetchPracticalEvents(currentCollege.실기ID);
-    const res = await fetch(`${SUSI_API}_counsel_by_college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await susicFetch(`${SUSI_API}_counsel_by_college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
     const data = await res.json();
     Swal.close();
     if (data.success) {
@@ -303,7 +303,7 @@ async function searchConsultations() {
 
 async function fetchPracticalEvents(practicalId) {
     if (!practicalId) { practicalEvents = []; return; }
-    const res = await fetch(`${SUSI_API}_events_by_practical_id?practical_id=${practicalId}&gender=남`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await susicFetch(`${SUSI_API}_events_by_practical_id?practical_id=${practicalId}&gender=남`, { headers: { 'Authorization': 'Bearer ' + token } });
     const data = await res.json();
     practicalEvents = data.success ? [...new Set(data.events.map(e => e.종목명))] : [];
 }
@@ -370,7 +370,7 @@ async function saveGroupData() {
         studentDataPayload.push(data);
     });
     try {
-        const res = await fetch(`${SUSI_API}_counsel_by_college_save`, {
+        const res = await susicFetch(`${SUSI_API}_counsel_by_college_save`, {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ college_id: currentCollege.대학ID, studentData: studentDataPayload })
@@ -390,7 +390,7 @@ async function openScoreTablePopup() { /* 이전과 동일, 생략하지 않음 
     container.innerHTML = '로딩 중...';
     modal.style.display = 'block';
     try {
-        const res = await fetch(`${SUSI_API}_get_score_table?실기ID=${currentCollege.실기ID}`);
+        const res = await susicFetch(`${SUSI_API}_get_score_table?실기ID=${currentCollege.실기ID}`);
         const data = await res.json();
         if (data.success) {
             let finalHTML = '';

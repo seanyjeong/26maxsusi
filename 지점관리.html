@@ -120,7 +120,7 @@
 
             try {
                 // [수정 2] /owner_login API 사용
-                const response = await fetch(`${SUSI_API}/owner_login`, {
+                const response = await susicFetch(`${SUSI_API}/owner_login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userid, password })
@@ -169,7 +169,7 @@
 
             try {
                 // [수정 3] /branch-data-status API로 지점 목록 가져오기
-                const response = await fetch(`${SUSI_API}/branch-data-status`, {
+                const response = await susicFetch(`${SUSI_API}/branch-data-status`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();
@@ -197,7 +197,7 @@
 
             try {
                 // [수정 4] /branch_summary_by_university API 호출
-                const response = await fetch(`${SUSI_API}/branch_summary_by_university`, {
+                const response = await susicFetch(`${SUSI_API}/branch_summary_by_university`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();
@@ -229,7 +229,7 @@
 
             try {
                 // [수정 5] /admin/branch_summary API 호출
-                const response = await fetch(`${SUSI_API}/admin/branch_summary?branch=${selectedBranch}`, {
+                const response = await susicFetch(`${SUSI_API}/admin/branch_summary?branch=${selectedBranch}`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();
@@ -255,7 +255,7 @@
 
             try {
                 // [신규] 1단계에서 만든 /admin/all_branch_summary API 호출
-                const response = await fetch(`${SUSI_API}/admin/all_branch_summary`, {
+                const response = await susicFetch(`${SUSI_API}/admin/all_branch_summary`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();

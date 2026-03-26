@@ -170,7 +170,7 @@
 
         try {
             // ⭐️ API 경로 수정: /check-userid 사용
-            const res = await fetch(`${SUSI_API}/check-userid`, {
+            const res = await susicFetch(`${SUSI_API}/check-userid`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userid })
@@ -231,7 +231,7 @@
 
         try {
             // ⭐️ API 경로 수정: /send-verification-sms 사용
-            const res = await fetch(`${SUSI_API}/send-verification-sms`, {
+            const res = await susicFetch(`${SUSI_API}/send-verification-sms`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone })
@@ -300,7 +300,7 @@
 
         try {
              // ⭐️ API 경로 수정: /verify-code 사용
-            const res = await fetch(`${SUSI_API}/verify-code`, {
+            const res = await susicFetch(`${SUSI_API}/verify-code`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone, code })
@@ -377,7 +377,7 @@
 
         try {
             // ⭐️ API 경로 수정: /register 사용 (백엔드에서 직급 처리하도록 수정 필요)
-            const res = await fetch(`${SUSI_API}/register`, {
+            const res = await susicFetch(`${SUSI_API}/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

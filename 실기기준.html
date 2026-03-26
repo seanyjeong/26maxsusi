@@ -66,7 +66,7 @@
 
     async function fetchColleges() {
         // 1. 호출하는 API 주소를 새로 만든 API로 변경합니다.
-        const res = await fetch(`${SUSI_API}_get_practical_colleges_with_scores`);
+        const res = await susicFetch(`${SUSI_API}_get_practical_colleges_with_scores`);
         const data = await res.json();
         renderCollegeList(data);
     }
@@ -131,7 +131,7 @@ function renderCollegeList(list) {
                 특수식설명: desc
             };
 
-            const res = await fetch(`${SUSI_API}_save_practical_total_config`, {
+            const res = await susicFetch(`${SUSI_API}_save_practical_total_config`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

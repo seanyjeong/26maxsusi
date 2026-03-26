@@ -148,9 +148,9 @@
 
     async function initializePage() {
         const [regionRes, eventRes, studentRes] = await Promise.all([
-            fetch(`${SUSI_API}/filter-options/regions`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SUSI_API}/filter-options/events`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SUSI_API}_student_list`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json())
+            susicFetch(`${SUSI_API}/filter-options/regions`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
+            susicFetch(`${SUSI_API}/filter-options/events`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
+            susicFetch(`${SUSI_API}_student_list`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json())
         ]);
         
         if (studentRes.success) allBranchStudents = studentRes.students;
@@ -279,7 +279,7 @@
 
     function applyFilters() {
         const queryString = new URLSearchParams(currentFilters).toString();
-        fetch(`${SUSI_API}/explore-universities?${queryString}`, { headers: { Authorization: 'Bearer ' + token } })
+        susicFetch(`${SUSI_API}/explore-universities?${queryString}`, { headers: { Authorization: 'Bearer ' + token } })
             .then(res => res.json())
             .then(data => {
                 if (data.success) renderResults(data.universities);
@@ -312,7 +312,7 @@ async function openStudentModal(collegeId) {
         return;
     }
 
-    const res = await fetch(`${SUSI_API}/counseled-students-for-college?college_id=${collegeId}`, {
+    const res = await susicFetch(`${SUSI_API}/counseled-students-for-college?college_id=${collegeId}`, {
         headers: { 'Authorization': 'Bearer ' + token }
     });
     const data = await res.json();
@@ -346,7 +346,7 @@ async function openStudentModal(collegeId) {
 
     if (selectedIds && selectedIds.length > 0) {
         const idsToSend = Array.isArray(selectedIds) ? selectedIds : [selectedIds];
-        fetch(`${SUSI_API}/add-counseling-bulk`, {
+        susicFetch(`${SUSI_API}/add-counseling-bulk`, {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ college_id: collegeId, student_ids: idsToSend })

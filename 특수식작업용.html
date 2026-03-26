@@ -53,7 +53,7 @@
     }
 
     async function loadSpecialColleges() {
-      const res = await fetch(SUSI_API + '_get_practical_colleges_with_scores');
+      const res = await susicFetch(SUSI_API + '_get_practical_colleges_with_scores');
       const colleges = await res.json();
       const tbody = document.getElementById('specialBody');
       const checkedSet = getCheckedSet();

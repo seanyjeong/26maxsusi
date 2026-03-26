@@ -129,9 +129,9 @@
     // init 및 드롭다운 관련 함수들은 이전과 동일 (생략)
     async function init() {
         const [profileRes, collegeRes, practicalRes] = await Promise.all([
-            fetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SUSI_API}_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SUSI_API}_get_practical_colleges`).then(res => res.json()).catch(() => [])
+            susicFetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+            susicFetch(`${SUSI_API}_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+            susicFetch(`${SUSI_API}_get_practical_colleges`).then(res => res.json()).catch(() => [])
         ]);
         if (profileRes.success && profileRes.user) { loggedInUserBranch = profileRes.user.branch; }
         if (Array.isArray(practicalRes)) {
@@ -168,7 +168,7 @@
         
         resultTitle.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 전체 지점 데이터 조회 중...`;
         
-        const res = await fetch(`${SUSI_API}/realtime-rank-by-college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
+        const res = await susicFetch(`${SUSI_API}/realtime-rank-by-college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
         
         if (data.success) {
@@ -327,7 +327,7 @@
                 if (db) db.style.width = pct + '%';
 
                 try {
-                    const res = await fetch(`${SUSI_API}/realtime-rank-by-college?college_id=${col.대학ID}`, {
+                    const res = await susicFetch(`${SUSI_API}/realtime-rank-by-college?college_id=${col.대학ID}`, {
                         headers: { 'Authorization': 'Bearer ' + token }
                     });
                     const data = await res.json();
@@ -665,7 +665,7 @@
         Swal.fire({ title: '배점표 로딩 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            const res = await fetch(`${SUSI_API}_get_score_table?실기ID=${실기ID}`);
+            const res = await susicFetch(`${SUSI_API}_get_score_table?실기ID=${실기ID}`);
             const data = await res.json();
             if (!data.success || !data.events || Object.keys(data.events).length === 0) {
                 Swal.fire('안내', '배점표 데이터가 없습니다.', 'info');
