@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>실기 총점 설정</title>
@@ -61,11 +62,11 @@
   <div id="college-list"></div>
 
   <script>
-    const BASE_URL = 'https://supermax.kr';
+    const BASE_URL = SUSI_API;;
 
     async function fetchColleges() {
         // 1. 호출하는 API 주소를 새로 만든 API로 변경합니다.
-        const res = await fetch(`${BASE_URL}/26susi_get_practical_colleges_with_scores`);
+        const res = await fetch(`${SUSI_API}_get_practical_colleges_with_scores`);
         const data = await res.json();
         renderCollegeList(data);
     }
@@ -130,7 +131,7 @@ function renderCollegeList(list) {
                 특수식설명: desc
             };
 
-            const res = await fetch(`${BASE_URL}/26susi_save_practical_total_config`, {
+            const res = await fetch(`${SUSI_API}_save_practical_total_config`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

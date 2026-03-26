@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>지점별 최종 수합 현황</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,7 +61,7 @@
 </div>
 
 <script>
-    const SERVER = 'https://supermax.kr';
+    const SERVER = SUSI_API;;
     const token = localStorage.getItem('token');
     if (!token) location.href = 'login.html';
     let allUniversityData = [];
@@ -69,8 +70,8 @@
         Swal.fire({ title: '데이터를 불러오는 중입니다...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
             const [summaryRes, profileRes] = await Promise.all([
-                fetch(`${SERVER}/26susi/branch_summary_by_university`, { headers: { 'Authorization': 'Bearer ' + token } }),
-                fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } })
+                fetch(`${SUSI_API}/branch_summary_by_university`, { headers: { 'Authorization': 'Bearer ' + token } }),
+                fetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } })
             ]);
             if (!summaryRes.ok || !profileRes.ok) throw new Error(`서버 응답 오류`);
             const summaryData = await summaryRes.json();
@@ -251,7 +252,7 @@
         });
         
         try {
-            const res = await fetch(`${SERVER}/26susi_final_save`, {
+            const res = await fetch(`${SUSI_API}_final_save`, {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ college_id: collegeId, studentData: studentDataPayload })
@@ -297,7 +298,7 @@
                 return;
             }
 
-            const res = await fetch(`${SERVER}/26susi/calculate-final-score`, {
+            const res = await fetch(`${SUSI_API}/calculate-final-score`, {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -342,7 +343,7 @@
     async function checkUnassignedStudents() {
         Swal.fire({ title: '확인 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(`${SERVER}/26susi/unassigned_students`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const res = await fetch(`${SUSI_API}/unassigned_students`, { headers: { 'Authorization': 'Bearer ' + token } });
             const data = await res.json();
             if (!data.success) throw new Error(data.message || '데이터 조회 실패');
             let contentHTML = '';
@@ -375,7 +376,7 @@
         modal.style.display = 'block';
         
         try {
-            const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${university.실기ID}`);
+            const res = await fetch(`${SUSI_API}_get_score_table?실기ID=${university.실기ID}`);
             const data = await res.json();
             if (data.success) {
                 renderPopupScoreTable(data.events, container);

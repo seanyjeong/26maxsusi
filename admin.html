@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>원장회원 승인/관리</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -166,7 +167,7 @@
     </div>
 
 <script>
-    const SERVER = 'https://supermax.kr';
+    const SERVER = SUSI_API;;
 
     // 관리자 인증 체크
     async function checkAdmin() {
@@ -175,7 +176,7 @@
             location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
             return false;
         }
-        const res = await fetch(SERVER + '/26susi/profile', {
+        const res = await fetch(SUSI_API + '/profile', {
             headers: { Authorization: 'Bearer ' + token }
         });
         const json = await res.json();
@@ -191,7 +192,7 @@
     // 회원 목록 불러오기
     async function loadMembers() {
         const token = localStorage.getItem('token');
-        const res = await fetch(SERVER + '/26susi_admin_members', {
+        const res = await fetch(SUSI_API + '_admin_members', {
             headers: { Authorization: 'Bearer ' + token }
         });
         const json = await res.json();
@@ -241,7 +242,7 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 const token = localStorage.getItem('token');
-                const res = await fetch(SERVER + '/26susi_admin_approve', {
+                const res = await fetch(SUSI_API + '_admin_approve', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userid })
@@ -270,7 +271,7 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 const token = localStorage.getItem('token');
-                const res = await fetch(SERVER + '/26susi_admin_delete', {
+                const res = await fetch(SUSI_API + '_admin_delete', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userid })

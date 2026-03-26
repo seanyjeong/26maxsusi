@@ -39,6 +39,7 @@
         }
         .hidden { display: none; }
     </style>
+    <script src="utils.js"></script>
 </head>
 <body>
 
@@ -79,7 +80,7 @@
 
     <script>
         // [수정 1] 네 서버 주소를 여기에 추가!
-        const API_BASE_URL = 'https://supermax.kr';
+        // API_BASE_URL is now provided by utils.js as SUSI_API
 
         // 전역 변수로 토큰과 유저 정보 저장
         let appState = {
@@ -118,8 +119,8 @@
             updateStatus("로그인 시도 중...", '#333');
 
             try {
-                // [수정 2] /26susi/owner_login API 사용
-                const response = await fetch(`${API_BASE_URL}/26susi/owner_login`, {
+                // [수정 2] /owner_login API 사용
+                const response = await fetch(`${SUSI_API}/owner_login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userid, password })
@@ -167,8 +168,8 @@
             selectEl.innerHTML = "<option>지점 목록 불러오는 중...</option>";
 
             try {
-                // [수정 3] /26susi/branch-data-status API로 지점 목록 가져오기
-                const response = await fetch(`${API_BASE_URL}/26susi/branch-data-status`, {
+                // [수정 3] /branch-data-status API로 지점 목록 가져오기
+                const response = await fetch(`${SUSI_API}/branch-data-status`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();
@@ -195,8 +196,8 @@
             updateStatus("서버에서 데이터를 가져오는 중입니다...", '#333');
 
             try {
-                // [수정 4] /26susi/branch_summary_by_university API 호출
-                const response = await fetch(`${API_BASE_URL}/26susi/branch_summary_by_university`, {
+                // [수정 4] /branch_summary_by_university API 호출
+                const response = await fetch(`${SUSI_API}/branch_summary_by_university`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();
@@ -227,8 +228,8 @@
             updateStatus(`[${selectedBranch}] 지점 데이터를 가져오는 중...`, '#333');
 
             try {
-                // [수정 5] /26susi/admin/branch_summary API 호출
-                const response = await fetch(`${API_BASE_URL}/26susi/admin/branch_summary?branch=${selectedBranch}`, {
+                // [수정 5] /admin/branch_summary API 호출
+                const response = await fetch(`${SUSI_API}/admin/branch_summary?branch=${selectedBranch}`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();
@@ -253,8 +254,8 @@
             updateStatus("서버에서 [전 지점] 데이터를 모두 가져오는 중... (시간이 걸릴 수 있음)", '#333');
 
             try {
-                // [신규] 1단계에서 만든 /26susi/admin/all_branch_summary API 호출
-                const response = await fetch(`${API_BASE_URL}/26susi/admin/all_branch_summary`, {
+                // [신규] 1단계에서 만든 /admin/all_branch_summary API 호출
+                const response = await fetch(`${SUSI_API}/admin/all_branch_summary`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const data = await response.json();

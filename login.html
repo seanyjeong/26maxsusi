@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>원장/관리자 로그인</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -127,6 +128,13 @@
             <h2>로그인</h2>
         </div>
         
+        <div style="text-align:center; margin-bottom:15px;">
+          <select id="year-select" onchange="setSusiYear(this.value)" style="padding:8px 16px; font-size:14px; border-radius:8px; border:1px solid #ddd;">
+            <option value="26">2026학년도</option>
+            <option value="27">2027학년도</option>
+          </select>
+        </div>
+        <script>document.getElementById("year-select").value = SUSI_YEAR;</script>
         <form id="loginForm" autocomplete="off">
             <div>
                 <label for="userid">아이디</label>
@@ -157,7 +165,7 @@
             const msgEl = document.getElementById('loginMsg');
             msgEl.textContent = ''; // 이전 메시지 초기화
 
-            const res = await fetch('https://supermax.kr/26susi/login', {
+            const res = await fetch(SUSI_API + '/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

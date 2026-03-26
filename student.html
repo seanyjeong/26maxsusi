@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>학생 명단 관리</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -223,7 +224,7 @@
     </div>
 
 <script>
-    const SERVER = 'https://supermax.kr';
+    const SERVER = SUSI_API;;
     let branch = '';
     let token = localStorage.getItem('token');
     if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
@@ -366,7 +367,7 @@
         return;
       }
       
-      const res = await fetch(SERVER + '/26susi_student_bulk_insert', {
+      const res = await fetch(SUSI_API + '_student_bulk_insert', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer '+token,
@@ -387,7 +388,7 @@
 
     // 학생 목록 불러오기
     async function loadStudents() {
-      const res = await fetch(SERVER + '/26susi_student_list', {
+      const res = await fetch(SUSI_API + '_student_list', {
         headers: { Authorization: 'Bearer ' + token }
       });
       const json = await res.json();
@@ -438,7 +439,7 @@
       const btn = document.getElementById(`editBtn_${sid}`);
       btn.disabled = true; // 중복 클릭 방지
       
-      const res = await fetch(SERVER + '/26susi_student_update', {
+      const res = await fetch(SUSI_API + '_student_update', {
         method:'POST',
         headers:{
           'Authorization':'Bearer '+token,
@@ -475,7 +476,7 @@
             cancelButtonText: '취소'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                const res = await fetch(SERVER + '/26susi_student_delete', {
+                const res = await fetch(SUSI_API + '_student_delete', {
                     method:'POST',
                     headers:{
                         'Authorization':'Bearer '+token,

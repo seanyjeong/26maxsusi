@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>공지사항 관리</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,13 +58,13 @@
     </div>
 
     <script>
-        const SERVER = 'https://supermax.kr';
+        const SERVER = SUSI_API;;
         const token = localStorage.getItem('token');
 
         // 관리자 인증 체크
         async function checkAdmin() {
             if (!token) { location.href = 'login.html'; return false; }
-            const res = await fetch(`${SERVER}/26susi/profile`, { headers: { Authorization: 'Bearer ' + token } });
+            const res = await fetch(`${SUSI_API}/profile`, { headers: { Authorization: 'Bearer ' + token } });
             const json = await res.json();
             if (!json.success || json.user.userid !== 'admin') {
                 await Swal.fire('권한 없음', '관리자 계정만 접근 가능합니다.', 'error');
@@ -75,7 +76,7 @@
 
         // 공지사항 목록 불러오기
         async function loadNotices() {
-            const res = await fetch(`${SERVER}/26susi/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const res = await fetch(`${SUSI_API}/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
             const data = await res.json();
             const tbody = document.getElementById('notice-tbody');
             tbody.innerHTML = '';
@@ -105,7 +106,7 @@
             const content = document.getElementById('notice-content').value;
             const is_important = document.getElementById('notice-important').checked;
             
-            const res = await fetch(`${SERVER}/26susi/announcements/create`, {
+            const res = await fetch(`${SUSI_API}/announcements/create`, {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, content, is_important })
@@ -133,7 +134,7 @@
                 cancelButtonText: '취소'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    const res = await fetch(`${SERVER}/26susi/announcements/delete`, {
+                    const res = await fetch(`${SUSI_API}/announcements/delete`, {
                         method: 'POST',
                         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ notice_id: noticeId })

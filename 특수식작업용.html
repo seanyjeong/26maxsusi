@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
   <meta charset="UTF-8">
   <title>특수 계산식 적용 대학 리스트</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,7 +39,7 @@
   </table>
 
   <script>
-    const SERVER = 'https://supermax.kr';
+    const SERVER = SUSI_API;;
     const STORAGE_KEY = 'special_college_checked';
 
     // 저장/불러오기
@@ -52,7 +53,7 @@
     }
 
     async function loadSpecialColleges() {
-      const res = await fetch(SERVER + '/26susi_get_practical_colleges_with_scores');
+      const res = await fetch(SUSI_API + '_get_practical_colleges_with_scores');
       const colleges = await res.json();
       const tbody = document.getElementById('specialBody');
       const checkedSet = getCheckedSet();

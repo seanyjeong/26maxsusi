@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>원장회원 가입</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -142,7 +143,7 @@
         <div class="card-footer"> 이미 계정이 있다면? <a href="admin_login.html">로그인</a> </div> </div>
 
 <script>
-    const SERVER_URL = 'https://supermax.kr';
+    const SERVER_URL = SUSI_API;;
     const form = document.getElementById('registerForm');
     const useridInput = form.userid;
     const password = document.getElementById('password');
@@ -168,8 +169,8 @@
         }
 
         try {
-            // ⭐️ API 경로 수정: /26susi/check-userid 사용
-            const res = await fetch(`${SERVER_URL}/26susi/check-userid`, {
+            // ⭐️ API 경로 수정: /check-userid 사용
+            const res = await fetch(`${SUSI_API}/check-userid`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userid })
@@ -229,8 +230,8 @@
         phoneFeedback.className = 'feedback';
 
         try {
-            // ⭐️ API 경로 수정: /26susi/send-verification-sms 사용
-            const res = await fetch(`${SERVER_URL}/26susi/send-verification-sms`, {
+            // ⭐️ API 경로 수정: /send-verification-sms 사용
+            const res = await fetch(`${SUSI_API}/send-verification-sms`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone })
@@ -298,8 +299,8 @@
         phoneFeedback.className = 'feedback';
 
         try {
-             // ⭐️ API 경로 수정: /26susi/verify-code 사용
-            const res = await fetch(`${SERVER_URL}/26susi/verify-code`, {
+             // ⭐️ API 경로 수정: /verify-code 사용
+            const res = await fetch(`${SUSI_API}/verify-code`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone, code })
@@ -375,8 +376,8 @@
         };
 
         try {
-            // ⭐️ API 경로 수정: /26susi/register 사용 (백엔드에서 직급 처리하도록 수정 필요)
-            const res = await fetch(`${SERVER_URL}/26susi/register`, {
+            // ⭐️ API 경로 수정: /register 사용 (백엔드에서 직급 처리하도록 수정 필요)
+            const res = await fetch(`${SUSI_API}/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
-    <title>26수시 실시간 현황</title>
+    <title>수시 실시간 현황</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -79,7 +80,7 @@
 <body>
     <div class="container">
         <div class="section">
-             <h2 id="main-title">26수시 실시간 현황 (전체 교육원)</h2>
+             <h2 id="main-title"><span class="year-display"></span>수시 실시간 현황 (전체 교육원)</h2>
             <div class="controls-wrap">
                 <div class="filter-wrap">
                     <div><label for="sel-college">대학명</label><select id="sel-college" onchange="onCollegeChange()"></select></div>
@@ -108,7 +109,7 @@
     </div>
 
 <script>
-    const SERVER = 'https://supermax.kr';
+    const SERVER = SUSI_API;;
     const token = localStorage.getItem('token');
     if (!token) location.href = 'login.html';
 
@@ -128,9 +129,9 @@
     // init 및 드롭다운 관련 함수들은 이전과 동일 (생략)
     async function init() {
         const [profileRes, collegeRes, practicalRes] = await Promise.all([
-            fetch(`${SERVER}/26susi/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SERVER}/26susi_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SERVER}/26susi_get_practical_colleges`).then(res => res.json()).catch(() => [])
+            fetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+            fetch(`${SUSI_API}_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
+            fetch(`${SUSI_API}_get_practical_colleges`).then(res => res.json()).catch(() => [])
         ]);
         if (profileRes.success && profileRes.user) { loggedInUserBranch = profileRes.user.branch; }
         if (Array.isArray(practicalRes)) {
@@ -167,7 +168,7 @@
         
         resultTitle.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 전체 지점 데이터 조회 중...`;
         
-        const res = await fetch(`${SERVER}/26susi/realtime-rank-by-college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
+        const res = await fetch(`${SUSI_API}/realtime-rank-by-college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
         
         if (data.success) {
@@ -326,7 +327,7 @@
                 if (db) db.style.width = pct + '%';
 
                 try {
-                    const res = await fetch(`${SERVER}/26susi/realtime-rank-by-college?college_id=${col.대학ID}`, {
+                    const res = await fetch(`${SUSI_API}/realtime-rank-by-college?college_id=${col.대학ID}`, {
                         headers: { 'Authorization': 'Bearer ' + token }
                     });
                     const data = await res.json();
@@ -374,7 +375,7 @@
 
             // ========== 1) 목차 시트 ==========
             const tocWs = wb.addWorksheet('목차', { properties: { defaultRowHeight: 24 } });
-            const tocTitle = tocWs.addRow(['26수시 전체 수합결과 — 목차']);
+            const tocTitle = tocWs.addRow([SUSI_YEAR + '수시 전체 수합결과 — 목차']);
             tocTitle.height = 42;
             tocWs.mergeCells(tocTitle.number, 1, tocTitle.number, 5);
             tocTitle.getCell(1).font = { name: 'Noto Sans KR', size: 18, bold: true, color: { argb: C.primary } };
@@ -636,7 +637,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `26수시_전체수합결과_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`;
+            a.download = `${SUSI_YEAR}수시_전체수합결과_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -664,7 +665,7 @@
         Swal.fire({ title: '배점표 로딩 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${실기ID}`);
+            const res = await fetch(`${SUSI_API}_get_score_table?실기ID=${실기ID}`);
             const data = await res.json();
             if (!data.success || !data.events || Object.keys(data.events).length === 0) {
                 Swal.fire('안내', '배점표 데이터가 없습니다.', 'info');

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
   <meta charset="UTF-8">
   <title>대학별 내신/등급 입력 시스템</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -185,7 +186,7 @@
   <div id="msg"></div>
   
   <script>
-    const SERVER = 'https://supermax.kr';
+    const SERVER = SUSI_API;;
     let branch = '';
     let token = localStorage.getItem('token');
     if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
@@ -211,7 +212,7 @@
     const studentsPerPage = 5;
 
     async function loadAll() {
-      const res = await fetch(SERVER + '/26susi_student_grade_map', {
+      const res = await fetch(SUSI_API + '_student_grade_map', {
         headers: { Authorization: 'Bearer ' + token }
       });
       const json = await res.json();
@@ -362,7 +363,7 @@ function setupStudentSearch() {
       if (score === null) score = prev.내신점수 || '';
       grade_map[key] = { 등급: grade, 내신점수: score };
 
-      const res = await fetch(SERVER + '/26susi_student_grade_update', {
+      const res = await fetch(SUSI_API + '_student_grade_update', {
         method:'POST',
         headers:{
           'Authorization':'Bearer '+token,

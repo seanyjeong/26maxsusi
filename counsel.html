@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
   <meta charset="UTF-8">
   <title>상담 입력</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -594,7 +595,7 @@ table {
 </div>
 
   <script>
-const SERVER = 'https://supermax.kr';
+const SERVER = SUSI_API;;
 let token = localStorage.getItem('token');
 if (!token) location.href = 'login.html';
 
@@ -613,7 +614,7 @@ async function updateAllScores(tbody) {
         기록: group.querySelector('.input-record').value.trim() || null
     }));
 
-    const res = await fetch(`${SERVER}/26susi/calculate-final-score`, {
+    const res = await fetch(`${SUSI_API}/calculate-final-score`, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ 대학ID: collegeID, gender: student.성별, inputs, 내신점수 })
@@ -670,9 +671,9 @@ async function loadData() {
     });
     try {
         const [profileRes, studentRes, collegeRes] = await Promise.all([
-            fetch(SERVER + '/26susi/profile', { headers: { Authorization: 'Bearer ' + token } }),
-            fetch(SERVER + '/26susi_student_list', { headers: { Authorization: 'Bearer ' + token } }),
-            fetch(SERVER + '/26susi_college_list', { headers: { Authorization: 'Bearer ' + token } }),
+            fetch(SUSI_API + '/profile', { headers: { Authorization: 'Bearer ' + token } }),
+            fetch(SUSI_API + '_student_list', { headers: { Authorization: 'Bearer ' + token } }),
+            fetch(SUSI_API + '_college_list', { headers: { Authorization: 'Bearer ' + token } }),
         ]);
         const profileData = await profileRes.json();
         if (profileData.success && profileData.user) {
@@ -772,13 +773,13 @@ async function onTypeChange(sel) {
     if (!student) { practicalContainer.innerHTML = '<span style="color:red;">학생을 먼저 선택하세요.</span>'; return; }
     if (!practical_id) { practicalContainer.innerHTML = '<span style="color:gray;">실기 종목이 없습니다.</span>'; }
     else {
-        const res = await fetch(`${SERVER}/26susi_events_by_practical_id?practical_id=${practical_id}&gender=${student.성별}`, { headers: { Authorization: 'Bearer ' + token } });
+        const res = await fetch(`${SUSI_API}_events_by_practical_id?practical_id=${practical_id}&gender=${student.성별}`, { headers: { Authorization: 'Bearer ' + token } });
         const json = await res.json();
         const events = [...new Set((json.events || []).map(e => e.종목명))];
         practicalContainer.innerHTML = events.map(e => `<div class="practical-group"><span class="practical-label">${e}</span><div class="practical-input-container"><input type="text" class="input-sm input-record" placeholder="기록" oninput="onRecordInputChange(this)"><input type="text" class="input-sm input-score-only" placeholder="점수" readonly></div></div>`).join('');
     }
     if (collegeID && student_id) {
-        const res2 = await fetch(`${SERVER}/26susi_student_grade?student_id=${student_id}`, { headers: { Authorization: 'Bearer ' + token } });
+        const res2 = await fetch(`${SUSI_API}_student_grade?student_id=${student_id}`, { headers: { Authorization: 'Bearer ' + token } });
         const json2 = await res2.json();
         if (json2.success && Array.isArray(json2.grades)) {
             const g = json2.grades.find(row => row.대학ID === collegeID);
@@ -798,7 +799,7 @@ function onInputEdit(input) {
     const student_id = document.getElementById('studentSelect').value;
     const collegeID = getCollegeIDByTbody(tbody);
     if (student_id && collegeID && (input.classList.contains('input-grade') || input.classList.contains('input-score'))) {
-        fetch(SERVER + '/26susi_student_grade_update', {
+        fetch(SUSI_API + '_student_grade_update', {
             method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ student_id, college_id: collegeID, 등급: tbody.querySelector('.input-grade').value, 내신점수: tbody.querySelector('.input-score').value })
         });
@@ -831,11 +832,11 @@ document.getElementById('counselForm').onsubmit = async function(e) {
             합산점수: tbody.querySelector('.합산점수')?.value || null,
         });
     });
-    const saveColleges = fetch(SERVER + '/26susi_counsel_college_save_multi', {
+    const saveColleges = fetch(SUSI_API + '_counsel_college_save_multi', {
         method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ student_id, colleges: collegesArr })
     });
-    const saveMemo = fetch(SERVER + '/26susi_counsel_memo_save', {
+    const saveMemo = fetch(SUSI_API + '_counsel_memo_save', {
         method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ student_id, memo: document.getElementById('counselMemo').value })
     });
@@ -857,8 +858,8 @@ async function loadCounselData(student_id) {
     tbodyContainer.innerHTML = ''; memoTextarea.value = '';
     try {
         const [collegeRes, memoRes] = await Promise.all([
-            fetch(`${SERVER}/26susi_counsel_college_load?student_id=${student_id}`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
-            fetch(`${SERVER}/26susi_counsel_memo_load?student_id=${student_id}`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json())
+            fetch(`${SUSI_API}_counsel_college_load?student_id=${student_id}`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json()),
+            fetch(`${SUSI_API}_counsel_memo_load?student_id=${student_id}`, { headers: { Authorization: 'Bearer ' + token } }).then(res => res.json())
         ]);
         if (memoRes.success) { memoTextarea.value = memoRes.memo || ''; }
         if (!collegeRes.success || !collegeRes.colleges || collegeRes.colleges.length === 0) { addCollegeRow(); return; }
@@ -1047,7 +1048,7 @@ async function openScoreTablePopup(btn) {
     const container = document.getElementById('modalTableContainer'); container.innerHTML = '로딩 중...';
     modal.style.display = 'block';
     try {
-        const res = await fetch(`${SERVER}/26susi_get_score_table?실기ID=${matched.실기ID}`);
+        const res = await fetch(`${SUSI_API}_get_score_table?실기ID=${matched.실기ID}`);
         const data = await res.json();
         if (data.success) { renderPopupScoreTable(data.events, container); } 
         else { container.innerHTML = '배점표를 불러오는 데 실패했습니다.'; }
@@ -1083,7 +1084,7 @@ async function showCollegeDetailsModal(btn) {
     }
 
     try {
-        const res = await fetch(`${SERVER}/26susi/university-details?college_id=${collegeID}`, {
+        const res = await fetch(`${SUSI_API}/university-details?college_id=${collegeID}`, {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>예상컷 관리</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -179,7 +180,7 @@
     </table>
 
     <script>
-        const SERVER = 'https://supermax.kr';
+        const SERVER = SUSI_API;;
         const token = localStorage.getItem('token');
         
         let initialData = [];
@@ -218,7 +219,7 @@ function logout() {
             }
 
             try {
-                const res = await fetch(`${SERVER}/26susi_get_all_cuts`, {
+                const res = await fetch(`${SUSI_API}_get_all_cuts`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
@@ -302,7 +303,7 @@ function logout() {
 
                 if (!maxCutInput.readOnly && maxCutInput.value !== initialMaxCut) {
                     promises.push(
-                        fetch(`${SERVER}/26susi_update_max_cut`, {
+                        fetch(`${SUSI_API}_update_max_cut`, {
                             method: 'POST',
                             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 대학ID: collegeID, 맥스예상컷: maxCutInput.value })
@@ -312,7 +313,7 @@ function logout() {
 
                 if (branchCutInput.value !== initialBranchCut) {
                      promises.push(
-                        fetch(`${SERVER}/26susi_update_branch_cut`, {
+                        fetch(`${SUSI_API}_update_branch_cut`, {
                             method: 'POST',
                             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 대학ID: collegeID, 지점예상컷: branchCutInput.value })

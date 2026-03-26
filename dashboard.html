@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="utils.js"></script>
     <meta charset="UTF-8">
     <title>대시보드</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -84,7 +85,7 @@
     </div>
 
 <script>
-    const SERVER = 'https://supermax.kr';
+    const SERVER = SUSI_API;;
     const token = window.parent.localStorage.getItem('token');
 
     // ✅ [추가] 공지사항 목록을 불러오는 함수
@@ -93,7 +94,7 @@ async function loadNotices() {
     const list = document.getElementById('notice-list');
     if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
     try {
-        const res = await fetch(`${SERVER}/26susi/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
+        const res = await fetch(`${SUSI_API}/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
 
         if (data.success && data.announcements.length > 0) {
@@ -177,7 +178,7 @@ function showNoticePopup(title, content) {
         const list = document.getElementById('announcement-list');
         if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
         try {
-            const res = await fetch(`${SERVER}/26susi/announcement-dates`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const res = await fetch(`${SUSI_API}/announcement-dates`, { headers: { 'Authorization': 'Bearer ' + token } });
             const data = await res.json();
             if (data.success && data.dates.length > 0) {
                 list.innerHTML = '';
@@ -201,7 +202,7 @@ function showNoticePopup(title, content) {
         const list = document.getElementById('schedule-list');
         if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
         try {
-            const res = await fetch(`${SERVER}/26susi/branch-schedule`, { headers: { Authorization: 'Bearer ' + token } });
+            const res = await fetch(`${SUSI_API}/branch-schedule`, { headers: { Authorization: 'Bearer ' + token } });
             const data = await res.json();
             if (data.success && data.schedule.length > 0) {
                 list.innerHTML = '';
