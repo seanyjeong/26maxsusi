@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="assets/css/toast.css">
 <link rel="stylesheet" href="assets/css/modal.css">
 <link rel="stylesheet" href="assets/css/combobox.css">
-<link rel="stylesheet" href="explore.css">
+<link rel="stylesheet" href="explore.css?v=search20260612">
 </head>
 
 <body data-page="explore" data-title="대학 검색" data-category="탐색">
@@ -53,6 +53,24 @@
 
       <section class="card filter-card">
         <div id="filtersContainer">
+          <div class="filter-section search-section">
+            <label class="search-label" for="collegeSearchInput">대학명 · 학과명 · 전형명 검색</label>
+            <div class="search-box">
+              <i class="ph-light ph-magnifying-glass" aria-hidden="true"></i>
+              <input
+                type="search"
+                id="collegeSearchInput"
+                class="search-input"
+                placeholder="예: 순천향 스포츠의학 교과우수자"
+                autocomplete="off"
+                spellcheck="false"
+              >
+              <button type="button" class="search-clear" id="collegeSearchClear" aria-label="검색어 지우기" hidden>
+                <i class="ph-light ph-x" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
           <div class="filter-section">
             <div class="horizontal-filters">
               <div class="filter-group" data-filter-group="isPractical">
@@ -173,6 +191,6 @@
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/combobox.js"></script>
 <script src="assets/js/bootstrap.js?v=4aa4784"></script>
-<script src="explore.js"></script>
+<script src="explore.js?v=search20260612"></script>
 </body>
 </html>

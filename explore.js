@@ -12,8 +12,10 @@
   var esc = window.escapeHtml;
 
   var allBranchStudents = [];
+  var latestUniversities = [];
   var currentFilters = {};
   var pendingCollegeId = null;
+  var searchQuery = '';
 
   document.addEventListener('DOMContentLoaded', function () {
     var token = window.getToken();
@@ -38,6 +40,7 @@
       if (eventRes && eventRes.success) categorizeAndCreateEventButtons(eventRes.events || []);
 
       setupEventListeners();
+      setupSearch();
       applyFilters();
     } catch (e) {
       console.error('[initializePage]', e);
@@ -106,6 +109,28 @@
     });
   }
 
+  function setupSearch() {
+    var input = document.getElementById('collegeSearchInput');
+    var clearBtn = document.getElementById('collegeSearchClear');
+    if (!input) return;
+
+    input.addEventListener('input', function () {
+      searchQuery = input.value || '';
+      if (clearBtn) clearBtn.hidden = searchQuery.trim() === '';
+      renderResults(getVisibleUniversities());
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        input.value = '';
+        searchQuery = '';
+        clearBtn.hidden = true;
+        input.focus();
+        renderResults(getVisibleUniversities());
+      });
+    }
+  }
+
   function handleFilterClick(event) {
     var btn = event.currentTarget;
     var section = btn.closest('.filter-group, .filter-section');
@@ -168,21 +193,52 @@
       var qs = new URLSearchParams(currentFilters).toString();
       var path = '/explore-universities' + (qs ? '?' + qs : '');
       var data = await window.api(path);
-      if (data && data.success) renderResults(data.universities || []);
+      if (data && data.success) {
+        latestUniversities = data.universities || [];
+        renderResults(getVisibleUniversities());
+      }
     } catch (e) {
       console.error('[applyFilters]', e);
       window.showToast('검색 실패: ' + (e && e.message ? e.message : ''), 'error');
     }
   }
 
+  function normalizeSearchText(value) {
+    return String(value || '').toLocaleLowerCase('ko-KR').replace(/\s+/g, ' ').trim();
+  }
+
+  function getSearchHaystack(uni) {
+    return normalizeSearchText([
+      uni.대학명,
+      uni.학과명,
+      uni.전형명,
+    ].join(' '));
+  }
+
+  function getVisibleUniversities() {
+    var terms = normalizeSearchText(searchQuery).split(' ').filter(Boolean);
+    if (!terms.length) return latestUniversities;
+    return latestUniversities.filter(function (uni) {
+      var haystack = getSearchHaystack(uni);
+      return terms.every(function (term) { return haystack.indexOf(term) !== -1; });
+    });
+  }
+
   function renderResults(universities) {
     var tbody = document.getElementById('resultTbody');
     var meta = document.getElementById('resultMeta');
     tbody.innerHTML = '';
-    if (meta) meta.textContent = universities.length + '개 검색됨';
+    if (meta) {
+      meta.textContent = searchQuery.trim()
+        ? universities.length + '개 검색됨 · 필터 결과 ' + latestUniversities.length + '개'
+        : universities.length + '개 검색됨';
+    }
 
     if (!universities.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="placeholder">검색 결과가 없습니다.</td></tr>';
+      var message = searchQuery.trim()
+        ? '검색어와 일치하는 대학이 없습니다.'
+        : '검색 결과가 없습니다.';
+      tbody.innerHTML = '<tr><td colspan="7" class="placeholder">' + message + '</td></tr>';
       return;
     }
 
