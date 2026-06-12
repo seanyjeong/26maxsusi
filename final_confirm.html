@@ -1,308 +1,164 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="light">
 <head>
-    <script src="utils.js"></script>
-    <meta charset="UTF-8">
-    <title>최종 수합 관리</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root { --primary-color: #4364f7; --secondary-color: #6a8eff; --success-color: #28a745; --danger-color: #dc3545; --info-color: #17a2b8; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #495057; --border-radius: 6px; }
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--light-gray); padding: 20px; }
-        h2 { color: var(--primary-color); }
-        .section { background-color: white; padding: 20px; border-radius: var(--border-radius); margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow-x: auto; }
-        .controls-wrap { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
-        .filter-wrap { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-        select, button { padding: 8px; border-radius: 4px; border: 1px solid var(--medium-gray); font-size: 14px; }
-        button { color: white; cursor: pointer; border: none; transition: background-color 0.2s; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        .btn-add { background-color: var(--success-color); }
-        .btn-save { background-color: var(--dark-gray); }
-        .btn-import { background-color: var(--info-color); }
-        .btn-delete { background-color: var(--danger-color); font-size: 11px; padding: 4px 8px; }
-        #result-title-container { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; border-bottom: 2px solid var(--medium-gray); padding-bottom: 10px; }
-        #result-title { margin: 0; font-size: 1.2em; font-weight: 500; color: var(--dark-gray); }
-        #cut-scores-display { font-size: 0.9em; color: var(--dark-gray); font-weight: 500; }
-        #cut-scores-display span { margin-left: 15px; }
-        table { width: 100%; border-collapse: collapse; table-layout: auto; }
-        th, td { border: 1px solid var(--medium-gray); padding: 8px; text-align: center; font-size: 12px; vertical-align: middle; white-space: nowrap; }
-        th { background-color: var(--primary-color); color: white; font-weight: 500; }
-        input { width: 95%; box-sizing: border-box; text-align: center; border: 1px solid var(--medium-gray); border-radius: 4px; padding: 4px; font-size: 12px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="assets/img/max-logo.png">
+<title>최종 수합 관리 — 맥스수시엔진</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+<!-- 공용 자산 CSS: tokens → base → 레이아웃 → 컴포넌트 → 페이지 -->
+<link rel="stylesheet" href="assets/css/tokens.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/base.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/sidebar.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="assets/css/modal.css">
+<link rel="stylesheet" href="assets/css/combobox.css">
+<link rel="stylesheet" href="final_confirm.css">
 </head>
-<body>
-    <div class="section">
-        <h2 id="main-title">교육원 최종 수합 관리</h2>
-        <div class="controls-wrap">
-            <div class="filter-wrap">
-                <div><label for="sel-college">대학명</label><select id="sel-college" onchange="onCollegeChange()"></select></div>
-                <div><label for="sel-major">학과명</label><select id="sel-major" onchange="onMajorChange()" disabled></select></div>
-                <div><label for="sel-type">전형명</label><select id="sel-type" onchange="onTypeChange()"></select></div>
-            </div>
-            <div>
-                <button class="btn-import" onclick="importFromCounsel()">+ 상담학생 불러오기</button>
-                <button class="btn-add" onclick="openStudentAddModal()">+ 학생 직접 추가</button>
-                <button class="btn-save" onclick="saveFinalData()"> 전체 저장</button>
-            </div>
+
+<body data-page="final_confirm" data-title="최종 수합 관리" data-category="수합">
+
+<div class="app-shell" id="appShell">
+  <!-- 사이드바 (bootstrap.js 가 assets/sidebar.html 주입) -->
+  <div id="sidebar-slot"></div>
+
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="page-path">
+        <span>수합</span>
+        <span class="sep">/</span>
+        <span class="current">최종 수합 관리</span>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost" id="btnImport">
+          <i class="ph-light ph-download-simple"></i><span>상담학생 불러오기</span>
+        </button>
+        <button type="button" class="btn btn-ghost" id="btnAddDirect">
+          <i class="ph-light ph-user-plus"></i><span>학생 직접 추가</span>
+        </button>
+        <button type="button" class="btn btn-accent" id="btnSaveAll">
+          <i class="ph-light ph-floppy-disk"></i><span>전체 저장</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title" id="mainTitle">교육원 최종 수합 관리</h1>
+          <div class="page-sub">지점별 전형 최종 수합 · 상담학생 일괄 불러오기 · 실기일정 · 내신 입력</div>
         </div>
-    </div>
-    
-    <div class="section">
-        <div id="result-title-container">
-            <h3 id="result-title"></h3>
-            <div id="cut-scores-display"></div>
+        <div class="head-meta" id="headMeta"></div>
+      </div>
+
+      <!-- 필터 카드 -->
+      <div class="fc-toolbar">
+        <div class="fc-filter-wrap">
+          <div class="fc-field">
+            <label for="selCollege">대학명</label>
+            <div class="combobox" id="collegeCombo"></div>
+          </div>
+          <div class="fc-field">
+            <label for="selMajor">학과명</label>
+            <div class="combobox" id="majorCombo"></div>
+          </div>
+          <div class="fc-field">
+            <label for="selType">전형명</label>
+            <div class="combobox" id="typeCombo"></div>
+          </div>
         </div>
-        <table id="resultTable">
-            <thead></thead>
+      </div>
+
+      <!-- 결과 카드 -->
+      <div class="card">
+        <div class="fc-result-head">
+          <h3 class="fc-result-title" id="resultTitle">조회할 대학/학과/전형을 선택해주세요.</h3>
+          <div class="fc-cut-display" id="cutScoresDisplay"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="resultTable">
+            <thead id="resultThead"></thead>
             <tbody id="resultTbody">
-                <tr><td colspan="9">조회할 대학/학과/전형을 선택해주세요.</td></tr>
+              <tr><td colspan="9" class="placeholder">조회할 대학/학과/전형을 선택해주세요.</td></tr>
             </tbody>
-        </table>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 확인 모달 (학생 삭제 / 빈 저장 확인) -->
+<div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="modal-card" style="max-width: 440px;">
+    <div class="modal-head">
+      <div class="modal-title" id="confirmTitle">확인</div>
+      <button type="button" class="modal-close" id="confirmCloseX" aria-label="닫기">
+        <i class="ph-light ph-x"></i>
+      </button>
     </div>
+    <div class="modal-body">
+      <p class="fc-confirm-msg" id="confirmMsg">내용</p>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" id="confirmCancel">취소</button>
+      <button type="button" class="btn btn-primary" id="confirmOk">확인</button>
+    </div>
+  </div>
+</div>
 
-    <script>
-    const SERVER = SUSI_API;;
-    const token = localStorage.getItem('token');
-    if (!token) location.href = 'login.html';
+<!-- 학생 다중 선택 모달 (상담학생 불러오기 / 직접 추가 공용) -->
+<div class="modal-backdrop" id="pickModal" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+  <div class="modal-card" style="max-width: 520px;">
+    <div class="modal-head">
+      <div class="modal-title" id="pickTitle">학생 선택</div>
+      <button type="button" class="modal-close" id="pickCloseX" aria-label="닫기">
+        <i class="ph-light ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="fc-pick-hint">여러 명을 체크하여 한 번에 추가할 수 있습니다.</p>
+      <div class="fc-pick-search">
+        <i class="ph-light ph-magnifying-glass"></i>
+        <input type="text" id="pickSearch" placeholder="이름으로 검색">
+      </div>
+      <div class="fc-pick-list" id="pickList"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" id="pickCancel">취소</button>
+      <button type="button" class="btn btn-primary" id="pickOk">추가</button>
+    </div>
+  </div>
+</div>
 
-    let colleges = [], collegeGroups = {}, allBranchStudents = [];
-    let currentCollege = null, currentStudentMap = new Map(), practicalEvents = [];
+<!-- 로딩 오버레이 -->
+<div id="loadingOverlay" class="loading-overlay" hidden>
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">데이터 로딩중…</div>
+  </div>
+</div>
 
-    async function loadInitialData() {
-        const [profileRes, collegeRes, studentRes] = await Promise.all([
-            susicFetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            susicFetch(`${SUSI_API}_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            susicFetch(`${SUSI_API}_student_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json())
-        ]);
-        if (profileRes.success) document.getElementById('main-title').textContent = `${profileRes.user.branch} 교육원 최종 수합 관리`;
-        if (collegeRes.success) { colleges = collegeRes.colleges; groupColleges(); populateCollegeSelect(); }
-        if (studentRes.success) allBranchStudents = studentRes.students;
-    }
-
-    function groupColleges() { colleges.forEach(c => { if (!collegeGroups[c.대학명]) collegeGroups[c.대학명] = {}; if (!collegeGroups[c.대학명][c.학과명]) collegeGroups[c.대학명][c.학과명] = []; collegeGroups[c.대학명][c.학과명].push(c.전형명); }); }
-    function populateCollegeSelect() { document.getElementById('sel-college').innerHTML = '<option value="">선택</option>' + Object.keys(collegeGroups).sort().map(c => `<option value="${c}">${c}</option>`).join(''); }
-    function onCollegeChange() { const c = document.getElementById('sel-college').value, s = document.getElementById('sel-major'); s.innerHTML = '<option value="">선택</option>'; document.getElementById('sel-type').innerHTML = '<option value="">선택</option>'; if (c && collegeGroups[c]) { s.innerHTML += Object.keys(collegeGroups[c]).sort().map(m => `<option value="${m}">${m}</option>`).join(''); s.disabled = false; } else { s.disabled = true; document.getElementById('sel-type').disabled = true; } }
-    function onMajorChange() { const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type'); t.innerHTML = '<option value="">선택</option>'; if (m && collegeGroups[c]?.[m]) { t.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join(''); t.disabled = false; } else { t.disabled = true; } }
-    
-    function onTypeChange() { searchFinalConfirmations(); }
-
-    async function fetchPracticalEvents(practicalId) {
-        if (!practicalId) { practicalEvents = []; return; }
-        // gender 필터를 제거하여 남/녀 공통 종목을 가져오도록 수정 (필요 시)
-        const res = await susicFetch(`${SUSI_API}_events_by_practical_id?practical_id=${practicalId}&gender=남`, { headers: { 'Authorization': 'Bearer ' + token } });
-        const data = await res.json();
-        practicalEvents = data.success ? [...new Set(data.events.map(e => e.종목명))] : [];
-    }
-
-    async function searchFinalConfirmations() {
-        const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type').value;
-        if (!c || !m || !t) {
-            document.getElementById('resultTbody').innerHTML = '<tr><td colspan="9">조회할 대학/학과/전형을 선택해주세요.</td></tr>';
-            document.getElementById('result-title').textContent = '';
-            document.getElementById('cut-scores-display').textContent = '';
-            return;
-        }
-        currentCollege = colleges.find(col => col.대학명 === c && col.학과명 === m && col.전형명 === t);
-        if (!currentCollege) return;
-        
-        Swal.fire({ title: '조회 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        document.getElementById('result-title').innerHTML = `<strong>${c} ${m} (${t})</strong>`;
-        document.getElementById('cut-scores-display').innerHTML = `<span>맥스컷: ${currentCollege['26맥스예상컷'] || '-'}</span><span>지점컷: ${currentCollege['지점예상컷'] || '-'}</span>`;
-        await fetchPracticalEvents(currentCollege.실기ID);
-        
-        const res = await susicFetch(`${SUSI_API}_final_list?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
-        const data = await res.json();
-        Swal.close();
-        
-        if (data.success) {
-            document.getElementById('result-title').innerHTML += ` <span style="font-size: 0.9em; color: #555;">(총 ${data.students.length}명)</span>`;
-            data.students.sort((a, b) => (b.합산점수 || 0) - (a.합산점수 || 0)); // 합산점수 높은 순으로 정렬
-            renderTable(data.students);
-        } else { Swal.fire('오류', '데이터 조회 중 문제가 발생했습니다.', 'error'); }
-    }
-
-    function renderTable(students) {
-        const thead = document.getElementById('resultTable').querySelector('thead');
-        const tbody = document.getElementById('resultTable').querySelector('tbody');
-        thead.innerHTML = ''; tbody.innerHTML = '';
-        currentStudentMap.clear();
-        students.forEach(s => currentStudentMap.set(s.학생ID, s));
-
-        thead.innerHTML = '<tr><th>이름</th><th>학년</th><th>성별</th><th>등급</th><th>내신점수</th><th>실기종목</th><th>실기일정</th><th>합산점수</th><th>관리</th></tr>';
-
-        if (students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9">해당 전형으로 수합된 학생이 없습니다.</td></tr>`;
-            return;
-        }
-        students.forEach(student => addStudentRow(student, false));
-    }
-
-    function addStudentRow(student, isNew = true) {
-        if (!student || (isNew && currentStudentMap.has(student.학생ID))) return;
-
-        const tbody = document.getElementById('resultTbody');
-        if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
-        currentStudentMap.set(student.학생ID, student);
-
-        const row = document.createElement('tr');
-        row.dataset.studentId = student.학생ID;
-        
-        const scheduleDate = student.실기일정 ? student.실기일정.split(' ')[0] : '';
-        
-        row.innerHTML = `
-            <td>${student.이름}</td>
-            <td>${student.학년}</td>
-            <td>${student.성별}</td>
-            <td><input class="input-grade" type="text" value="${student.내신등급 || ''}"></td>
-            <td><input class="input-score" type="text" value="${student.내신점수 || ''}"></td>
-            <td>${practicalEvents.length > 0 ? practicalEvents.join(', ') : '비실기'}</td>
-            <td><input class="input-date" type="date" value="${scheduleDate || ''}"></td>
-            <td>${student.합산점수 ? parseFloat(student.합산점수).toFixed(2) : '-'}</td>
-            <td><button class="btn-delete" onclick="deleteRow(this)">삭제</button></td>
-        `;
-        
-        tbody.appendChild(row);
-    }
-    
-    function deleteRow(button) {
-        Swal.fire({
-            title: '정말 삭제할까요?', text: "이 학생을 명단에서 제거합니다.", icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#d33', cancelButtonText: '취소', confirmButtonText: '삭제'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const row = button.closest('tr');
-                currentStudentMap.delete(parseInt(row.dataset.studentId, 10));
-                row.remove();
-            }
-        });
-    }
-
-    async function importFromCounsel() {
-        if (!currentCollege) { Swal.fire('알림', '먼저 조회할 대학을 선택해주세요.', 'warning'); return; }
-        const res = await susicFetch(`${SUSI_API}_counsel_candidates?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
-        const data = await res.json();
-        if (!data.success || data.candidates.length === 0) { Swal.fire('알림', '불러올 수 있는 상담 학생이 없습니다.', 'info'); return; }
-        
-        const { value: selectedIds } = await Swal.fire({
-            title: '수합 명단에 추가할 학생 선택',
-            html: `<p style="font-size:14px; color:gray;">Ctrl 키를 눌러 여러 명을 선택할 수 있습니다.</p>
-                   <select id="swal-select" class="swal2-select" multiple style="min-height: 200px;">
-                     ${data.candidates.map(s => `<option value="${s.학생ID}">${s.이름} (${s.학년||'N/A'})</option>`).join('')}
-                   </select>`,
-            showCancelButton: true, confirmButtonText: '추가', cancelButtonText: '취소',
-            preConfirm: () => Array.from(document.getElementById('swal-select').selectedOptions).map(option => option.value)
-        });
-
-        if (selectedIds && selectedIds.length > 0) {
-            selectedIds.forEach(id => {
-                const studentToAdd = data.candidates.find(s => s.학생ID == id);
-                if (studentToAdd) addStudentRow(studentToAdd);
-            });
-        }
-    }
-
-    // ▼▼▼▼▼ 여기가 수정된 함수 ▼▼▼▼▼
-    async function openStudentAddModal() {
-        if (!currentCollege) { Swal.fire('알림', '먼저 조회할 대학을 선택해주세요.', 'warning'); return; }
-        const availableStudents = allBranchStudents.filter(s => !currentStudentMap.has(s.학생ID));
-        if (availableStudents.length === 0) { Swal.fire('알림', '추가할 수 있는 학생이 없습니다.', 'info'); return; }
-        
-        const { value: selectedIds } = await Swal.fire({
-            title: '명단에 추가할 학생 선택',
-            html: `<p style="font-size:14px; color:gray;">Ctrl 키를 눌러 여러 명을 선택할 수 있습니다.</p>
-                   <select id="swal-select-add" class="swal2-select" multiple style="min-height: 200px;">
-                     ${availableStudents.map(s => `<option value="${s.학생ID}">${s.이름} (${s.학년||'N/A'})</option>`).join('')}
-                   </select>`,
-            showCancelButton: true, confirmButtonText: '추가', cancelButtonText: '취소',
-            preConfirm: () => Array.from(document.getElementById('swal-select-add').selectedOptions).map(option => option.value)
-        });
-
-        if (selectedIds && selectedIds.length > 0) {
-            Swal.fire({ title: '학생 내신 정보 조회 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-            // 선택된 모든 학생의 내신 정보를 한 번에 조회하기 위한 Promise 배열 생성
-            const gradeFetchPromises = selectedIds.map(id => 
-                susicFetch(`${SUSI_API}_student_grade?student_id=${id}`, { headers: { 'Authorization': 'Bearer ' + token } })
-                .then(res => res.json())
-            );
-            
-            // 모든 학생의 내신 정보 조회가 완료될 때까지 기다림
-            const results = await Promise.all(gradeFetchPromises);
-            
-            Swal.close(); // 로딩 팝업 닫기
-
-            selectedIds.forEach((id, index) => {
-                // 기본 학생 정보 찾기 (이름, 학년 등)
-                const studentToAdd = { ...availableStudents.find(s => s.학생ID == id) };
-                if (!studentToAdd) return;
-
-                // 해당 학생의 내신 정보 결과 가져오기
-                const gradeData = results[index];
-
-                if (gradeData.success && gradeData.grades) {
-                    // 현재 선택된 대학에 해당하는 내신 정보 찾기
-                    const specificGrade = gradeData.grades.find(g => g.대학ID === currentCollege.대학ID);
-                    if (specificGrade) {
-                        // 찾았으면 학생 정보 객체에 등급과 점수를 추가
-                        studentToAdd.내신등급 = specificGrade.등급;
-                        studentToAdd.내신점수 = specificGrade.내신점수;
-                    }
-                }
-                // 내신 정보가 추가된 학생 객체로 테이블에 행 추가
-                addStudentRow(studentToAdd);
-            });
-        }
-    }
-    // ▲▲▲▲▲ 여기가 수정된 함수 ▲▲▲▲▲
-
-    async function saveFinalData() {
-        if (!currentCollege) { Swal.fire('알림', '저장할 데이터가 없습니다.', 'warning'); return; }
-        
-        const studentDataPayload = [];
-        document.querySelectorAll('#resultTbody tr[data-student-id]').forEach(row => {
-            studentDataPayload.push({
-                학생ID: parseInt(row.dataset.studentId, 10),
-                실기ID: currentCollege.실기ID,
-                내신등급: row.querySelector('.input-grade').value,
-                내신점수: row.querySelector('.input-score').value,
-                실기일정: row.querySelector('.input-date').value || null,
-            });
-        });
-        
-        if (studentDataPayload.length === 0) {
-            const result = await Swal.fire({
-                title: '정말 저장할까요?',
-                text: "현재 명단에 학생이 없습니다. 이대로 저장하면 해당 전형의 모든 학생 데이터가 삭제됩니다.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonText: '취소',
-                confirmButtonText: '네, 모두 삭제하고 저장합니다.'
-            });
-            if (!result.isConfirmed) {
-                return; 
-            }
-        }
-
-        Swal.fire({ title: '저장 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        const res = await susicFetch(`${SUSI_API}_final_save`, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ college_id: currentCollege.대학ID, studentData: studentDataPayload })
-        });
-        const result = await res.json();
-        
-        if (result.success) {
-            await Swal.fire('저장 완료!', '성공적으로 저장되었습니다.', 'success');
-            searchFinalConfirmations();
-        } else {
-            Swal.fire('저장 실패', result.message || '오류가 발생했습니다.', 'error');
-        }
-    }
-
-    loadInitialData();
-    </script>
+<!-- 공용 JS -->
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/modal.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/combobox.js"></script>
+<script src="assets/js/bootstrap.js?v=4aa4784"></script>
+<script src="final_confirm.js"></script>
 </body>
 </html>

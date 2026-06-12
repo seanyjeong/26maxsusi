@@ -1,0 +1,315 @@
+/* ============================================================
+ * counsel_group.new.css — 그룹 상담 (counsel_group)
+ * 공용 토큰/컴포넌트 상속. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 1480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.year-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+
+/* 필터 바 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 14px;
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  flex: 1 1 200px;
+}
+.filter-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* 결과 패널 */
+.result-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.result-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.result-head strong { color: var(--accent); }
+.result-head .count-chip {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-left: 6px;
+  font-weight: 500;
+}
+.cut-scores {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.cut-scores span { margin-left: 14px; }
+.cut-scores span:first-child { margin-left: 0; }
+
+/* 테이블 */
+.table-wrap { overflow-x: auto; max-height: 70vh; }
+.group-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  table-layout: auto;
+}
+.group-table th,
+.group-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.group-table th {
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-width: 70px;
+}
+.group-table th:first-child, .group-table td:first-child { min-width: 90px; }
+.group-table tbody tr:nth-child(even) { background: var(--surface-2); }
+.group-table .empty-cell {
+  color: var(--text-3);
+  padding: 28px 12px;
+}
+
+/* 인풋 */
+.group-table input[type="text"] {
+  width: 90%;
+  max-width: 90px;
+  height: 28px;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  text-align: center;
+  transition: border-color 160ms var(--ease);
+}
+.group-table input[type="text"]:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* 실기 (기록 + 점수) 그룹 */
+.practical-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.practical-input-group .input-record { max-width: 66px; }
+.practical-input-group .input-score-only {
+  max-width: 46px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  color: var(--text-2);
+}
+.gam-span {
+  color: var(--danger);
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.total-gam-span {
+  color: var(--danger);
+  font-weight: 700;
+  margin-left: 4px;
+  font-size: 11px;
+}
+
+/* 합산 점수 하이라이트 (맥스컷 초과 시) */
+.total-sum-cell { font-weight: 600; }
+.total-sum-cell.highlight-score {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* 배점표 modal 내부 */
+.score-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+.score-cell { flex: 1; min-width: 240px; }
+.score-cell table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.score-cell th, .score-cell td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: center;
+}
+.score-cell .evt-header {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 9px;
+}
+.score-cell thead th { background: var(--surface-2); font-weight: 600; }
+.score-cell tbody tr:nth-child(even) { background: var(--surface-2); }
+
+/* 로딩 오버레이 */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(28, 25, 23, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loading-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 22px 28px;
+  box-shadow: var(--shadow-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 220px;
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 900ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+@media (max-width: 900px) {
+  .filter-field { min-width: 140px; }
+  .group-table th, .group-table td { font-size: 11px; padding: 6px 7px; }
+  .group-table input[type="text"] { font-size: 11px; height: 26px; }
+}
+
+/* ===== 학생 추가 모달 — pending staging chips ===== */
+.pending-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  margin: 10px 0 12px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-xs);
+}
+.pending-hint b { color: var(--accent); }
+.pending-students {
+  display: flex; flex-wrap: wrap;
+  gap: 8px;
+  min-height: 44px;
+}
+.pending-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 6px 6px 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: background 140ms var(--ease);
+}
+.pending-chip .chip-meta {
+  font-size: 11px;
+  color: var(--accent);
+  opacity: 0.7;
+  font-weight: 500;
+}
+.pending-chip .chip-remove {
+  width: 22px; height: 22px;
+  border: 0; background: transparent;
+  border-radius: 50%;
+  color: var(--accent);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.pending-chip .chip-remove:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+.pending-chip .chip-remove i { font-size: 14px; }
+#pendingCount {
+  font-size: 12.5px;
+  color: var(--text-2);
+  font-weight: 500;
+}

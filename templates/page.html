@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>__PAGE_TITLE__ · 맥스수시</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <!-- 공통 CSS (순서: 토큰 → 베이스 → 레이아웃 → 컴포넌트) -->
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/sidebar.css">
+  <link rel="stylesheet" href="assets/css/topbar.css">
+  <link rel="stylesheet" href="assets/css/buttons.css">
+  <link rel="stylesheet" href="assets/css/toast.css">
+  <link rel="stylesheet" href="assets/css/modal.css">
+  <link rel="stylesheet" href="assets/css/combobox.css">
+  <!-- 페이지 전용 CSS (필요 시 주석 해제) -->
+  <!-- <link rel="stylesheet" href="__PAGE_ID__.new.css"> -->
+</head>
+<body data-page="__PAGE_ID__" data-title="__PAGE_TITLE__" data-category="__PAGE_CATEGORY__">
+
+  <div class="app-shell" id="appShell">
+
+    <!-- 사이드바: bootstrap.js 가 /assets/sidebar.html 을 fetch 해 이 슬롯에 주입 -->
+    <div id="sidebar-slot"></div>
+
+    <div class="main">
+
+      <header class="topbar">
+        <div class="page-path">
+          <span>__PAGE_CATEGORY__</span>
+          <span class="sep">/</span>
+          <span class="current">__PAGE_TITLE__</span>
+        </div>
+        <div class="topbar-actions">
+          <!-- 페이지별 topbar 액션 (검색/테마/기타 버튼) -->
+        </div>
+      </header>
+
+      <section class="page-content">
+        <!-- __PAGE_CONTENT__ -->
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- 공통 JS (순서: auth(+SUSI_YEAR) → api(X-Susi-Year 자동) → toast/modal/utils → bootstrap) -->
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/toast.js"></script>
+  <script src="assets/js/modal.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/combobox.js"></script>
+  <script src="assets/js/bootstrap.js"></script>
+
+  <!-- 페이지 전용 JS (필요 시 주석 해제) -->
+  <!-- <script src="__PAGE_ID__.new.js"></script> -->
+
+</body>
+</html>

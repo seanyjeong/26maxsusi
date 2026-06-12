@@ -1,107 +1,87 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="light">
 <head>
-    <script src="utils.js"></script>
-  <meta charset="UTF-8">
-  <title>특수 계산식 적용 대학 리스트</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Noto Sans KR', sans-serif; background: #f6f8fa; max-width: 900px; margin: 0 auto; padding: 30px 10px;}
-    h2 { color: #4364f7; margin-bottom: 25px; font-weight: 700;}
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.05);}
-    th, td { padding: 12px 10px; border-bottom: 1px solid #e9ecef; text-align: center;}
-    th { background: #f4f7fe; color: #333; font-weight: 600;}
-    tbody tr:last-child td { border-bottom: none; }
-    .desc { color: #2c3e50; font-size: 0.98em; text-align: left;}
-    .type-badge { background: #4364f7; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 500; display: inline-block;}
-    .ckbox { width: 20px; height: 20px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="assets/img/max-logo.png">
+<title>특수 계산식 적용 대학 리스트 — 맥스수시엔진</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+<!-- 공용 자산 CSS -->
+<link rel="stylesheet" href="assets/css/tokens.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/base.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/sidebar.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="assets/css/modal.css">
+<link rel="stylesheet" href="assets/css/combobox.css">
+<link rel="stylesheet" href="특수식작업용.css">
 </head>
-<body>
-  <h2>🎯 특수 계산식 적용 대학 리스트</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>No</th>
-          <th>대학ID</th> <!-- 추가 -->
-        <th>선택</th>
-        <th>대학명</th>
-        <th>학과명</th>
-        <th>전형명</th>
-        <th>환산방식</th>
-        <th>특수식 설명</th>
-      </tr>
-    </thead>
-    <tbody id="specialBody">
-      <tr><td colspan="7">불러오는 중...</td></tr>
-    </tbody>
-  </table>
 
-  <script>
-    const SERVER = SUSI_API;;
-    const STORAGE_KEY = 'special_college_checked';
+<body data-page="special_formula" data-title="특수식 작업용" data-category="내부도구">
 
-    // 저장/불러오기
-    function getCheckedSet() {
-      try {
-        return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
-      } catch { return new Set(); }
-    }
-    function saveCheckedSet(set) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
-    }
+<div class="app-shell" id="appShell">
+  <div id="sidebar-slot"></div>
 
-    async function loadSpecialColleges() {
-      const res = await susicFetch(SUSI_API + '_get_practical_colleges_with_scores');
-      const colleges = await res.json();
-      const tbody = document.getElementById('specialBody');
-      const checkedSet = getCheckedSet();
+  <div class="main">
+    <header class="topbar">
+      <div class="page-path">
+        <span>내부도구</span>
+        <span class="sep">/</span>
+        <span class="current">특수식 작업용</span>
+      </div>
+      <div class="topbar-actions"></div>
+    </header>
 
-      const specialColleges = colleges.filter(c =>
-        (c.환산방식 && c.환산방식 !== '비율환산') ||
-        (c.특수식설명 && c.특수식설명.trim() !== '')
-      );
+    <section class="page-content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">특수 계산식 적용 대학 리스트</h1>
+          <div class="page-sub">비율환산이 아닌 특수식이 지정된 대학만 표시 · 체크 상태는 브라우저에 저장</div>
+        </div>
+        <div class="head-meta" id="headMeta"></div>
+      </div>
 
-      if (!specialColleges.length) {
-        tbody.innerHTML = '<tr><td colspan="7">특수식 적용 대학이 없습니다.</td></tr>';
-        return;
-      }
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 5%;">No</th>
+              <th style="width: 8%;">대학ID</th>
+              <th style="width: 7%;">선택</th>
+              <th style="width: 15%;">대학명</th>
+              <th style="width: 18%;">학과명</th>
+              <th style="width: 15%;">전형명</th>
+              <th style="width: 12%;">환산방식</th>
+              <th>특수식 설명</th>
+            </tr>
+          </thead>
+          <tbody id="specialBody">
+            <tr><td colspan="8" class="placeholder">로딩중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
 
-      tbody.innerHTML = '';
-      specialColleges.forEach((c, idx) => {
-        // 체크박스 key는 "대학ID-학과명-전형명"으로 고유성 부여
-        const rowKey = [c.대학ID, c.학과명, c.전형명].join('|');
-        const checked = checkedSet.has(rowKey) ? 'checked' : '';
-        tbody.innerHTML += `
-          <tr>
-            <td>${idx + 1}</td>
-              <td>${c.대학ID}</td> <!-- 추가 -->
-            <td>
-              <input type="checkbox" class="ckbox" data-key="${rowKey}" ${checked}>
-            </td>
-            <td>${c.대학명}</td>
-            <td>${c.학과명 || '-'}</td>
-            <td>${c.전형명 || '-'}</td>
-            <td>${c.환산방식 || '-'}</td>
-            <td class="desc">${c.특수식설명 || '-'}</td>
-          </tr>
-        `;
-      });
-
-      // 이벤트 연결 (동적 렌더 후!)
-      document.querySelectorAll('.ckbox').forEach(cb => {
-        cb.addEventListener('change', function() {
-          const key = this.dataset.key;
-          const set = getCheckedSet();
-          if (this.checked) set.add(key);
-          else set.delete(key);
-          saveCheckedSet(set);
-        });
-      });
-    }
-
-    loadSpecialColleges();
-  </script>
+<!-- 공용 JS -->
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/modal.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/combobox.js"></script>
+<script src="assets/js/bootstrap.js?v=4aa4784"></script>
+<script src="특수식작업용.js"></script>
 </body>
 </html>

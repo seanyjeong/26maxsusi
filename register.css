@@ -1,0 +1,212 @@
+/* ============================================================
+ * register.new.css — 회원가입 페이지 전용 스타일
+ * 디자인: 정시 jungsilogin 패턴 (Teal/Stone 토큰 확장)
+ * 규칙: 하드코딩 컬러 금지 — 모두 var(--*) 토큰 경유
+ * ============================================================ */
+
+html, body { min-height: 100%; }
+body {
+  display: grid;
+  place-items: center;
+  padding: 40px 16px;
+  position: relative;
+}
+
+/* ── 배경 워터마크 ── */
+.auth-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 15% 20%, var(--accent-ring), transparent 50%),
+    radial-gradient(circle at 85% 80%, var(--warn-soft), transparent 55%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── 카드 ── */
+.auth-card {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-modal);
+  padding: 36px 36px 28px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth-card--wide { max-width: 460px; }
+
+.auth-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent-strong);
+  letter-spacing: 0.04em;
+  font-family: 'Geist Mono', monospace;
+}
+.auth-brand i { font-size: 14px; }
+.auth-title {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.auth-sub {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* ── 폼 ── */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  transition: border-color 200ms var(--ease), background 200ms var(--ease), box-shadow 200ms var(--ease);
+}
+.field:focus-within {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.field i { color: var(--text-3); font-size: 16px; flex-shrink: 0; }
+.field:focus-within i { color: var(--accent); }
+.field input,
+.field select {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  appearance: none;
+}
+.field input::placeholder { color: var(--text-3); }
+
+.field-select { position: relative; }
+.field-select select { cursor: pointer; padding-right: 22px; }
+.field-select .field-caret {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+/* ── 2열 레이아웃 (입력 + 버튼) ── */
+.row-inline {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.row-inline .field { margin: 0; }
+.field-grow { flex: 1 1 auto; min-width: 0; }
+
+/* ── 피드백 텍스트 ── */
+.feedback {
+  margin: -2px 0 2px;
+  min-height: 16px;
+  padding-left: 4px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  letter-spacing: -0.005em;
+}
+.feedback.success { color: var(--accent-strong); }
+.feedback.error   { color: var(--danger); }
+.feedback.warn    { color: var(--warn); }
+
+/* ── 버튼 ── */
+.auth-btn {
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: #fff;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 150ms var(--ease), box-shadow 200ms var(--ease), opacity 200ms var(--ease), filter 200ms var(--ease);
+  box-shadow: 0 4px 12px var(--accent-ring);
+  font-family: inherit;
+  white-space: nowrap;
+}
+.auth-btn:hover { box-shadow: 0 6px 18px var(--accent-ring); transform: translateY(-1px); }
+.auth-btn:active { transform: translateY(0); }
+.auth-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: grayscale(0.15);
+}
+.auth-btn i { font-size: 15px; }
+.auth-btn--sm { padding: 0 14px; height: 44px; font-size: 12.5px; }
+
+/* ── 상태 메시지 ── */
+.auth-msg {
+  min-height: 18px;
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  padding: 2px 0;
+  color: var(--text-3);
+}
+.auth-msg.success { color: var(--accent-strong); }
+.auth-msg.error   { color: var(--danger); }
+.auth-msg.info    { color: var(--text-2); }
+
+/* ── 푸터 ── */
+.auth-foot {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 6px;
+}
+.auth-foot a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+.auth-foot a:hover { text-decoration: underline; }
+
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }

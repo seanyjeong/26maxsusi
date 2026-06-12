@@ -1,0 +1,45 @@
+/* ============================================================
+ * toast.css — 공통 토스트 (우측 하단 슬라이드 인/아웃)
+ * Source: counsel.new.html lines 1553~1587
+ * Phase 2 Refactor 2026 — 병사 B
+ * 규칙: 하드코딩 컬러 금지, 모두 토큰 경유
+ * JS API: window.showToast(message, type)  type: success|error|info
+ * ============================================================ */
+
+.toast-container {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  z-index: 200;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 240px; max-width: 420px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-modal);
+  transform: translateY(16px);
+  opacity: 0;
+  transition: transform 360ms var(--ease-spring), opacity 240ms linear;
+  pointer-events: auto;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+.toast-inner {
+  background: transparent;
+  border-radius: var(--r-lg);
+  padding: 11px 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--text);
+  letter-spacing: -0.01em;
+}
+.toast-inner i {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.toast.success .toast-inner i { color: var(--accent); }
+.toast.error   .toast-inner i { color: var(--danger); }
+.toast.info    .toast-inner i { color: var(--info); }

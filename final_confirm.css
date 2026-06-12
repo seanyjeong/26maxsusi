@@ -1,0 +1,298 @@
+/* ============================================================
+ * final_confirm.new.css — 최종 수합 관리 (데스크톱)
+ * 공용 토큰/컴포넌트 전용. 하드코딩 컬러 금지.
+ * 원본 final_confirm.html 의 기능 보존 + 미니멀 데스크톱 레이아웃.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+@media (min-width: 1900px) {
+  .page-content { padding: 22px 48px 64px; }
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.head-meta {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---- 필터 툴바 ---- */
+.fc-toolbar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-soft);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.fc-filter-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .fc-filter-wrap { grid-template-columns: 1fr; }
+}
+.fc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fc-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: -0.01em;
+}
+
+/* ---- 결과 카드 + 테이블 ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.fc-result-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-soft);
+  flex-wrap: wrap;
+}
+.fc-result-title {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.fc-result-title strong { color: var(--accent-strong); font-weight: 700; }
+.fc-result-title .fc-count {
+  color: var(--text-3);
+  font-weight: 500;
+  font-size: 13px;
+  margin-left: 8px;
+}
+.fc-cut-display {
+  font-size: 12.5px;
+  color: var(--text-2);
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.fc-cut-display .cut-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+.table-wrap { overflow-x: auto; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: auto;
+}
+.data-table th,
+.data-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.data-table thead th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tbody tr:hover { background: var(--accent-soft); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table td.placeholder {
+  color: var(--text-3);
+  padding: 28px 14px;
+  font-size: 13px;
+}
+
+.data-table input[type="text"],
+.data-table input[type="date"] {
+  width: 100%;
+  max-width: 120px;
+  box-sizing: border-box;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px 8px;
+  font-size: 12.5px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 0.16s var(--ease-out), box-shadow 0.16s var(--ease-out);
+}
+.data-table input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.fc-delete-btn {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.16s var(--ease-out);
+}
+.fc-delete-btn:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+/* ---- 학생 선택 모달 ---- */
+.fc-pick-hint {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.fc-pick-search {
+  position: relative;
+  margin-bottom: 10px;
+}
+.fc-pick-search i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 16px;
+}
+.fc-pick-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px 9px 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.fc-pick-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.fc-pick-list {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.fc-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: background-color 0.14s var(--ease-out);
+}
+.fc-pick-row:last-child { border-bottom: none; }
+.fc-pick-row:hover { background: var(--accent-soft); }
+.fc-pick-row input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+.fc-pick-row .fc-pick-meta {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.fc-pick-empty {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.fc-confirm-msg {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* ---- 로딩 오버레이 (counsel.new 패턴과 동일 구조) ---- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+.loading-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 24px 32px;
+  box-shadow: var(--shadow-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 240px;
+}
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--surface-3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: fc-spin 0.8s linear infinite;
+}
+@keyframes fc-spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 13px;
+  color: var(--text-2);
+  font-weight: 500;
+}

@@ -1,0 +1,140 @@
+/* ============================================================
+ * admin.new.css — 원장회원 승인/관리 (미니멀)
+ * 공용 토큰/컴포넌트만 사용. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+@media (min-width: 1900px) {
+  .page-content { padding: 22px 48px 64px; }
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.head-meta {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---- Card + table ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.table-wrap { overflow-x: auto; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.data-table th,
+.data-table td {
+  padding: 12px 14px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+.data-table thead th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tbody tr:hover {
+  background: var(--accent-soft);
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table td.placeholder {
+  color: var(--text-3);
+  padding: 26px 14px;
+  font-size: 13px;
+}
+
+/* ---- Status badge (승인 / 대기) ---- */
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+.status-pill.approved {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-ring);
+}
+.status-pill.pending {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 22%, transparent);
+}
+
+/* ---- Action buttons (작고 텍스트만) ---- */
+.btn-row {
+  display: inline-flex;
+  gap: 6px;
+  justify-content: center;
+}
+.btn-mini {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 28px; padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 160ms var(--ease);
+}
+.btn-mini:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.btn-mini.approve:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-ring);
+}
+.btn-mini.danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
+/* .modal-foot 는 공용 assets/css/modal.css v2 에서 관리 */
+
+@media (max-width: 720px) {
+  .page-content { padding: 14px 16px 40px; }
+  .data-table th, .data-table td { padding: 10px 8px; font-size: 12.5px; }
+}

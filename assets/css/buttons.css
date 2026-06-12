@@ -1,0 +1,109 @@
+/* ============================================================
+ * buttons.css — 공통 버튼 / 뱃지 / 칩
+ * Source: counsel.new.html lines 345~388, 868~876, 1043~1055
+ * Phase 2 Refactor 2026 — 병사 B
+ * 규칙: 하드코딩 컬러 금지, 모두 토큰 경유
+ * counsel 전용(.btn-outline, .btn-danger-outline, .btn-xs, .icon-btn,
+ *   .uni-delete, .badge.accent, .combo-pill*, .trend-chip 등)은 제외
+ * ============================================================ */
+
+/* ---------- BUTTONS (base + variants) ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: -0.01em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 200ms var(--ease);
+  background: transparent; color: var(--text);
+}
+.btn i { font-size: 16px; }
+.btn:active { transform: translateY(1px) scale(0.985); }
+
+.btn-ghost { color: var(--text-2); }
+.btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+
+/* icon-btn — 정사각 아이콘 버튼 (topbar 테마 토글 등) */
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 200ms var(--ease);
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+.icon-btn i { font-size: 18px; }
+
+.btn-primary {
+  background: var(--text); color: var(--bg);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), var(--shadow-soft);
+}
+.btn-primary .nest {
+  width: 20px; height: 20px; margin-right: -4px;
+  display: grid; place-items: center;
+  transition: transform 260ms var(--ease-spring);
+}
+.btn-primary:hover .nest { transform: translateX(2px); }
+.btn-primary:hover { box-shadow: var(--shadow-hover); }
+
+.btn-accent {
+  background: var(--accent); color: white;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 1px 2px var(--accent-ring), 0 4px 12px -4px var(--accent-ring);
+}
+.btn-accent .nest {
+  width: 20px; height: 20px; margin-right: -4px;
+  display: grid; place-items: center;
+  transition: transform 260ms var(--ease-spring);
+}
+.btn-accent:hover .nest { transform: translateX(2px); }
+.btn-accent:hover {
+  filter: brightness(1.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 4px var(--accent-ring), 0 12px 24px -6px var(--accent-ring);
+}
+
+/* ---------- MINI BUTTON (인라인 텍스트 액션) ---------- */
+.mini-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 500;
+  color: var(--text-2);
+  background: transparent; border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  letter-spacing: -0.01em;
+  transition: all 180ms var(--ease);
+}
+.mini-btn i { font-size: 13px; }
+.mini-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* ---------- BADGES ---------- */
+.badge {
+  font-size: 10px; padding: 2px 7px; border-radius: 5px;
+  background: var(--surface-2); color: var(--text-2);
+  font-weight: 600; letter-spacing: 0.01em;
+}
+.badge.info   { background: var(--info-soft);   color: var(--info); }
+.badge.ok     { background: var(--accent-soft); color: var(--accent); }
+.badge.warn   { background: var(--warn-soft);   color: var(--warn); }
+.badge.danger { background: var(--danger-soft); color: var(--danger); }
+
+/* ---------- CHIP (badge 와 유사하지만 더 크고 둥근 형태) ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  font-size: 11px; font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: -0.01em;
+}
+.chip i { font-size: 12px; }
+.chip.solid { background: var(--accent); color: white; border-color: var(--accent); }
+.chip.ghost { background: transparent; color: var(--text-2); border-color: var(--border); }

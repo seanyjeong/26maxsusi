@@ -1,0 +1,129 @@
+/* ============================================================
+ * modal.css — 공통 모달 shell (backdrop + card + head/body/foot/close)
+ * v2 (2026-04-21) — Phase 2 원본 + 페이지별 modal-close/modal-foot 통합
+ *
+ * 구조:
+ *   .modal-backdrop.show
+ *   └── .modal-card [.wide|.narrow]
+ *       ├── .modal-head  (title + .modal-close)
+ *       ├── .modal-body  (flex:1, overflow-y:auto)
+ *       └── .modal-foot  (right-aligned buttons, border-top)
+ *
+ * 트리거: window.openModal(id) / window.closeModal(id)
+ *         또는 HTML data-action="modal-close" (modal.js 전역 delegation)
+ * ============================================================ */
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(9, 9, 11, 0.42);
+  display: grid; place-items: center;
+  padding: 40px 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 240ms var(--ease);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.modal-backdrop.show { opacity: 1; pointer-events: auto; }
+.dark .modal-backdrop { background: rgba(0, 0, 0, 0.68); }
+
+.modal-card {
+  border-radius: var(--r-2xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  max-width: 560px; width: 100%;
+  /* 세로 공간 기본 확보 — 드롭다운/콤보가 답답하지 않도록 portrait 비율.
+   * 뷰포트 작으면 80vh 로 자동 축소. */
+  min-height: min(560px, 80vh);
+  max-height: 85vh;
+  transform: translateY(12px) scale(0.97);
+  transition: transform 320ms var(--ease-out), opacity 240ms var(--ease);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-modal);
+  opacity: 0;
+}
+.modal-backdrop.show .modal-card { transform: translateY(0) scale(1); opacity: 1; }
+/* narrow = 단순 확인/경고용 (min-height 제거) */
+.modal-card.narrow { max-width: 420px; min-height: 0; }
+/* wide = 배점표 등 큰 데이터 (가로 중심, min-height 더 크게) */
+.modal-card.wide   { max-width: 920px; min-height: min(640px, 85vh); }
+
+/* ── head ── */
+.modal-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.modal-title {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  flex: 1;
+  margin: 0;
+}
+.modal-sub {
+  font-size: 13px; color: var(--text-2);
+  margin-top: 4px;
+}
+
+/* ── close button (공용) ── */
+.modal-close {
+  margin-left: auto;
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-3);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease), transform 120ms var(--ease);
+  flex-shrink: 0;
+}
+.modal-close i { font-size: 18px; line-height: 1; }
+.modal-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.modal-close:active { transform: scale(0.94); }
+.modal-close:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ── body ── */
+.modal-body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.modal-body > p { margin: 0 0 12px; }
+.modal-body > p:last-child { margin-bottom: 0; }
+
+/* ── foot ── */
+.modal-foot {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.modal-foot .foot-left { margin-right: auto; }
+
+/* ── 반응형 ── */
+@media (max-width: 640px) {
+  .modal-backdrop { padding: 20px 12px; }
+  .modal-card { border-radius: var(--r-xl); max-height: 92vh; }
+  .modal-head { padding: 14px 16px; }
+  .modal-body { padding: 14px 16px; }
+  .modal-foot { padding: 12px 16px; }
+  .modal-close { width: 32px; height: 32px; }
+}
+
+/* ── body lock (modal.js 가 .modal-open 토글) ── */
+body.modal-open { overflow: hidden; }

@@ -1,0 +1,164 @@
+/* ============================================================
+ * 실기기준.new.css — 실기 총점 설정 (silgi_standard)
+ * 공용 토큰/컴포넌트 상속. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 1120px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+
+.college-list {
+  display: grid;
+  gap: 12px;
+}
+.empty-msg {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-lg);
+}
+
+.college-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px 20px;
+  align-items: start;
+}
+.college-box .col-main { display: grid; gap: 10px; }
+.college-box .col-save { align-self: end; }
+
+.college-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.college-title .silgi-id {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-3);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.field-row > label {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.field-row input[type="number"],
+.field-row input[type="text"] {
+  width: 100%;
+  max-width: 240px;
+  height: 32px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  transition: border-color 160ms var(--ease);
+}
+.field-row input:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.field-row.mode-row .toggle-group {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.btn-toggle {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 160ms var(--ease);
+  font-family: inherit;
+}
+.btn-toggle:hover { background: var(--surface-2); color: var(--text); }
+.btn-toggle.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-save {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: filter 160ms var(--ease);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-save:hover { filter: brightness(1.06); }
+.btn-save i { font-size: 15px; }
+
+@media (max-width: 760px) {
+  .college-box {
+    grid-template-columns: 1fr;
+  }
+  .field-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .college-box .col-save { align-self: stretch; }
+  .btn-save { width: 100%; justify-content: center; }
+}

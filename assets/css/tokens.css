@@ -1,0 +1,112 @@
+/* ============================================================ */
+/* tokens.css — 디자인 토큰 (2026 refresh): Teal + Stone, radius/easing/shadow scale */
+/* 원본: counsel.new.html line 37~129 (:root + .dark 블록 그대로 이관) */
+/* ============================================================ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── Neutral base ── */
+  /* warm neutral base — stone tint 대신 아주 살짝 cool */
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --surface-2: #f5f5f4;
+  --surface-3: #e7e5e4;
+  --border: #e7e5e4;
+  --border-soft: #f1f0ee;
+  --text: #1c1917;
+  --text-2: #57534e;
+  --text-3: #a8a29e;
+
+  /* ── Accent (teal) ── */
+  /* accent — deep teal (올드한 emerald 대체) */
+  --accent: #0f766e;
+  --accent-strong: #134e4a;
+  --accent-soft: #f0fdfa;
+  --accent-ring: rgba(15, 118, 110, 0.16);
+
+  /* ── States ── */
+  --ok: #15803d;
+  --ok-soft: #ecfdf5;
+  --warn: #b45309;
+  --warn-soft: #fffbeb;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --info: #1d4ed8;
+  --info-soft: #eff6ff;
+
+  /* ── Shadows ── */
+  /* layered shadows — 실제로 보이는 깊이감 */
+  --shadow-soft:
+    0 1px 0 rgba(28,25,23,0.04),
+    0 1px 2px rgba(28,25,23,0.05),
+    0 4px 12px -4px rgba(28,25,23,0.06);
+  --shadow-hover:
+    0 1px 0 rgba(28,25,23,0.04),
+    0 2px 4px rgba(28,25,23,0.06),
+    0 12px 28px -8px rgba(28,25,23,0.10);
+  --shadow-modal:
+    0 1px 0 rgba(28,25,23,0.06),
+    0 4px 12px rgba(28,25,23,0.08),
+    0 32px 72px -16px rgba(28,25,23,0.24);
+
+  /* ── Easing ── */
+  /* easing — 용도별 분리 */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ── Radius scale ── */
+  /* radius scale — 계층화 */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+  --r-2xl: 22px;
+}
+
+.dark {
+  /* ── Neutral base (dark) ── */
+  /* blue-tinted neutrals — Linear/Vercel 스타일 */
+  --bg: #09090b;
+  --surface: #0f0f11;
+  --surface-2: #17171a;
+  --surface-3: #26262b;
+  --border: #26262b;
+  --border-soft: #1c1c20;
+  --text: #fafaf9;
+  --text-2: #a8a29e;
+  --text-3: #57534e;
+
+  /* ── Accent (teal, dark) ── */
+  --accent: #2dd4bf;
+  --accent-strong: #5eead4;
+  --accent-soft: #042f2e;
+  --accent-ring: rgba(45, 212, 191, 0.20);
+
+  /* ── States (dark) ── */
+  --ok: #4ade80;
+  --ok-soft: #052e16;
+  --warn: #f59e0b;
+  --warn-soft: #2a1c04;
+  --danger: #f87171;
+  --danger-soft: #2a0e12;
+  --info: #60a5fa;
+  --info-soft: #0b1e3a;
+
+  /* ── Shadows (dark) ── */
+  --shadow-soft:
+    0 1px 0 rgba(0,0,0,0.3),
+    0 1px 2px rgba(0,0,0,0.4),
+    0 4px 12px -4px rgba(0,0,0,0.4);
+  --shadow-hover:
+    0 1px 0 rgba(0,0,0,0.4),
+    0 2px 4px rgba(0,0,0,0.5),
+    0 12px 28px -8px rgba(0,0,0,0.6);
+  --shadow-modal:
+    0 1px 0 rgba(0,0,0,0.5),
+    0 4px 12px rgba(0,0,0,0.6),
+    0 32px 72px -16px rgba(0,0,0,0.8);
+}

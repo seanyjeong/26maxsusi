@@ -1,0 +1,277 @@
+/* ============================================================
+ * live.new.css — 실시간 현황 (live)
+ * 공용 토큰/컴포넌트 상속. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 1480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.year-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+
+/* 필터 바 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 14px;
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  flex: 1 1 200px;
+}
+.filter-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+.live-indicator i { animation: live-pulse 1.2s ease-in-out infinite; }
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* 결과 패널 */
+.result-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.result-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.result-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.result-head strong { color: var(--accent); }
+.result-head .count-chip {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+/* 데스크탑 테이블 */
+.desktop-view { overflow-x: auto; max-height: 70vh; }
+.rank-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.rank-table th, .rank-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.rank-table th {
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.rank-table thead tr:nth-child(2) th { top: 36px; }
+.rank-table .col-record, .rank-table .col-score { min-width: 60px; }
+.rank-table .rank-top3 { font-weight: 700; color: var(--accent); }
+.rank-table .my-branch-row { background: var(--accent-soft); }
+.rank-table tbody tr:nth-child(even):not(.my-branch-row) { background: var(--surface-2); }
+.rank-table .empty-cell { color: var(--text-3); padding: 28px 12px; }
+
+/* 등급 뱃지 */
+.grade-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  min-width: 26px;
+  text-align: center;
+}
+.grade-1, .grade-2 { background: var(--accent); }
+.grade-3, .grade-4 { background: var(--ok); }
+.grade-5, .grade-6 { background: var(--warn); }
+.grade-7, .grade-8, .grade-9 { background: var(--danger); }
+.grade-none { background: var(--surface-3); color: var(--text-3); }
+
+/* 모바일 카드 뷰 */
+.mobile-view { display: none; padding: 12px; }
+.student-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+.student-card:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
+.student-card.my-branch-item { background: var(--accent-soft); border-color: var(--accent); }
+.student-card .rank {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  width: 40px;
+  text-align: center;
+}
+.student-card .student-info { flex: 1; min-width: 0; }
+.student-card .student-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.student-card .student-branch {
+  font-size: 11px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+}
+.student-card .student-scores {
+  font-size: 11.5px;
+  color: var(--text-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.student-card .chev { color: var(--text-3); font-size: 14px; }
+
+/* 배점표 modal 내부 */
+.score-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+.score-cell { flex: 1; min-width: 240px; }
+.score-cell table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.score-cell th, .score-cell td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: center;
+}
+.score-cell .evt-header {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 9px;
+}
+.score-cell thead th { background: var(--surface-2); font-weight: 600; }
+.score-cell tbody tr:nth-child(even) { background: var(--surface-2); }
+
+/* 학생 상세 modal 테이블 */
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin-bottom: 12px;
+}
+.detail-table th, .detail-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: center;
+}
+.detail-table th { background: var(--surface-2); font-weight: 600; }
+.detail-table .total-score { font-weight: 700; color: var(--accent); }
+.detail-section-title {
+  font-weight: 600;
+  text-align: center;
+  color: var(--text);
+  margin: 12px 0 6px;
+}
+
+/* 엑셀 진행 바 */
+.excel-progress-text {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.excel-progress-track {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  height: 18px;
+  overflow: hidden;
+}
+.excel-progress-bar {
+  background: var(--accent);
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s var(--ease);
+  border-radius: var(--r-sm);
+}
+
+@media (max-width: 900px) {
+  .desktop-view { display: none; }
+  .mobile-view { display: block; }
+  .filter-field { min-width: 140px; }
+}

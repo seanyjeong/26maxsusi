@@ -1,0 +1,186 @@
+/* ============================================================ */
+/* college-grade.new.css — 학생×대학 매트릭스 등급/내신 입력 */
+/* 기능 포커스 · 미니멀. sticky header + horizontal scroll 만. */
+/* ============================================================ */
+
+.page-content {
+  padding: 22px 28px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* ── 상단 툴바 ─────────────────────────────────────── */
+.grade-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.grade-toolbar .tb-left { flex: 1 1 280px; min-width: 240px; }
+.grade-toolbar .tb-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.tb-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+.tb-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.tb-input-sm { width: 160px; }
+.tb-sep {
+  display: inline-block;
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  margin: 0 4px;
+}
+.page-info {
+  font-size: 12.5px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  min-width: 92px;
+  text-align: center;
+}
+
+/* ── 매트릭스 카드 ────────────────────────────────── */
+.grade-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.table-scroll {
+  overflow: auto;
+  max-height: 70vh;
+}
+
+.grade-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12.5px;
+}
+.grade-table th,
+.grade-table td {
+  padding: 0 8px;
+  text-align: center;
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+  height: 36px;
+  box-sizing: border-box;
+}
+.grade-table th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  /* sticky 시 배경이 border 를 덮지 않도록 */
+  background-clip: padding-box;
+}
+
+/* sticky 2-row header — 행 높이 36px 고정해서 두 번째 행 top 정확히 일치 */
+.grade-table thead tr th {
+  position: sticky;
+  z-index: 2;
+}
+.grade-table thead tr:first-child th {
+  top: 0;
+  z-index: 3;              /* 첫 행이 두 번째 행보다 위 */
+}
+.grade-table thead tr:nth-child(2) th {
+  top: 36px;               /* 첫 행 높이와 정확히 일치 */
+}
+/* rowspan=2 셀(No/대학명/학과명/전형명)은 첫 행 소속이라 top:0 적용됨.
+   두 행을 전부 덮어야 하므로 z-index 3 유지. */
+
+/* header 하단에 굵은 구분선 — tbody 로 갭 보이지 않게 */
+.grade-table thead tr:nth-child(2) th {
+  border-bottom: 1px solid var(--border);
+}
+.grade-table thead tr:first-child th[rowspan="2"] {
+  border-bottom: 1px solid var(--border);
+}
+
+.grade-table .col-name {
+  color: var(--accent);
+  font-weight: 700;
+  min-width: 140px;
+}
+.grade-table .row-no {
+  color: var(--text-3);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.grade-table tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+.grade-table input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 4px;
+  font-size: 12.5px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease);
+}
+.grade-table input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.state-row {
+  color: var(--text-3);
+  padding: 24px 10px !important;
+  font-size: 13px;
+}
+
+/* ── 저장 메시지 ──────────────────────────────────── */
+.grade-msg {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.grade-msg.is-error {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (max-width: 720px) {
+  .page-content { padding: 16px; }
+  .grade-toolbar .tb-right { margin-left: 0; width: 100%; }
+  .tb-input-sm { flex: 1 1 120px; width: auto; }
+}

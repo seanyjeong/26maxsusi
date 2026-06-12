@@ -1,0 +1,54 @@
+/* ============================================================ */
+/* topbar.css — 상단 바 (sticky 페이지 경로 + 우측 액션 슬롯) */
+/* 원본: counsel.new.html line 327~343 + 반응형 line 1660 (일부) */
+/* ============================================================ */
+
+/* ============ MAIN (sidebar 우측 컬럼) ============ */
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ============ TOPBAR ============ */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex; align-items: center; gap: 14px;
+  min-height: 64px;
+}
+
+/* ── Page path (breadcrumb / title slot) ── */
+.page-path {
+  display: flex; align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.page-path .sep { opacity: 0.5; }
+.page-path .current {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ── Right-side actions slot ── */
+.topbar-actions {
+  margin-left: auto;
+  display: flex; gap: 8px;
+  align-items: center;
+}
+
+/* ============ RESPONSIVE (topbar only) ============ */
+@media (max-width: 640px) {
+  .topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}

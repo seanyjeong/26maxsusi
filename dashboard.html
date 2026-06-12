@@ -1,229 +1,115 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="light">
 <head>
-    <script src="utils.js"></script>
-    <meta charset="UTF-8">
-    <title>대시보드</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
-     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root { --primary: #4364f7; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #495057; --card-bg: #fff; --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); --border-radius: 10px; }
-        body { font-family: 'Noto Sans KR', sans-serif; background: var(--light-gray); margin: 0; padding: 20px; max-width: 1200px; margin: auto; }
-        h2 { color: var(--primary); margin-bottom: 20px; }
-        .card { background: var(--card-bg); box-shadow: var(--box-shadow); border-radius: var(--border-radius); margin-bottom: 25px; padding: 20px; }
-        .card h3 { margin-top: 0; color: var(--dark-gray); border-bottom: 1px solid var(--medium-gray); padding-bottom: 10px; margin-bottom: 10px; font-size: 1.1em; }
-        ul { list-style: none; padding-left: 0; margin: 0; }
-        li { padding: 12px 5px; border-bottom: 1px solid var(--medium-gray); display: flex; align-items: center; gap: 15px; border-radius: 5px; }
-        li:last-child { border-bottom: none; }
-        .date { font-weight: 600; color: var(--primary); width: 150px; text-align: center; }
-        .desc { color: #555; }
-        .placeholder { color: #999; text-align: center; padding: 20px; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="assets/img/max-logo.png">
+<title>대시보드 — 맥스수시엔진</title>
 
-        /* ✅ [추가] 깜빡이는 애니메이션 효과 */
-        .blinking {
-            animation: blink-effect 1.5s infinite;
-        }
-        @keyframes blink-effect {
-            50% {
-                background-color: #fffbe6; /* 밝은 노란색 배경 */
-                box-shadow: 0 0 10px #ffecb3;
-            }
-        }
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 
-        .notice-important { font-weight: 600; color: var(--primary); }
-
-
-        /* dashboard.html의 style 태그 안에 이 코드를 추가하거나 기존 .notice-item을 수정 */
-.notice-item {
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.notice-item:hover {
-    background-color: #f0f2ff; /* 마우스를 올렸을 때 살짝 색 변경 */
-}
-.notice-important { 
-    font-weight: 600; 
-    color: var(--primary); 
-}
-
-.notice-important svg {
-    width: 17px;
-    height: 17px;
-    stroke : #ff4d4d; /* ✅ 핀 아이콘을 빨간색으로 변경 */
-    stroke-width: 2.5;
-    vertical-align: middle;
-    
-}
-
-    </style>
-
+<!-- 공용 자산 CSS -->
+<link rel="stylesheet" href="assets/css/tokens.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/base.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/sidebar.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="assets/css/modal.css">
+<link rel="stylesheet" href="assets/css/combobox.css">
+<link rel="stylesheet" href="dashboard.css">
 </head>
-<body>
-    <h2>대시보드</h2>
 
-    <div class="card">
-        <h3> 공지사항</h3>
-        <ul id="notice-list">
-            <li class="placeholder">공지사항을 불러오는 중입니다...</li>
+<body data-page="dashboard" data-title="대시보드" data-category="홈">
+
+<div class="app-shell" id="appShell">
+  <div id="sidebar-slot"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="page-path">
+        <span>홈</span>
+        <span class="sep">/</span>
+        <span class="current">대시보드</span>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost" id="btnReload">
+          <i class="ph-light ph-arrows-clockwise"></i><span>새로고침</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">대시보드</h1>
+          <div class="page-sub">공지사항 · 우리 지점 실기 일정 · 합격자 발표 일정</div>
+        </div>
+      </div>
+
+      <!-- 공지사항 -->
+      <section class="card">
+        <div class="card-head">
+          <h3 class="card-title"><i class="ph-light ph-megaphone"></i> 공지사항</h3>
+        </div>
+        <ul class="info-list" id="notice-list">
+          <li class="placeholder">공지사항을 불러오는 중입니다...</li>
         </ul>
-    </div>
+      </section>
 
-    <div class="card">
-        <h3>우리 지점 실기일정 (가까운 순)</h3>
-        <ul id="schedule-list">
-            <li class="placeholder">일정을 불러오는 중입니다...</li>
+      <!-- 우리 지점 실기 일정 -->
+      <section class="card">
+        <div class="card-head">
+          <h3 class="card-title"><i class="ph-light ph-calendar-check"></i> 우리 지점 실기일정 (가까운 순)</h3>
+        </div>
+        <ul class="info-list" id="schedule-list">
+          <li class="placeholder">일정을 불러오는 중입니다...</li>
         </ul>
-    </div>
-    
-    <div class="card">
-        <h3>합격자 발표 일정 (가까운 순)</h3>
-        <ul id="announcement-list">
-            <li class="placeholder">일정을 불러오는 중입니다...</li>
+      </section>
+
+      <!-- 합격자 발표 일정 -->
+      <section class="card">
+        <div class="card-head">
+          <h3 class="card-title"><i class="ph-light ph-trophy"></i> 합격자 발표 일정 (가까운 순)</h3>
+        </div>
+        <ul class="info-list" id="announcement-list">
+          <li class="placeholder">일정을 불러오는 중입니다...</li>
         </ul>
+      </section>
+    </section>
+  </div>
+</div>
+
+<!-- 공지 상세 모달 -->
+<div class="modal-backdrop" id="noticeDetailModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title" id="noticeDetailTitle"></div>
     </div>
+    <div class="modal-body">
+      <div id="noticeDetailBody" class="notice-detail"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-primary" id="btnCloseDetail">확인</button>
+    </div>
+  </div>
+</div>
 
-<script>
-    const SERVER = SUSI_API;;
-    const token = window.parent.localStorage.getItem('token');
-
-    // ✅ [추가] 공지사항 목록을 불러오는 함수
-// dashboard.html의 기존 loadNotices 함수를 이걸로 덮어쓰기
-async function loadNotices() {
-    const list = document.getElementById('notice-list');
-    if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
-    try {
-        const res = await susicFetch(`${SUSI_API}/announcements`, { headers: { 'Authorization': 'Bearer ' + token } });
-        const data = await res.json();
-
-        if (data.success && data.announcements.length > 0) {
-            list.innerHTML = '';
-            data.announcements.forEach(item => {
-                const li = document.createElement('li');
-                li.classList.add('notice-item');
-                li.dataset.title = item.제목;
-                li.dataset.content = item.내용;
-                li.onclick = () => showNoticePopup(li.dataset.title, li.dataset.content);
-
-                let pinIcon = '';
-                if (item.중요 === 'O') {
-                    li.classList.add('notice-important');
-                    // ✅ 네가 선택한 아이콘 SVG 코드로 교체했어
-                    pinIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
-                }
-
-                li.innerHTML = `${pinIcon} <strong>${item.제목}</strong>`;
-                list.appendChild(li);
-            });
-        } else {
-            list.innerHTML = `<li class="placeholder">등록된 공지사항이 없습니다.</li>`;
-        }
-    } catch (error) {
-        console.error("공지사항 로딩 실패:", error);
-        list.innerHTML = `<li class="placeholder">공지사항을 불러오는 데 실패했습니다.</li>`;
-    }
-}
-// ✅ [추가] 공지사항 팝업을 띄우는 함수
-function showNoticePopup(title, content) {
-    Swal.fire({
-        title: `<strong>${title}</strong>`,
-        html: `<div style="text-align: left; white-space: pre-wrap;">${content}</div>`,
-        confirmButtonText: '확인',
-        confirmButtonColor: '#4364f7'
-    });
-}
-
-    // ... (isDateInCurrentWeek, formatDate 등 기존 함수들은 그대로 유지) ...
-
-    // ✅ [수정] 페이지 로드 시 loadNotices 함수 호출 추가
-    document.addEventListener('DOMContentLoaded', () => {
-        loadNotices();
-        loadAnnouncementDates();
-        loadBranchSchedule();
-    });
-    
-    // --- 이하 기존 함수들 ---
-    function isDateInCurrentWeek(dateString) { /* 생략 */ }
-    function formatDate(dateString) { /* 생략 */ }
-    async function loadAnnouncementDates() { /* 생략 */ }
-    async function loadBranchSchedule() { /* 생략 */ }
-</script>
-<script>
-    // ⚠️ 위 script 태그의 생략된 부분에 dashboard.html의 기존 자바스크립트 함수들을 그대로 붙여넣어주세요.
-    function isDateInCurrentWeek(dateString) {
-        if (!dateString) return false;
-        const formattedString = dateString.split(' ')[0].replace(/\./g, '-');
-        const targetDate = new Date(formattedString + 'T00:00:00');
-        if (isNaN(targetDate.getTime())) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const dayOfWeek = today.getDay();
-        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const monday = new Date(today);
-        monday.setDate(today.getDate() + diffToMonday);
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-        return targetDate >= monday && targetDate <= sunday;
-    }
-    function formatDate(dateString) {
-        if (!dateString) return '';
-        const formattedString = dateString.split(' ')[0].replace(/\./g, '-');
-        const date = new Date(formattedString + 'T00:00:00');
-        if (isNaN(date.getTime())) return dateString;
-        const days = ['일', '월', '화', '수', '목', '금', '토'];
-        return `${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`;
-    }
-    async function loadAnnouncementDates() {
-        const list = document.getElementById('announcement-list');
-        if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
-        try {
-            const res = await susicFetch(`${SUSI_API}/announcement-dates`, { headers: { 'Authorization': 'Bearer ' + token } });
-            const data = await res.json();
-            if (data.success && data.dates.length > 0) {
-                list.innerHTML = '';
-                data.dates.forEach(item => {
-                    const li = document.createElement('li');
-                    if (isDateInCurrentWeek(item.발표일)) {
-                        li.classList.add('blinking');
-                    }
-                    li.innerHTML = `<div class="date">${formatDate(item.발표일)}</div><div class="desc">${item.대학명} ${item.학과명} - ${item.내용}</div>`;
-                    list.appendChild(li);
-                });
-            } else {
-                list.innerHTML = `<li class="placeholder">예정된 발표 일정이 없습니다.</li>`;
-            }
-        } catch (error) {
-            console.error("발표일정 로딩 실패:", error);
-            list.innerHTML = `<li class="placeholder">일정을 불러오는 데 실패했습니다.</li>`;
-        }
-    }
-    async function loadBranchSchedule() {
-        const list = document.getElementById('schedule-list');
-        if (!token) { list.innerHTML = `<li class="placeholder">로그인 정보가 필요합니다.</li>`; return; }
-        try {
-            const res = await susicFetch(`${SUSI_API}/branch-schedule`, { headers: { Authorization: 'Bearer ' + token } });
-            const data = await res.json();
-            if (data.success && data.schedule.length > 0) {
-                list.innerHTML = '';
-                data.schedule.forEach(item => {
-                    const li = document.createElement('li');
-                    const studentNames = item.students.join(', ');
-                    if (isDateInCurrentWeek(item.date)) {
-                        li.classList.add('blinking');
-                    }
-                    li.innerHTML = `<div class="date">${formatDate(item.date)}</div><div class="desc">${item.university} ${item.department} - <strong>${studentNames}</strong> 학생</div>`;
-                    list.appendChild(li);
-                });
-            } else {
-                list.innerHTML = `<li class="placeholder">예정된 실기 일정이 없습니다.</li>`;
-            }
-        } catch (error) {
-            console.error("실기일정 로딩 실패:", error);
-            list.innerHTML = `<li class="placeholder">일정을 불러오는 데 실패했습니다.</li>`;
-        }
-    }
-</script>
-
+<!-- 공용 JS -->
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/modal.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/combobox.js"></script>
+<script src="assets/js/bootstrap.js?v=4aa4784"></script>
+<script src="dashboard.js"></script>
 </body>
 </html>

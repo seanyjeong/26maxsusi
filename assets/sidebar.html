@@ -1,0 +1,119 @@
+<!--
+  sidebar.html — 공용 사이드바 (fetch include 용)
+  주입 위치: <div id="sidebar-slot"></div>
+  활성 표시: bootstrap.js 가 body.dataset.page 와 .nav-item[data-page] 매칭 후 .active 부여
+-->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <div class="brand-text">
+      <span class="name">맥스수시엔진</span>
+      <span class="sub">v1.26.04</span>
+    </div>
+    <button class="sidebar-toggle" id="toggleSidebar" aria-label="사이드바 접기">
+      <i class="ph-light ph-sidebar"></i>
+    </button>
+  </div>
+
+  <div class="sidebar-year" data-tooltip="연도 전환">
+    <div class="year-row">
+      <label for="sidebarYearCombo">
+        <i class="ph-light ph-calendar"></i><span>연도</span>
+      </label>
+      <div id="sidebarYearCombo"></div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group nav-group-solo">
+      <a class="nav-item" data-page="dashboard" href="dashboard.html">
+        <i class="ph-light ph-house"></i><span>대시보드</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">인사이트</div>
+      <a class="nav-item nav-item-live" data-page="live" href="live.html">
+        <i class="ph-fill ph-broadcast"></i><span>실시간 라이브</span><span class="live-badge">LIVE</span>
+      </a>
+      <a class="nav-item" data-page="branch_summary" href="branch_summary.html">
+        <i class="ph-light ph-chart-bar"></i><span>지점 현황</span>
+      </a>
+      <a class="nav-item" data-page="explore" href="explore.html">
+        <i class="ph-light ph-compass"></i><span>대학 탐색</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">학생 관리</div>
+      <a class="nav-item" data-page="student" href="student.html">
+        <i class="ph-light ph-user-list"></i><span>학생 관리</span>
+      </a>
+      <a class="nav-item" data-page="college-grade" href="college-grade.html">
+        <i class="ph-light ph-ranking"></i><span>학과 점수</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">컨설팅</div>
+      <a class="nav-item" data-page="counsel" href="counsel.html">
+        <i class="ph-light ph-chat-centered-dots"></i><span>개인 상담</span>
+      </a>
+      <a class="nav-item" data-page="counsel_group" href="counsel_group.html">
+        <i class="ph-light ph-users-three"></i><span>그룹 상담</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">최종 확정</div>
+      <a class="nav-item" data-page="final_confirm" href="final_confirm.html">
+        <i class="ph-light ph-flag-checkered"></i><span>원서 수합</span>
+      </a>
+      <a class="nav-item" data-page="26mobile" href="26mobile.html">
+        <i class="ph-light ph-device-mobile"></i><span>모바일 뷰</span>
+      </a>
+    </div>
+
+    <div class="nav-group nav-group-solo">
+      <a class="nav-item" data-page="announcement_manager" href="announcement_manager.html">
+        <i class="ph-light ph-megaphone"></i><span>공지 관리</span>
+      </a>
+    </div>
+
+    <div class="nav-group" data-group="admin">
+      <div class="nav-group-label">관리자 편집</div>
+      <a class="nav-item" data-page="admin" href="admin.html">
+        <i class="ph-light ph-shield-check"></i><span>관리자 홈</span>
+      </a>
+      <a class="nav-item" data-page="cut_manager" href="cut_manager.html">
+        <i class="ph-light ph-scissors"></i><span>컷 관리</span>
+      </a>
+      <a class="nav-item" data-page="silgi_standard" href="실기기준.html">
+        <i class="ph-light ph-barbell"></i><span>실기 기준</span>
+      </a>
+      <a class="nav-item" data-page="silgi_score_edit" href="실기배점수정.html">
+        <i class="ph-light ph-pencil-ruler"></i><span>실기 배점 수정</span>
+      </a>
+      <a class="nav-item" data-page="branch_manager" href="지점관리.html">
+        <i class="ph-light ph-buildings"></i><span>지점 관리</span>
+      </a>
+      <a class="nav-item" data-page="special_formula" href="특수식작업용.html">
+        <i class="ph-light ph-function"></i><span>특수식 작업</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div class="sidebar-foot-user">
+      <div class="avatar-dot" id="sidebarAvatar">?</div>
+      <div class="user-meta">
+        <span class="name" id="sidebarUserName">—</span>
+        <span class="role" id="sidebarUserBranch">—</span>
+      </div>
+    </div>
+    <div class="sidebar-foot-actions">
+      <button class="mini-btn" data-action="logout" aria-label="로그아웃">
+        <i class="ph-light ph-sign-out"></i><span>로그아웃</span>
+      </button>
+    </div>
+  </div>
+</aside>

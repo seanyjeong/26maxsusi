@@ -1,0 +1,174 @@
+/* ============================================================ */
+/* student.new.css — 학생 명단 관리 (Phase 3 Batch 2) */
+/* 기능 포커스 · 미니멀. 카드 / 테이블 / 푸터 액션만. */
+/* ============================================================ */
+
+.page-content {
+  padding: 22px 28px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.card-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.card-hint {
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+.card-body {
+  padding: 16px 18px;
+}
+.card-foot {
+  padding: 12px 18px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.foot-msg {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+/* ── Table ── */
+.table-wrap {
+  overflow-x: auto;
+}
+.st-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.st-table thead th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 500;
+  text-align: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+.st-table tbody td {
+  padding: 8px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text);
+}
+.st-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.st-table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.st-table input[type="text"] {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  font-size: 13px;
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+.st-table input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ── Small action buttons (row level) ── */
+.row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: var(--r-xs);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 160ms var(--ease);
+  font-family: inherit;
+  margin: 0 2px;
+}
+.row-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.row-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.row-btn.primary:hover {
+  filter: brightness(1.06);
+}
+.row-btn.danger {
+  color: var(--danger);
+  border-color: var(--danger-soft);
+}
+.row-btn.danger:hover {
+  background: var(--danger-soft);
+}
+.row-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: var(--surface-2);
+  color: var(--text-3);
+  border-color: var(--border);
+}
+
+/* ── 상태 안내 ── */
+.state-row {
+  color: var(--text-3);
+  padding: 20px 10px !important;
+  font-size: 13px;
+}
+.list-msg {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 12.5px;
+}
+
+@media (max-width: 640px) {
+  .page-content { padding: 16px; }
+  .card-head { padding: 12px 14px; }
+  .card-foot { padding: 10px 14px; flex-wrap: wrap; }
+}

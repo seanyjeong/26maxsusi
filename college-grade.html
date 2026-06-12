@@ -1,402 +1,96 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="light">
 <head>
-    <script src="utils.js"></script>
-  <meta charset="UTF-8">
-  <title>대학별 내신/등급 입력 시스템</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #4361ee;
-      --primary-light: #e6e9ff;
-      --border: #e0e0e0;
-      --header-bg: #f8f9fa;
-    }
-    
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      max-width: 98%;
-      margin: 0 auto;
-      padding: 20px;
-      color: #333;
-    }
-    
-    h2 {
-      color: var(--primary);
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-      font-weight: 700;
-    }
-    
-    #branchInfo {
-      background: var(--primary-light);
-      padding: 8px 12px;
-      border-radius: 4px;
-      display: inline-block;
-      margin-bottom: 15px;
-      font-weight: 500;
-    }
-    
-    #searchInput {
-      width: 300px;
-      padding: 10px 15px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      margin-bottom: 10px;
-      font-size: 14px;
-      transition: all 0.3s;
-    }
-    
-    #searchInput:focus {
-      border-color: var(--primary);
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9em;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    
-    th, td {
-      padding: 12px 8px;
-      text-align: center;
-      border: 1px solid var(--border);
-    }
-    
-    thead th {
-      background-color: var(--header-bg);
-      font-weight: 600;
-      position: sticky;
-      z-index: 1;
-    }
-    
-    tbody tr:hover {
-      background-color: rgba(67, 97, 238, 0.03);
-    }
-    
-    input[type="text"] {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 6px 4px;
-      font-size: 0.85em;
-      text-align: center;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-    }
-    
-    input[type="text"]:focus {
-      border-color: var(--primary);
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
-    }
-    
-    .col-name {
-      white-space: nowrap;
-      font-weight: 600;
-      color: var(--primary);
-      min-width: 160px;
-    }
-    
-    .row-no {
-      color: #999;
-      font-weight: 500;
-    }
-    
-    #msg {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-      padding: 10px 15px;
-      border-radius: 4px;
-      margin-top: 15px;
-      display: inline-block;
-      font-weight: 500;
-    }
-    
-    .controls {
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    ::-webkit-scrollbar {
-      height: 8px;
-      width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: #a8a8a8;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="assets/img/max-logo.png">
+<title>대학별 내신/등급 입력 — 맥스수시엔진</title>
 
-    thead tr:first-child th {
-      top: 0;
-      z-index: 2;
-    }
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    thead tr:nth-child(2) th {
-      top: 45px;
-      border-bottom: 1px solid var(--border);
-    }
-  </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+<!-- 공용 자산 CSS -->
+<link rel="stylesheet" href="assets/css/tokens.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/base.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/sidebar.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="assets/css/modal.css">
+<link rel="stylesheet" href="assets/css/combobox.css">
+<link rel="stylesheet" href="college-grade.css">
 </head>
-<body>
-  <div class="controls">
-    <h2>대학별 내신/등급 입력 시스템</h2>
+
+<body data-page="college-grade" data-title="대학별 내신/등급 입력" data-category="학생·성적">
+
+<div class="app-shell" id="appShell">
+  <div id="sidebar-slot"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="page-path">
+        <span>학생·성적</span>
+        <span class="sep">/</span>
+        <span class="current">대학별 내신/등급 입력</span>
+      </div>
+      <div class="topbar-actions">
+        <span class="chip ghost" id="branchChip" hidden><i class="ph-light ph-storefront"></i><span id="branchChipText">—</span></span>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <!-- 필터 바: 대학 검색 + 학생 페이지네이션 + 학생 검색 -->
+      <div class="grade-toolbar">
+        <div class="tb-left">
+          <input type="text" id="searchInput" class="tb-input" placeholder="대학명, 학과명, 전형명으로 검색">
+        </div>
+        <div class="tb-right">
+          <button type="button" class="btn btn-ghost" id="prevPageBtn">
+            <i class="ph-light ph-caret-left"></i><span>이전 학생들</span>
+          </button>
+          <span class="page-info" id="pageInfo">페이지 1 / 1</span>
+          <button type="button" class="btn btn-ghost" id="nextPageBtn">
+            <span>다음 학생들</span><i class="ph-light ph-caret-right"></i>
+          </button>
+          <span class="tb-sep"></span>
+          <input type="text" id="studentSearchInput" class="tb-input tb-input-sm" placeholder="학생 이름으로 검색">
+          <button type="button" class="btn btn-ghost" id="studentSearchBtn">
+            <i class="ph-light ph-magnifying-glass"></i><span>검색</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 매트릭스 뷰 -->
+      <div class="card grade-card">
+        <div class="table-scroll">
+          <table class="grade-table" id="gradeTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody">
+              <tr><td colspan="4" class="state-row">로딩중…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="msg" class="grade-msg" hidden></div>
+    </section>
   </div>
-  
-  <div id="branchInfo"></div>
+</div>
 
-  <div>
-    <input type="text" id="searchInput" placeholder="대학명, 학과명, 전형명으로 검색">
-  </div>
-  
-<div id="pagination-controls" style="margin: 20px 0; display: flex; align-items: center; gap: 15px;">
-    <button id="prevPageBtn">&laquo; 이전 학생들</button>
-    <span id="pageInfo"></span>
-    <button id="nextPageBtn">다음 학생들 &raquo;</button>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/modal.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/combobox.js"></script>
+<script src="assets/js/bootstrap.js?v=4aa4784"></script>
+<script src="college-grade.js"></script>
 
-    <div style="margin-left: auto; display: flex; align-items: center; gap: 5px;">
-        <input type="text" id="studentSearchInput" placeholder="학생 이름으로 검색" style="width: 150px; padding: 8px; font-size: 14px;">
-        <button id="studentSearchBtn">검색</button>
-    </div>
-      </div>
-
-  <div style="overflow-x:auto; max-height: 70vh; border: 1px solid #eee; border-radius: 6px;">
-    <table id="gradeTable">
-      <thead id="tableHead"></thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-  
-  <div id="msg"></div>
-  
-  <script>
-    const SERVER = SUSI_API;;
-    let branch = '';
-    let token = localStorage.getItem('token');
-    if (!token) location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
-
-    function parseJwt(token) {
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-      } catch { return {}; }
-    }
-    const payload = parseJwt(token);
-    branch = payload.branch;
-    document.getElementById('branchInfo').textContent = "내 지점: " + (branch || '(지점정보없음)');
-
-    let colleges = [], students = [], grade_map = {};
-    let filteredColleges = [];
-
-    let currentPage = 1;
-    const studentsPerPage = 5;
-
-    async function loadAll() {
-      const res = await susicFetch(SUSI_API + '_student_grade_map', {
-        headers: { Authorization: 'Bearer ' + token }
-      });
-      const json = await res.json();
-      if (!json.success) {
-        document.getElementById('msg').textContent = "데이터 로딩 오류! 다시 로그인 필요";
-        if(json.message && json.message.includes("권한없음")) logout();
-        return;
-      }
-   colleges = json.colleges;
-   // ✅ 대학명을 가나다순으로 정렬하는 코드 추가
-   colleges.sort((a, b) => a.대학명.localeCompare(b.대학명));
-   
-   students = json.students;
-   grade_map = json.grade_map;
-      filteredColleges = colleges;
-      
-      renderTable();
-      setupPagination();
-      setupStudentSearch();
-    }
-
-    document.getElementById('searchInput').addEventListener('input', function() {
-      const q = this.value.trim().toLowerCase();
-      // 검색 시에는 currentPage를 1로 초기화하지 않음. 대학 필터링은 학생 페이지와 무관.
-      filteredColleges = colleges.filter(col =>
-        (col.대학명 && col.대학명.toLowerCase().includes(q)) ||
-        (col.학과명 && col.학과명.toLowerCase().includes(q)) ||
-        (col.전형명 && col.전형명.toLowerCase().includes(q))
-      );
-      renderTable();
-    });
-
-    // 👇 이 함수 전체를 복사해서 붙여넣어줘
-function setupStudentSearch() {
-    const searchInput = document.getElementById('studentSearchInput');
-    const searchBtn = document.getElementById('studentSearchBtn');
-
-    const findStudent = () => {
-        const query = searchInput.value.trim().toLowerCase();
-        if (!query) {
-            alert("검색할 학생 이름을 입력하세요.");
-            return;
-        }
-
-        // 전체 학생 목록(students)에서 이름이 포함된 학생의 순서(index)를 찾음
-        const studentIndex = students.findIndex(st => 
-            st.이름 && st.이름.toLowerCase().includes(query)
-        );
-
-        if (studentIndex !== -1) {
-            // 학생을 찾았을 경우
-            // 학생의 순서를 이용해 몇 페이지에 있는지 계산
-            const targetPage = Math.floor(studentIndex / studentsPerPage) + 1;
-            if (currentPage !== targetPage) {
-                currentPage = targetPage;
-                renderTable(); // 해당 페이지로 테이블을 다시 그림
-            }
-        } else {
-            // 학생을 못 찾았을 경우
-            alert('"' + searchInput.value + '" 학생을 찾을 수 없습니다.');
-        }
-    };
-
-    searchBtn.addEventListener('click', findStudent);
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            findStudent();
-        }
-    });
-}
-
-    function renderTable() {
-      const startIndex = (currentPage - 1) * studentsPerPage;
-      const endIndex = startIndex + studentsPerPage;
-      const paginatedStudents = students.slice(startIndex, endIndex);
-
-      let headHtml = `<tr>
-        <th rowspan="2">No</th>
-        <th rowspan="2">대학명</th>
-        <th rowspan="2">학과명</th>
-        <th rowspan="2">전형명</th>`;
-      paginatedStudents.forEach(st => {
-        headHtml += `<th colspan="2" class="col-name">${st.이름}</th>`;
-      });
-      headHtml += `</tr><tr>`;
-      paginatedStudents.forEach(() => {
-        headHtml += `<th>등급</th><th>내신</th>`;
-      });
-      headHtml += `</tr>`;
-      document.getElementById('tableHead').innerHTML = headHtml;
-
-      let bodyHtml = '';
-      (filteredColleges || []).forEach((col, rowIdx) => {
-        bodyHtml += `<tr>
-          <td class="row-no">${rowIdx + 1}</td>
-          <td>${col.대학명}</td>
-          <td>${col.학과명 || ''}</td>
-          <td>${col.전형명 || ''}</td>`;
-
-        paginatedStudents.forEach(st => {
-          const key = `${st.학생ID}-${col.대학ID}`;
-          const grade = grade_map[key]?.등급 || '';
-          const score = grade_map[key]?.내신점수 || '';
-          bodyHtml += `
-            <td><input type="text" value="${grade}" 
-              onchange="updateGrade(${st.학생ID},'${col.대학ID}', this.value, null)" 
-              placeholder="등급"></td>
-            <td><input type="text" value="${score}"
-              onchange="updateGrade(${st.학생ID},'${col.대학ID}', null, this.value)" 
-              placeholder="내신"></td>`;
-        });
-
-        bodyHtml += `</tr>`;
-      });
-      document.getElementById('tableBody').innerHTML = bodyHtml;
-      
-      updatePageInfo();
-    }
-    
-    function updatePageInfo() {
-      const totalPages = Math.ceil(students.length / studentsPerPage);
-      document.getElementById('pageInfo').textContent = `페이지 ${currentPage} / ${totalPages > 0 ? totalPages : 1}`;
-      document.getElementById('prevPageBtn').disabled = (currentPage === 1);
-      document.getElementById('nextPageBtn').disabled = (currentPage >= totalPages);
-    }
-
-    function setupPagination() {
-      document.getElementById('prevPageBtn').addEventListener('click', () => {
-        if (currentPage > 1) {
-          currentPage--;
-          renderTable();
-        }
-      });
-
-      document.getElementById('nextPageBtn').addEventListener('click', () => {
-        const totalPages = Math.ceil(students.length / studentsPerPage);
-        if (currentPage < totalPages) {
-          currentPage++;
-          renderTable();
-        }
-      });
-    }
-
-    async function updateGrade(student_id, college_id, grade, score) {
-      const key = `${student_id}-${college_id}`;
-      const prev = grade_map[key] || {};
-      if (grade === null) grade = prev.등급 || '';
-      if (score === null) score = prev.내신점수 || '';
-      grade_map[key] = { 등급: grade, 내신점수: score };
-
-      const res = await susicFetch(SUSI_API + '_student_grade_update', {
-        method:'POST',
-        headers:{
-          'Authorization':'Bearer '+token,
-          'Content-Type':'application/json'
-        },
-        body: JSON.stringify({
-          student_id, college_id,
-          "등급": grade, "내신점수": score
-        })
-      });
-      const json = await res.json();
-      if(!json.success) {
-        document.getElementById('msg').textContent = json.message||'저장실패';
-        document.getElementById('msg').style.backgroundColor = '#ffebee';
-        document.getElementById('msg').style.color = '#c62828';
-      } else {
-        document.getElementById('msg').textContent = "성공적으로 저장되었습니다!";
-        document.getElementById('msg').style.backgroundColor = '#e8f5e9';
-        document.getElementById('msg').style.color = '#2e7d32';
-        setTimeout(()=>{ 
-          document.getElementById('msg').textContent = ""; 
-          document.getElementById('msg').style.backgroundColor = '';
-        }, 1500);
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem('token');
-      location.href = 'login.html?next=' + encodeURIComponent(location.pathname);
-    }
-
-    loadAll();
-  </script>
 </body>
 </html>
-

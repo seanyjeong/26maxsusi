@@ -1,0 +1,136 @@
+/* ============================================================
+ * 지점관리.new.css — 지점 관리 (branch_manager)
+ * 공용 토큰/컴포넌트 상속. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+
+.bm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 24px 24px 20px;
+  margin-bottom: 16px;
+  display: grid;
+  gap: 14px;
+}
+.bm-card.hidden { display: none; }
+
+.bm-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.bm-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+
+.bm-field {
+  display: grid;
+  gap: 6px;
+}
+.bm-field > label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.bm-field input[type="text"],
+.bm-field input[type="password"] {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  transition: border-color 160ms var(--ease);
+}
+.bm-field input:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.bm-primary-btn {
+  width: 100%;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--text);
+  border: 1px solid var(--text);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: filter 160ms var(--ease), opacity 160ms var(--ease);
+  font-family: inherit;
+}
+.bm-primary-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.bm-primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.bm-primary-btn i { font-size: 17px; }
+
+.bm-primary-btn.success {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.bm-primary-btn.info {
+  background: var(--info);
+  border-color: var(--info);
+}
+
+.bm-status {
+  margin-top: 8px;
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bm-status[data-tone="error"]   { color: var(--danger); background: var(--danger-soft); border-color: var(--danger-soft); }
+.bm-status[data-tone="success"] { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-soft); }
+.bm-status[data-tone="warn"]    { color: var(--warn);   background: var(--warn-soft);   border-color: var(--warn-soft); }

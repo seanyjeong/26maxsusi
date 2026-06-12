@@ -1,0 +1,251 @@
+/* ============================================================
+ * branch_summary.new.css — 지점별 최종수합 (미니멀)
+ * 공용 토큰만 사용. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+@media (min-width: 1900px) {
+  .page-content { padding: 22px 48px 64px; }
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.head-meta {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---- Accordion cards ---- */
+.university-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.university-accordion .placeholder {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+}
+
+details.uni-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+details.uni-card[open] {
+  box-shadow: var(--shadow-hover);
+}
+details.uni-card summary {
+  list-style: none;
+  padding: 14px 18px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transition: background 160ms var(--ease);
+}
+details.uni-card summary::-webkit-details-marker { display: none; }
+details.uni-card summary::before {
+  content: '\25B6';
+  font-size: 10px;
+  color: var(--text-3);
+  margin-right: 6px;
+  transition: transform 160ms var(--ease);
+}
+details.uni-card[open] summary::before {
+  transform: rotate(90deg);
+}
+details.uni-card summary:hover { background: var(--surface-2); }
+
+.summary-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.summary-title .uni-name {
+  color: var(--text);
+}
+.summary-title .uni-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 400;
+}
+.summary-info {
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.table-container {
+  padding: 0 18px 16px;
+  overflow-x: auto;
+}
+
+/* ---- Data table ---- */
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.summary-table th,
+.summary-table td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.summary-table thead th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.summary-table tbody tr:hover { background: var(--accent-soft); }
+.summary-table tbody tr:last-child td { border-bottom: none; }
+
+/* ---- Inputs ---- */
+.summary-table input[type="text"],
+.summary-table input[type="number"],
+.summary-table input[type="date"],
+.summary-table select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease);
+}
+.summary-table input:focus,
+.summary-table select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.summary-table .input-grade { width: 52px; margin: 0 auto; }
+.summary-table .input-score { width: 60px; margin: 0 auto; }
+.summary-table .input-record { width: 58px; }
+.summary-table .input-score-only {
+  width: 40px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: not-allowed;
+  border-color: var(--border-soft);
+}
+.summary-table .input-reserve-number { width: 52px; }
+
+.practical-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  justify-content: center;
+}
+
+.pass-fail-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 150px;
+}
+.pass-fail-container select { min-width: 80px; }
+
+.save-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 18px 4px;
+}
+
+/* ---- Score-table popup ---- */
+.score-table-container {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  flex-wrap: wrap;
+}
+.score-table-container table {
+  min-width: 220px;
+  border-collapse: collapse;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+.score-table-container th,
+.score-table-container td {
+  padding: 5px 8px;
+  border: 1px solid var(--border-soft);
+  text-align: center;
+}
+.score-table-container thead th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+/* .modal-close 는 공용 assets/css/modal.css v2 에서 관리 */
+
+.unassigned-body p {
+  margin: 0 0 10px;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.unassigned-body ul {
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 8px 12px 8px 28px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: 13px;
+  color: var(--text);
+}
+.unassigned-body li { padding: 2px 0; }
+
+@media (max-width: 900px) {
+  .page-content { padding: 14px 16px 40px; }
+  .summary-table th, .summary-table td { padding: 6px 4px; font-size: 11.5px; }
+}

@@ -1,708 +1,157 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="light">
 <head>
-    <script src="utils.js"></script>
-    <meta charset="UTF-8">
-    <title>수시 실시간 현황</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <style>
-        :root { 
-            --primary-color: #4364f7; --primary-light: #eef2ff; --secondary-color: #6a8eff; 
-            --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #1e293b; 
-            --text-primary: #334155; --text-secondary: #64748b; --border-radius: 8px; 
-            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--light-gray); padding: 20px; }
-        .section { background-color: white; padding: 20px; border-radius: var(--border-radius); margin-bottom: 20px; box-shadow: var(--card-shadow); }
-        .controls-wrap { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
-        .filter-wrap { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-        select, button { padding: 8px 12px; border-radius: 4px; border: 1px solid var(--medium-gray); font-size: 14px; }
-        #result-title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--medium-gray); padding-bottom: 10px; }
-        #result-title { margin: 0; font-size: 1.3em; font-weight: 500; color: var(--dark-gray); }
-        .swal2-html-container { text-align: left !important; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="assets/img/max-logo.png">
+<title>실시간 현황 — 맥스수시엔진</title>
 
-        .btn-excel { background: linear-gradient(135deg, #1D6F42, #28a745); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .btn-excel:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(29,111,66,0.3); }
-        .btn-score-table { background: linear-gradient(135deg, #4364f7, #6a8eff); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
-        .btn-score-table:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(67,100,247,0.3); }
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-        .score-modal-wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
-        .score-modal-table { flex: 1; min-width: 260px; }
-        .score-modal-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .score-modal-table th, .score-modal-table td { border: 1px solid var(--medium-gray); padding: 6px 10px; text-align: center; }
-        .score-modal-table .evt-header { background: var(--primary-color); color: white; font-weight: 600; font-size: 14px; padding: 10px; }
-        .score-modal-table thead th { background: #f1f5f9; font-weight: 500; color: var(--dark-gray); }
-        .score-modal-table tbody tr:nth-child(even) { background: #f8fafc; }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 
-        /* --- 데스크탑 테이블 스타일 --- */
-        #desktop-view { overflow-x: auto; }
-        #desktop-view table { width: 100%; border-collapse: collapse; }
-        #desktop-view th, #desktop-view td { border: 1px solid var(--medium-gray); padding: 10px; text-align: center; font-size: 13px; vertical-align: middle; white-space: nowrap; }
-        #desktop-view th { background-color: var(--primary-color); color: white; font-weight: 500; position: sticky; top: -1px; z-index: 10; }
-        #desktop-view thead tr:nth-child(2) th { top: 40px; }
-        #desktop-view .col-record, #desktop-view .col-score { width: 70px; min-width: 60px; }
-        #desktop-view .rank-top3 { font-weight: bold; color: var(--primary-color); }
-        #desktop-view .my-branch-row { background-color: var(--primary-light); font-weight: 500; }
+<link rel="stylesheet" href="assets/css/tokens.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/base.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/sidebar.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="assets/css/modal.css">
+<link rel="stylesheet" href="assets/css/combobox.css">
+<link rel="stylesheet" href="live.css">
 
-        /* --- 모바일 카드 스타일 --- */
-        #mobile-view { display: none; }
-        #mobile-view .student-item { background: white; padding: 18px; border-radius: 12px; margin-bottom: 12px; box-shadow: var(--card-shadow); cursor: pointer; display: flex; align-items: center; gap: 15px; }
-        #mobile-view .rank { font-size: 1.2rem; font-weight: 700; color: var(--primary-color); width: 40px; text-align: center; }
-        #mobile-view .student-info { flex: 1; }
-        #mobile-view .student-main-info { display: flex; align-items: center; font-weight: 600; font-size: 1.05rem; margin-bottom: 6px; }
-        #mobile-view .student-branch { font-size: 0.8rem; color: var(--text-secondary); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
-        #mobile-view .student-scores { font-size: 0.85rem; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 10px; }
-        #mobile-view .my-branch-item { background-color: var(--primary-light); border: 1px solid var(--primary-color); }
-        .swal-results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
-        .swal-results-table th, .swal-results-table td { border: 1px solid var(--medium-gray); padding: 10px; text-align: center; }
-        .swal-results-table th { background-color: var(--primary-light); color: var(--primary-color); font-weight: 600; }
-        .swal-results-table .total-score { font-weight: bold; color: var(--primary-color); }
-
-        .grade-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; color: white; min-width: 28px; text-align: center; }
-        .grade-1, .grade-2 { background: #4364f7; }
-        .grade-3, .grade-4 { background: #28a745; }
-        .grade-5, .grade-6 { background: #f59e0b; }
-        .grade-7, .grade-8, .grade-9 { background: #ef4444; }
-        .grade-none { background: #cbd5e1; color: #64748b; }
-
-        @media (max-width: 768px) {
-            body { padding: 8px; }
-            .section { padding: 12px; }
-            #desktop-view { display: none; }
-            #mobile-view { display: block; }
-        }
-    </style>
+<!-- ExcelJS: 전체 수합 엑셀 다운로드 (원본 기능 보존) -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
-<body>
-    <div class="container">
-        <div class="section">
-             <h2 id="main-title"><span class="year-display"></span>수시 실시간 현황 (전체 교육원)</h2>
-            <div class="controls-wrap">
-                <div class="filter-wrap">
-                    <div><label for="sel-college">대학명</label><select id="sel-college" onchange="onCollegeChange()"></select></div>
-                    <div><label for="sel-major">학과명</label><select id="sel-major" onchange="onMajorChange()" disabled></select></div>
-                    <div><label for="sel-type">전형명</label><select id="sel-type" onchange="onTypeChange()"></select></div>
-                </div>
-                <button class="btn-excel" onclick="downloadAllExcel()"><i class="fas fa-file-excel"></i> 전체 수합 엑셀 다운로드</button>
-            </div>
+
+<body data-page="live" data-title="실시간 현황" data-category="수합">
+
+<div class="app-shell" id="appShell">
+  <div id="sidebar-slot"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="page-path">
+        <span>수합</span>
+        <span class="sep">/</span>
+        <span class="current">실시간 현황</span>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-accent" id="btnExcel">
+          <i class="ph-light ph-file-xls"></i><span>전체 수합 엑셀</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">
+            실시간 현황
+            <span class="year-chip" id="yearChip"></span>
+          </h1>
+          <div class="page-sub">전체 교육원 수합 순위 · 폴링으로 자동 갱신</div>
+        </div>
+      </div>
+
+      <!-- 필터 바 -->
+      <div class="filter-bar">
+        <div class="filter-field">
+          <label for="comboCollege">대학명</label>
+          <div class="combobox" id="comboCollege"></div>
+        </div>
+        <div class="filter-field">
+          <label for="comboMajor">학과명</label>
+          <div class="combobox" id="comboMajor"></div>
+        </div>
+        <div class="filter-field">
+          <label for="comboType">전형명</label>
+          <div class="combobox" id="comboType"></div>
+        </div>
+        <button type="button" class="btn btn-ghost" id="btnScoreTable" hidden>
+          <i class="ph-light ph-table"></i><span>배점표</span>
+        </button>
+        <span class="live-indicator" id="liveIndicator" hidden>
+          <i class="ph-fill ph-dot"></i><span>실시간</span>
+        </span>
+      </div>
+
+      <!-- 결과 -->
+      <div class="result-panel">
+        <div class="result-head">
+          <h3 id="resultTitle">대학/학과/전형을 선택해주세요.</h3>
         </div>
 
-        <div class="section">
-             <div id="result-title-container">
-                <h3 id="result-title">대학/학과/전형을 선택해주세요.</h3>
-                <button id="btn-score-table" class="btn-score-table" onclick="showScoreTable()" style="display:none;"><i class="fas fa-table"></i> 배점표</button>
-            </div>
-            <div id="desktop-view">
-                <table id="resultTable">
-                    <thead></thead>
-                    <tbody id="resultTbody"></tbody>
-                </table>
-            </div>
-            <div id="mobile-view">
-                <div id="student-list-container"></div>
-            </div>
+        <!-- 데스크탑 테이블 -->
+        <div id="desktopView" class="desktop-view scroll-thin">
+          <table id="resultTable" class="rank-table">
+            <thead></thead>
+            <tbody id="resultTbody"></tbody>
+          </table>
         </div>
+
+        <!-- 모바일 카드 -->
+        <div id="mobileView" class="mobile-view">
+          <div id="studentListContainer"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 배점표 모달 -->
+<div class="modal-backdrop" id="scoreTableModal" role="dialog" aria-modal="true" aria-labelledby="scoreTableTitle">
+  <div class="modal-card wide">
+    <div class="modal-head">
+      <h3 class="modal-title" id="scoreTableTitle">배점표</h3>
+      <button type="button" class="modal-close" data-action="modal-close" aria-label="닫기">
+        <i class="ph-light ph-x"></i>
+      </button>
     </div>
-
-<script>
-    const SERVER = SUSI_API;;
-    const token = localStorage.getItem('token');
-    if (!token) location.href = 'login.html';
-
-    let colleges = [], collegeGroups = {};
-    let loggedInUserBranch = '';
-    let studentDataMap = new Map();
-    let currentEvents = [];
-    let scoreTableMap = {}; // "대학명_학과명_전형명" -> 실기ID
-
-    function gradeBadge(grade) {
-        if (!grade && grade !== 0) return '<span class="grade-badge grade-none">-</span>';
-        const g = Math.round(parseFloat(grade));
-        const cls = (g >= 1 && g <= 9) ? 'grade-' + g : 'grade-none';
-        return `<span class="grade-badge ${cls}">${grade}</span>`;
-    }
-
-    // init 및 드롭다운 관련 함수들은 이전과 동일 (생략)
-    async function init() {
-        const [profileRes, collegeRes, practicalRes] = await Promise.all([
-            susicFetch(`${SUSI_API}/profile`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            susicFetch(`${SUSI_API}_college_list`, { headers: { 'Authorization': 'Bearer ' + token } }).then(res => res.json()),
-            susicFetch(`${SUSI_API}_get_practical_colleges`).then(res => res.json()).catch(() => [])
-        ]);
-        if (profileRes.success && profileRes.user) { loggedInUserBranch = profileRes.user.branch; }
-        if (Array.isArray(practicalRes)) {
-            practicalRes.forEach(p => { scoreTableMap[`${p.대학명}_${p.학과명}_${p.전형명}`] = p.실기ID; });
-        }
-        if (collegeRes.success) { colleges = collegeRes.colleges; groupColleges(); populateCollegeSelect(); onTypeChange(); }
-    }
-    function groupColleges() { colleges.forEach(c => { if (!collegeGroups[c.대학명]) collegeGroups[c.대학명] = {}; if (!collegeGroups[c.대학명][c.학과명]) collegeGroups[c.대학명][c.학과명] = []; collegeGroups[c.대학명][c.학과명].push(c.전형명); }); }
-    function populateCollegeSelect() { document.getElementById('sel-college').innerHTML = '<option value="">선택</option>' + Object.keys(collegeGroups).sort().map(c => `<option value="${c}">${c}</option>`).join(''); }
-    function onCollegeChange() { const c = document.getElementById('sel-college').value; const s = document.getElementById('sel-major'); s.innerHTML = '<option value="">선택</option>'; document.getElementById('sel-type').innerHTML = '<option value="">선택</option>'; if (c && collegeGroups[c]) { s.innerHTML += Object.keys(collegeGroups[c]).sort().map(m => `<option value="${m}">${m}</option>`).join(''); s.disabled = false; } else { s.disabled = true; document.getElementById('sel-type').disabled = true; } onTypeChange(); }
-    function onMajorChange() { const c = document.getElementById('sel-college').value; const m = document.getElementById('sel-major').value; const t = document.getElementById('sel-type'); t.innerHTML = '<option value="">선택</option>'; if (m && collegeGroups[c]?.[m]) { t.innerHTML += collegeGroups[c][m].sort().map(type => `<option value="${type}">${type}</option>`).join(''); t.disabled = false; } else { t.disabled = true; } onTypeChange(); }
-    function onTypeChange() { searchRanking(); }
-
-    async function searchRanking() {
-        const c = document.getElementById('sel-college').value, m = document.getElementById('sel-major').value, t = document.getElementById('sel-type').value;
-        const resultTitle = document.getElementById('result-title');
-        
-        const scoreBtn = document.getElementById('btn-score-table');
-
-        if (!c || !m || !t) {
-            renderDesktopTable([], []);
-            renderMobileList([]);
-            resultTitle.textContent = '대학/학과/전형을 선택해주세요.';
-            scoreBtn.style.display = 'none';
-            return;
-        }
-
-        // Show score table button if 실기ID exists for this college
-        const scoreKey = `${c}_${m}_${t}`;
-        scoreBtn.style.display = scoreTableMap[scoreKey] ? 'inline-flex' : 'none';
-
-        const currentCollege = colleges.find(col => col.대학명 === c && col.학과명 === m && col.전형명 === t);
-        if (!currentCollege) return;
-        
-        resultTitle.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 전체 지점 데이터 조회 중...`;
-        
-        const res = await susicFetch(`${SUSI_API}/realtime-rank-by-college?college_id=${currentCollege.대학ID}`, { headers: { 'Authorization': 'Bearer ' + token } });
-        const data = await res.json();
-        
-        if (data.success) {
-            currentEvents = data.events;
-            resultTitle.textContent = `[${c} ${m} (${t})] 실시간 순위 (총 ${data.ranking.length}명)`;
-            renderDesktopTable(data.ranking, data.events);
-            renderMobileList(data.ranking);
-        } else {
-            Swal.fire('오류', '데이터 조회 중 문제가 발생했습니다.', 'error');
-            renderDesktopTable([], []);
-            renderMobileList([]);
-        }
-    }
-
-    // ▼▼▼▼▼ 여기가 수정된 renderDesktopTable 함수 ▼▼▼▼▼
-    function renderDesktopTable(rankingData, events = []) {
-        const thead = document.getElementById('resultTable').querySelector('thead');
-        const tbody = document.getElementById('resultTable').querySelector('tbody');
-        
-        let headerRow1HTML = `<tr><th rowspan="2">순위</th><th rowspan="2">지점</th><th rowspan="2">이름</th><th rowspan="2">성별</th>`;
-        events.forEach(event => {
-            headerRow1HTML += `<th colspan="2">${event}</th>`;
-        });
-        headerRow1HTML += `<th rowspan="2">내신등급</th><th rowspan="2">내신점수</th><th rowspan="2">실기총점</th><th rowspan="2">합산점수</th><th rowspan="2">최초합</th><th rowspan="2">최종합</th></tr>`;
-
-        let headerRow2HTML = `<tr>`;
-        events.forEach(event => {
-            headerRow2HTML += `<th class="col-record">기록</th><th class="col-score">점수</th>`;
-        });
-        headerRow2HTML += `</tr>`;
-        
-        thead.innerHTML = headerRow1HTML + headerRow2HTML;
-        
-        const totalColumns = 4 + (events.length * 2) + 6;
-
-        if (rankingData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${totalColumns}">해당 전형에 수합된 학생이 없습니다.</td></tr>`;
-            return;
-        }
-        
-        tbody.innerHTML = rankingData.map(student => {
-            const isMyBranch = student.지점명 === loggedInUserBranch;
-            const rowClass = isMyBranch ? 'my-branch-row' : '';
-            const rankClass = student.순위 <= 3 ? 'rank-top3' : '';
-            
-            let rowHTML = `<tr class="${rowClass}"><td class="${rankClass}">${student.순위}</td><td>${student.지점명}</td><td>${student.이름}</td><td>${student.성별}</td>`;
-            for (let i = 1; i <= events.length; i++) {
-                rowHTML += `<td class="col-record">${student['기록'+i] || '-'}</td><td class="col-score">${student['점수'+i] || '-'}</td>`;
-            }
-            rowHTML += `
-                <td>${gradeBadge(student.내신등급)}</td>
-                <td>${student.내신점수 || '-'}</td>
-                <td>${student.실기총점 !== null ? parseFloat(student.실기총점).toFixed(2) : '-'}</td>
-                <td><strong>${student.합산점수 !== null ? parseFloat(student.합산점수).toFixed(2) : '-'}</strong></td>
-                <td>${student.최초합여부 || '-'}</td>
-                <td>${student.최종합여부 || '-'}</td>
-            </tr>`;
-            return rowHTML;
-        }).join('');
-    }
-
-    // renderMobileList 함수는 이전과 동일 (팝업에서 보여줄 것이므로)
-    function renderMobileList(rankingData) {
-        const container = document.getElementById('student-list-container');
-        studentDataMap.clear();
-
-        if (rankingData.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">해당 전형에 수합된 학생이 없습니다.</p>';
-            return;
-        }
-
-        container.innerHTML = rankingData.map(student => {
-            studentDataMap.set(student.학생ID, student);
-            const isMyBranch = student.지점명 === loggedInUserBranch;
-            return `
-                <div class="student-item ${isMyBranch ? 'my-branch-item' : ''}" onclick="openDetailModal(${student.학생ID})">
-                    <div class="rank">${student.순위}</div>
-                    <div class="student-info">
-                        <div class="student-main-info">
-                            <span>${student.이름} (${student.성별})</span>
-                            <span class="student-branch">${student.지점명}</span>
-                        </div>
-                        <div class="student-scores">
-                            <span>${gradeBadge(student.내신등급)}</span>
-                            <span>내신: ${student.내신점수 || '-'}</span>
-                            <span>실기: ${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'}</span>
-                            <span>합산: ${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'}</span>
-                        </div>
-                    </div>
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            `;
-        }).join('');
-    }
-
-    // ▼▼▼▼▼ 여기가 수정된 openDetailModal 함수 ▼▼▼▼▼
-    function openDetailModal(studentId) {
-        const student = studentDataMap.get(studentId);
-        if (!student) return;
-
-        let detailHTML = ``;
-        if (currentEvents.length > 0) {
-            detailHTML += `<table class="swal-results-table"><thead><tr><th>종목</th><th>기록</th><th>점수</th></tr></thead><tbody>`;
-            for (let i = 0; i < currentEvents.length; i++) {
-                const eventName = currentEvents[i];
-                detailHTML += `<tr><td>${eventName}</td><td>${student['기록'+(i+1)] || '-'}</td><td>${student['점수'+(i+1)] || '-'}</td></tr>`;
-            }
-            detailHTML += `</tbody></table>`;
-        }
-        
-        detailHTML += `<table class="swal-results-table" style="margin-top: 10px;">
-            <tr><th>내신등급</th><td>${gradeBadge(student.내신등급)}</td></tr>
-            <tr><th>내신점수</th><td>${student.내신점수 || '-'}</td></tr>
-            <tr><th>실기 총점</th><td class="total-score">${student.실기총점 !== null ? student.실기총점.toFixed(2) : '-'} 점</td></tr>
-            <tr><th>합산 총점</th><td class="total-score">${student.합산점수 !== null ? student.합산점수.toFixed(2) : '-'} 점</td></tr>
-        </table>`;
-
-        // 합격 현황 테이블 추가
-        detailHTML += `<div style="margin-top:20px; text-align:center; font-weight:bold; color:var(--dark-gray);">합격 현황</div>
-        <table class="swal-results-table" style="margin-top: 5px;">
-            <thead><tr><th>최초 합격</th><th>최종 합격</th></tr></thead>
-            <tbody><tr>
-                <td>${student.최초합여부 || '-'}</td>
-                <td>${student.최종합여부 || '-'}</td>
-            </tr></tbody>
-        </table>`;
-
-        Swal.fire({
-            title: `${student.이름} 학생 상세 정보`,
-            html: detailHTML,
-            confirmButtonText: '닫기'
-        });
-    }
-    
-    async function downloadAllExcel() {
-        Swal.fire({
-            title: '📊 전체 수합 데이터 수집 중...',
-            html: `<div style="margin-top:10px">
-                <div id="dl-text" style="font-size:14px;color:#334155">준비 중...</div>
-                <div style="background:#e9ecef;border-radius:8px;height:20px;margin-top:10px;overflow:hidden">
-                    <div id="dl-bar" style="background:linear-gradient(90deg,#1D6F42,#28a745);height:100%;width:0%;transition:width 0.3s;border-radius:8px"></div>
-                </div>
-            </div>`,
-            allowOutsideClick: false,
-            showConfirmButton: false
-        });
-
-        try {
-            const allData = [];
-            for (let i = 0; i < colleges.length; i++) {
-                const col = colleges[i];
-                const pct = Math.round(((i + 1) / colleges.length) * 100);
-                const dt = document.getElementById('dl-text');
-                const db = document.getElementById('dl-bar');
-                if (dt) dt.textContent = `${i + 1}/${colleges.length} — ${col.대학명} ${col.학과명}`;
-                if (db) db.style.width = pct + '%';
-
-                try {
-                    const res = await susicFetch(`${SUSI_API}/realtime-rank-by-college?college_id=${col.대학ID}`, {
-                        headers: { 'Authorization': 'Bearer ' + token }
-                    });
-                    const data = await res.json();
-                    if (data.success && data.ranking && data.ranking.length > 0) {
-                        allData.push({ 대학명: col.대학명, 학과명: col.학과명, 전형명: col.전형명, ranking: data.ranking, events: data.events || [] });
-                    }
-                } catch (e) { console.error('Fetch fail:', col.대학명, e); }
-            }
-
-            if (allData.length === 0) {
-                Swal.fire('안내', '수합된 데이터가 없습니다.', 'info');
-                return;
-            }
-
-            // Sort by 대학명 > 학과명
-            allData.sort((a, b) => a.대학명.localeCompare(b.대학명, 'ko') || a.학과명.localeCompare(b.학과명, 'ko'));
-
-            const wb = new ExcelJS.Workbook();
-            wb.creator = 'MAX 수시 시스템';
-            wb.created = new Date();
-
-            // Color palette
-            const C = {
-                primary: 'FF4364F7', white: 'FFFFFFFF', dark: 'FF1E293B',
-                gray: 'FF64748B', lightBg: 'FFF8FAFC', border: 'FFD1D5DB',
-                green: 'FF1D6F42', accent: 'FFEEF2FF'
-            };
-            const border = {
-                top: { style: 'thin', color: { argb: C.border } },
-                left: { style: 'thin', color: { argb: C.border } },
-                bottom: { style: 'thin', color: { argb: C.border } },
-                right: { style: 'thin', color: { argb: C.border } }
-            };
-
-            // Group by 대학명
-            const byUniv = {};
-            allData.forEach(d => {
-                if (!byUniv[d.대학명]) byUniv[d.대학명] = [];
-                byUniv[d.대학명].push(d);
-            });
-            const univNames = Object.keys(byUniv).sort((a, b) => a.localeCompare(b, 'ko'));
-
-            // Sheet name sanitizer (Excel: max 31 chars, no []:*?/\)
-            const sanitize = (name) => name.replace(/[[\]:*?/\\]/g, '').substring(0, 31);
-
-            // ========== 1) 목차 시트 ==========
-            const tocWs = wb.addWorksheet('목차', { properties: { defaultRowHeight: 24 } });
-            const tocTitle = tocWs.addRow([SUSI_YEAR + '수시 전체 수합결과 — 목차']);
-            tocTitle.height = 42;
-            tocWs.mergeCells(tocTitle.number, 1, tocTitle.number, 5);
-            tocTitle.getCell(1).font = { name: 'Noto Sans KR', size: 18, bold: true, color: { argb: C.primary } };
-            tocTitle.getCell(1).alignment = { vertical: 'middle' };
-
-            const tocDate = tocWs.addRow([`다운로드: ${new Date().toLocaleString('ko-KR')}`]);
-            tocWs.mergeCells(tocDate.number, 1, tocDate.number, 5);
-            tocDate.getCell(1).font = { name: 'Noto Sans KR', size: 10, color: { argb: C.gray } };
-
-            const totalStudents = allData.reduce((s, d) => s + d.ranking.length, 0);
-            const tocSummary = tocWs.addRow([`총 ${univNames.length}개 대학  |  ${allData.length}개 학과/전형  |  ${totalStudents}명`]);
-            tocWs.mergeCells(tocSummary.number, 1, tocSummary.number, 5);
-            tocSummary.getCell(1).font = { name: 'Noto Sans KR', size: 11, bold: true };
-
-            tocWs.addRow([]);
-
-            // 합격자 명단 바로가기 (목차 상단 - 대학 목록 위)
-            const passLinkRow = tocWs.addRow(['']);
-            tocWs.mergeCells(passLinkRow.number, 1, passLinkRow.number, 5);
-            const passLink = passLinkRow.getCell(1);
-            passLink.value = { text: '합격자 명단 시트로 이동 →', hyperlink: "#'합격자 명단'!A1" };
-            passLink.font = { name: 'Noto Sans KR', size: 13, bold: true, color: { argb: C.white }, underline: true };
-            passLink.alignment = { horizontal: 'center', vertical: 'middle' };
-            passLinkRow.height = 38;
-            passLink.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.green } };
-            passLink.border = border;
-
-            tocWs.addRow([]);
-
-            // Table header
-            const tocHeader = tocWs.addRow(['No.', '대학명', '학과 수', '총 인원', '바로가기']);
-            tocHeader.height = 30;
-            tocHeader.eachCell(cell => {
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.primary } };
-                cell.font = { name: 'Noto Sans KR', size: 11, bold: true, color: { argb: C.white } };
-                cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                cell.border = border;
-            });
-
-            univNames.forEach((uName, idx) => {
-                const sections = byUniv[uName];
-                const stuCount = sections.reduce((s, d) => s + d.ranking.length, 0);
-                const sheetName = sanitize(uName);
-                const tocRow = tocWs.addRow([idx + 1, uName, sections.length, stuCount, uName]);
-                const isEven = idx % 2 === 0;
-                tocRow.eachCell((cell, colNum) => {
-                    cell.font = { name: 'Noto Sans KR', size: 10 };
-                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                    cell.border = border;
-                    if (isEven) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.lightBg } };
-                });
-                // Hyperlink on 바로가기 column
-                const linkCell = tocRow.getCell(5);
-                linkCell.value = { text: '→ 이동', hyperlink: `#'${sheetName}'!A1` };
-                linkCell.font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.primary }, underline: true };
-            });
-
-            tocWs.getColumn(1).width = 6;
-            tocWs.getColumn(2).width = 25;
-            tocWs.getColumn(3).width = 10;
-            tocWs.getColumn(4).width = 10;
-            tocWs.getColumn(5).width = 12;
-
-            // ========== 2) 대학별 시트 ==========
-            for (const uName of univNames) {
-                const sections = byUniv[uName];
-                const sheetName = sanitize(uName);
-                const ws = wb.addWorksheet(sheetName, { properties: { defaultRowHeight: 22 } });
-
-                // Sheet title
-                const r1 = ws.addRow([uName]);
-                r1.height = 38;
-                ws.mergeCells(r1.number, 1, r1.number, 13);
-                r1.getCell(1).font = { name: 'Noto Sans KR', size: 16, bold: true, color: { argb: C.primary } };
-                r1.getCell(1).alignment = { vertical: 'middle' };
-
-                // Back to TOC link
-                const backRow = ws.addRow(['← 목차로 돌아가기']);
-                ws.mergeCells(backRow.number, 1, backRow.number, 4);
-                backRow.getCell(1).value = { text: '← 목차로 돌아가기', hyperlink: "#'목차'!A1" };
-                backRow.getCell(1).font = { name: 'Noto Sans KR', size: 10, color: { argb: C.primary }, underline: true };
-
-                ws.addRow([]);
-
-                let maxCols = 0;
-
-                for (const section of sections) {
-                    const evtCount = section.events.length;
-                    const totalCols = 4 + evtCount * 2 + 6;
-                    if (totalCols > maxCols) maxCols = totalCols;
-
-                    // Section header
-                    const secRow = ws.addRow([`${section.학과명}  ▸  ${section.전형명}    (${section.ranking.length}명)`]);
-                    secRow.height = 32;
-                    ws.mergeCells(secRow.number, 1, secRow.number, totalCols);
-                    const secCell = secRow.getCell(1);
-                    secCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.dark } };
-                    secCell.font = { name: 'Noto Sans KR', size: 12, bold: true, color: { argb: C.white } };
-                    secCell.alignment = { vertical: 'middle', horizontal: 'left' };
-
-                    // Column headers
-                    const headers = ['순위', '지점', '이름', '성별'];
-                    section.events.forEach(evt => { headers.push(evt + ' 기록', evt + ' 점수'); });
-                    headers.push('내신등급', '내신점수', '실기총점', '합산점수', '최초합', '최종합');
-
-                    const hRow = ws.addRow(headers);
-                    hRow.height = 28;
-                    hRow.eachCell((cell) => {
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.primary } };
-                        cell.font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.white } };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = border;
-                    });
-
-                    // Data rows
-                    const totalColIdx = headers.indexOf('합산점수') + 1;
-                    const firstPassIdx = headers.indexOf('최초합') + 1;
-                    const finalPassIdx = headers.indexOf('최종합') + 1;
-
-                    section.ranking.forEach((stu, idx) => {
-                        const row = [stu.순위, stu.지점명, stu.이름, stu.성별];
-                        for (let i = 1; i <= evtCount; i++) {
-                            row.push(stu['기록' + i] || '-');
-                            row.push(stu['점수' + i] != null ? Number(stu['점수' + i]) : '-');
-                        }
-                        row.push(
-                            stu.내신등급 || '-',
-                            stu.내신점수 != null ? Number(stu.내신점수) : '-',
-                            stu.실기총점 != null ? Number(parseFloat(stu.실기총점).toFixed(2)) : '-',
-                            stu.합산점수 != null ? Number(parseFloat(stu.합산점수).toFixed(2)) : '-',
-                            stu.최초합여부 || '-',
-                            stu.최종합여부 || '-'
-                        );
-
-                        const dRow = ws.addRow(row);
-                        const isEven = idx % 2 === 0;
-                        dRow.eachCell((cell) => {
-                            cell.font = { name: 'Noto Sans KR', size: 10 };
-                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                            cell.border = border;
-                            if (isEven) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.lightBg } };
-                        });
-
-                        if (totalColIdx > 0) {
-                            dRow.getCell(totalColIdx).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.primary } };
-                        }
-                        if (stu.순위 <= 3) {
-                            dRow.getCell(1).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.primary } };
-                        }
-                        [firstPassIdx, finalPassIdx].forEach(ci => {
-                            if (ci > 0 && dRow.getCell(ci).value === '합격') {
-                                dRow.getCell(ci).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.green } };
-                            }
-                        });
-                    });
-
-                    ws.addRow([]); // separator
-                }
-
-                // Column widths
-                const widths = [6, 14, 10, 6];
-                for (let i = 4; i < maxCols - 6; i++) widths.push(i % 2 === 0 ? 12 : 10);
-                widths.push(10, 10, 10, 12, 8, 8);
-                widths.forEach((w, i) => { if (ws.columns[i]) ws.columns[i].width = w; });
-            }
-
-            // ========== 3) 합격자 명단 시트 ==========
-            const passWs = wb.addWorksheet('합격자 명단', { properties: { defaultRowHeight: 22 } });
-
-            // Title
-            const passTitle = passWs.addRow(['합격자 명단']);
-            passTitle.height = 42;
-            passWs.mergeCells(passTitle.number, 1, passTitle.number, 6);
-            passTitle.getCell(1).font = { name: 'Noto Sans KR', size: 18, bold: true, color: { argb: C.green } };
-            passTitle.getCell(1).alignment = { vertical: 'middle' };
-
-            const passBack = passWs.addRow(['← 목차로 돌아가기']);
-            passWs.mergeCells(passBack.number, 1, passBack.number, 4);
-            passBack.getCell(1).value = { text: '← 목차로 돌아가기', hyperlink: "#'목차'!A1" };
-            passBack.getCell(1).font = { name: 'Noto Sans KR', size: 10, color: { argb: C.primary }, underline: true };
-
-            // Collect all passers by 대학/학과/전형
-            const passSections = [];
-            let totalPassCount = 0;
-            for (const section of allData) {
-                const passers = section.ranking.filter(s =>
-                    s.최초합여부 === '합격' || s.최종합여부 === '합격'
-                );
-                if (passers.length > 0) {
-                    passSections.push({ 대학명: section.대학명, 학과명: section.학과명, 전형명: section.전형명, passers });
-                    totalPassCount += passers.length;
-                }
-            }
-
-            const passSummary = passWs.addRow([`총 ${passSections.length}개 학과/전형  |  합격자 ${totalPassCount}명`]);
-            passWs.mergeCells(passSummary.number, 1, passSummary.number, 6);
-            passSummary.getCell(1).font = { name: 'Noto Sans KR', size: 11, bold: true };
-
-            passWs.addRow([]);
-
-            if (passSections.length === 0) {
-                const noData = passWs.addRow(['합격자 데이터가 없습니다.']);
-                passWs.mergeCells(noData.number, 1, noData.number, 6);
-                noData.getCell(1).font = { name: 'Noto Sans KR', size: 12, color: { argb: C.gray } };
-                noData.getCell(1).alignment = { horizontal: 'center' };
-            } else {
-                for (const sec of passSections) {
-                    // Section header
-                    const secRow = passWs.addRow([`${sec.대학명}  ▸  ${sec.학과명}  ▸  ${sec.전형명}    (${sec.passers.length}명 합격)`]);
-                    secRow.height = 32;
-                    passWs.mergeCells(secRow.number, 1, secRow.number, 6);
-                    secRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.dark } };
-                    secRow.getCell(1).font = { name: 'Noto Sans KR', size: 12, bold: true, color: { argb: C.white } };
-                    secRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
-
-                    // Column headers
-                    const pH = passWs.addRow(['No.', '지점', '이름', '성별', '최초합', '최종합']);
-                    pH.height = 28;
-                    pH.eachCell(cell => {
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.green } };
-                        cell.font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.white } };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        cell.border = border;
-                    });
-
-                    // Data rows
-                    sec.passers.forEach((stu, idx) => {
-                        const pRow = passWs.addRow([idx + 1, stu.지점명, stu.이름, stu.성별, stu.최초합여부 || '-', stu.최종합여부 || '-']);
-                        const isEven = idx % 2 === 0;
-                        pRow.eachCell(cell => {
-                            cell.font = { name: 'Noto Sans KR', size: 10 };
-                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                            cell.border = border;
-                            if (isEven) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.lightBg } };
-                        });
-                        // Green highlight for 합격 only
-                        [5, 6].forEach(ci => {
-                            if (pRow.getCell(ci).value === '합격') {
-                                pRow.getCell(ci).font = { name: 'Noto Sans KR', size: 10, bold: true, color: { argb: C.green } };
-                            }
-                        });
-                    });
-
-                    passWs.addRow([]); // separator
-                }
-            }
-
-            // Column widths for 합격자 시트
-            passWs.getColumn(1).width = 6;
-            passWs.getColumn(2).width = 14;
-            passWs.getColumn(3).width = 10;
-            passWs.getColumn(4).width = 6;
-            passWs.getColumn(5).width = 10;
-            passWs.getColumn(6).width = 10;
-
-            // Generate and download
-            const buffer = await wb.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${SUSI_YEAR}수시_전체수합결과_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            Swal.fire({
-                icon: 'success',
-                title: '다운로드 완료!',
-                html: `총 <b>${allData.length}개</b> 대학/학과<br><b>${totalStudents}명</b> 수합 완료`,
-                confirmButtonColor: '#4364f7'
-            });
-        } catch (err) {
-            console.error('Excel error:', err);
-            Swal.fire('오류', '엑셀 생성 중 오류가 발생했습니다:\n' + err.message, 'error');
-        }
-    }
-
-    async function showScoreTable() {
-        const c = document.getElementById('sel-college').value;
-        const m = document.getElementById('sel-major').value;
-        const t = document.getElementById('sel-type').value;
-        const 실기ID = scoreTableMap[`${c}_${m}_${t}`];
-        if (!실기ID) { Swal.fire('안내', '해당 학교의 배점표가 없습니다.', 'info'); return; }
-
-        Swal.fire({ title: '배점표 로딩 중...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        try {
-            const res = await susicFetch(`${SUSI_API}_get_score_table?실기ID=${실기ID}`);
-            const data = await res.json();
-            if (!data.success || !data.events || Object.keys(data.events).length === 0) {
-                Swal.fire('안내', '배점표 데이터가 없습니다.', 'info');
-                return;
-            }
-
-            let html = '<div class="score-modal-wrap">';
-            for (const [eventName, eventData] of Object.entries(data.events)) {
-                const scoreMap = { 남: new Map(), 여: new Map() };
-                const scores = new Set();
-                eventData.남.forEach(item => { scoreMap.남.set(item.배점, item.기록); scores.add(item.배점); });
-                eventData.여.forEach(item => { scoreMap.여.set(item.배점, item.기록); scores.add(item.배점); });
-                const sorted = Array.from(scores).sort((a, b) => parseFloat(b) - parseFloat(a));
-
-                html += `<div class="score-modal-table"><table>
-                    <thead><tr><th colspan="3" class="evt-header">${eventName}</th></tr>
-                    <tr><th>배점</th><th>남</th><th>여</th></tr></thead><tbody>`;
-                sorted.forEach(score => {
-                    html += `<tr><td style="font-weight:600;">${score}</td><td>${scoreMap.남.get(score) || '-'}</td><td>${scoreMap.여.get(score) || '-'}</td></tr>`;
-                });
-                html += `</tbody></table></div>`;
-            }
-            html += '</div>';
-
-            Swal.fire({
-                title: `${c} ${m} 배점표`,
-                html: html,
-                width: Math.min(Object.keys(data.events).length * 320 + 80, 960),
-                confirmButtonText: '닫기',
-                confirmButtonColor: '#4364f7'
-            });
-        } catch (err) {
-            Swal.fire('오류', '배점표를 불러오는 중 오류가 발생했습니다.', 'error');
-        }
-    }
-
-    init();
-</script>
+    <div class="modal-body" id="scoreTableContainer"></div>
+  </div>
+</div>
+
+<!-- 학생 상세 모달 (모바일 카드 클릭) -->
+<div class="modal-backdrop" id="studentDetailModal" role="dialog" aria-modal="true" aria-labelledby="studentDetailTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title" id="studentDetailTitle">학생 상세</h3>
+      <button type="button" class="modal-close" data-action="modal-close" aria-label="닫기">
+        <i class="ph-light ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="studentDetailBody"></div>
+  </div>
+</div>
+
+<!-- 엑셀 진행 모달 -->
+<div class="modal-backdrop" id="excelProgressModal" role="dialog" aria-modal="true" aria-labelledby="excelProgressTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title" id="excelProgressTitle">전체 수합 엑셀 생성중</h3>
+    </div>
+    <div class="modal-body">
+      <div id="excelProgressText" class="excel-progress-text">준비 중...</div>
+      <div class="excel-progress-track">
+        <div id="excelProgressBar" class="excel-progress-bar"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/modal.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/combobox.js"></script>
+<script src="assets/js/bootstrap.js?v=4aa4784"></script>
+<script src="live.js"></script>
 </body>
 </html>

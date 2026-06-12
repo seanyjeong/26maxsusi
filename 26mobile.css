@@ -1,0 +1,290 @@
+/* ============================================================
+ * 26mobile.new.css — 모바일 실기 수합 (폰 우선)
+ * 원본 26mobile.html (673줄) 의 모바일 UX 보존.
+ * - viewport 고정 (width=device-width,initial-scale=1)
+ * - 사이드바 숨김 (mobile-shell 구조)
+ * - 큰 터치 타깃 (최소 44px), 세로 스크롤, 하나의 컬럼.
+ * - 공용 토큰만 사용. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+/* 모바일 전용 쉘: app-shell 대신 직접 쉘 정의 (사이드바 없이) */
+.mobile-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 사이드바가 DOM 에 없으므로 bootstrap.js 의 loadSidebar 는 no-op.
+   watermark 는 z-index 낮으므로 방해 안됨. */
+
+.m-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+.m-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.16s var(--ease-out);
+}
+.m-back:active { background: var(--surface-2); }
+.m-back:hover { background: var(--surface-2); color: var(--accent); }
+
+.m-title {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m-main {
+  flex: 1;
+  padding: 14px;
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---- 카드 ---- */
+.m-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-soft);
+}
+.m-card-title {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.m-card-title i { color: var(--accent); font-size: 18px; }
+.m-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+/* ---- 폼 (콤보박스 wrapper) ---- */
+.m-field {
+  margin-bottom: 14px;
+}
+.m-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+/* 공용 combobox 가 모바일에서도 잘 보이도록 큰 터치 타깃 */
+.m-field .combobox .combo-display {
+  min-height: 46px;
+  font-size: 14.5px;
+}
+
+/* ---- 학생 리스트 아이템 ---- */
+.m-student-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-height: 64px;
+  transition: transform 0.14s var(--ease-out), box-shadow 0.14s var(--ease-out), border-color 0.14s var(--ease-out);
+}
+.m-student-item:active {
+  transform: scale(0.99);
+  box-shadow: var(--shadow-soft);
+}
+.m-student-item:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-hover);
+}
+.m-student-info { flex: 1; min-width: 0; }
+.m-student-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.m-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-ring);
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.m-student-scores {
+  font-size: 12px;
+  color: var(--text-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.m-score-item { display: inline-flex; align-items: center; }
+.m-student-arrow {
+  color: var(--text-3);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ---- 빈/로딩 상태 ---- */
+.m-empty {
+  text-align: center;
+  padding: 28px 14px;
+  color: var(--text-3);
+}
+.m-empty i {
+  font-size: 36px;
+  color: var(--surface-3);
+  display: block;
+  margin-bottom: 10px;
+}
+.m-empty p { margin: 0; font-size: 13px; }
+
+/* ---- 기록 모달 폼 ---- */
+.rec-label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 12px 0 6px;
+}
+.rec-label:first-child { margin-top: 0; }
+.rec-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  font-size: 14.5px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 0.16s var(--ease-out), box-shadow 0.16s var(--ease-out);
+}
+.rec-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---- 결과 테이블 ---- */
+.res-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 10px;
+}
+.res-table th,
+.res-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+.res-table th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 12px;
+}
+.res-total { color: var(--accent-strong); font-weight: 700; font-variant-numeric: tabular-nums; }
+.res-lead { margin: 0 0 6px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+.res-lead strong { color: var(--text); }
+
+/* ---- 로딩 오버레이 ---- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+.loading-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 22px 28px;
+  box-shadow: var(--shadow-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 220px;
+}
+.loading-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--surface-3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: mm-spin 0.8s linear infinite;
+}
+@keyframes mm-spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 13px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* ---- 반응형 ---- */
+@media (max-width: 420px) {
+  .m-main { padding: 12px; }
+  .m-card { padding: 14px; border-radius: var(--r-lg); }
+  .m-title { font-size: 15px; }
+  .m-student-scores { flex-direction: column; gap: 4px; }
+}
+

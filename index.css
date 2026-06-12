@@ -1,0 +1,36 @@
+/* ============================================================
+ * index.new.css — iframe 쉘 전용 (사이드바 + 컨텐츠 iframe)
+ * 공용 자산(sidebar.css 등)이 이미 기본 레이아웃을 제공하므로
+ * 여기서는 iframe 영역만 커버.
+ * ============================================================ */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.shell-frame {
+  height: 100vh;
+}
+
+.shell-main {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+}
+
+.shell-main > #contentFrame {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bg);
+  display: block;
+  min-height: 0;
+}
+
+/* topbar/watermark 는 자식 페이지가 직접 렌더 — 쉘은 순수 컨테이너. */

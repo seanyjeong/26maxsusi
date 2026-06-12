@@ -1,151 +1,68 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="light">
 <head>
-    <script src="utils.js"></script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>실기 총점 설정</title>
-  <style>
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 10px;
-    }
-    .college-box {
-      border: 1px solid #ccc;
-      padding: 16px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      background: #f9f9f9;
-    }
-    .college-title {
-      font-size: 1.2em;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .row {
-      margin-bottom: 10px;
-    }
-    label {
-      display: inline-block;
-      width: 130px;
-    }
-    input[type="number"], input[type="text"] {
-      width: 150px;
-      padding: 4px;
-    }
-    .btn-toggle {
-      padding: 6px 10px;
-      margin-right: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .btn-toggle.active {
-      background-color: #4364f7;
-      color: white;
-      border-color: #4364f7;
-    }
-    .btn-save {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="assets/img/max-logo.png">
+<title>실기 총점 설정 — 맥스수시엔진</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+<link rel="stylesheet" href="assets/css/tokens.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/base.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/sidebar.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="assets/css/modal.css">
+<link rel="stylesheet" href="assets/css/combobox.css">
+<link rel="stylesheet" href="실기기준.css">
 </head>
-<body>
-  <h2>실기 총점 반영 설정</h2>
-  <div id="college-list"></div>
 
-  <script>
-    const BASE_URL = SUSI_API;;
+<body data-page="silgi_standard" data-title="실기 총점 설정" data-category="설정">
 
-    async function fetchColleges() {
-        // 1. 호출하는 API 주소를 새로 만든 API로 변경합니다.
-        const res = await susicFetch(`${SUSI_API}_get_practical_colleges_with_scores`);
-        const data = await res.json();
-        renderCollegeList(data);
-    }
+<div class="app-shell" id="appShell">
+  <div id="sidebar-slot"></div>
 
+  <div class="main">
+    <header class="topbar">
+      <div class="page-path">
+        <span>설정</span>
+        <span class="sep">/</span>
+        <span class="current">실기 총점 설정</span>
+      </div>
+      <div class="topbar-actions"></div>
+    </header>
 
-function renderCollegeList(list) {
-    const wrapper = document.getElementById('college-list');
-    wrapper.innerHTML = '';
+    <section class="page-content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">실기 총점 반영 설정</h1>
+          <div class="page-sub">대학별 실기 반영 총점 · 기준 총점 · 환산 방식 편집</div>
+        </div>
+      </div>
 
-    list.forEach(item => {
-        const box = document.createElement('div');
-        box.className = 'college-box';
-        
-        // API로 불러온 값을 변수에 할당 (값이 없으면 기본값 사용)
-        const totalScore = item.실기반영총점 || '';
-        // 저장된 기준총점이 있으면 그걸 쓰고, 없으면 기본만점총합을 사용
-        const baseScore = item.기준총점 || item.기본만점총합; 
-        const conversionMode = item.환산방식 || '비율환산';
-        const specialDesc = item.특수식설명 || '';
+      <div id="collegeList" class="college-list">
+        <div class="empty-msg">불러오는 중…</div>
+      </div>
+    </section>
+  </div>
+</div>
 
-        // 템플릿 리터럴 안의 value 속성에 위 변수들을 채워넣음
-        box.innerHTML = `
-            <div class="college-title">[${item.대학명} ${item.학과명} ${item.전형명}]</div>
-            <div class="row">실기ID: ${item.실기ID}</div>
-            <div class="row"><label>실기반영총점</label><input type="number" class="input-total" value="${totalScore}"></div>
-            <div class="row"><label>기준총점</label><input type="number" class="input-base" value="${baseScore}"></div>
-            <div class="row">
-                <label>환산방식</label>
-                <button class="btn-toggle" data-mode="비율환산">비율환산</button>
-                <button class="btn-toggle" data-mode="특수식">특수식</button>
-            </div>
-            <div class="row"><label>특수식설명</label><input type="text" class="input-desc" value="${specialDesc}"></div>
-            <button class="btn-save">저장</button>
-        `;
-        
-        // (로직 추가) 불러온 '환산방식'에 해당하는 버튼에 active 클래스 추가
-        const activeBtn = box.querySelector(`.btn-toggle[data-mode="${conversionMode}"]`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-        }
-
-        const btns = box.querySelectorAll('.btn-toggle');
-        btns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                btns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
-
-        const saveBtn = box.querySelector('.btn-save');
-        saveBtn.addEventListener('click', async () => {
-            const total = box.querySelector('.input-total').value;
-            const base = box.querySelector('.input-base').value;
-            const desc = box.querySelector('.input-desc').value;
-            const mode = box.querySelector('.btn-toggle.active')?.dataset.mode || '비율환산';
-
-            const payload = {
-                대학ID: item.대학ID,
-                실기반영총점: parseInt(total) || null,
-                기준총점: parseInt(base) || null,
-                환산방식: mode,
-                특수식설명: desc
-            };
-
-            const res = await susicFetch(`${SUSI_API}_save_practical_total_config`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) alert('저장 완료!');
-            else alert('저장 실패');
-        });
-
-        wrapper.appendChild(box);
-    });
-}
-
-    fetchColleges();
-  </script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/modal.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/combobox.js"></script>
+<script src="assets/js/bootstrap.js?v=4aa4784"></script>
+<script src="실기기준.js"></script>
 </body>
 </html>

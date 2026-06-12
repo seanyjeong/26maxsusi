@@ -1,0 +1,94 @@
+/* ============================================================ */
+/* base.css — 전역 리셋 + html/body 타이포/배경 + 스크롤바 */
+/* 원본: counsel.new.html line 172~199 */
+/* ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+
+* { box-sizing: border-box; }
+
+/* [hidden] 속성은 class selector의 display 를 이기지 못하는 문제 해결 */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  font-family: 'Pretendard', 'Geist', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "ss02", "tnum", "cv11";
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Windows 선명도 대응 ─────────────────────────────────────
+ * Windows 한글: hinting 잘 된 Noto Sans KR(Google Fonts) 우선.
+ * 영문: Geist 유지. antialiased + 자간 살짝 좁혀 픽셀감 완화.
+ * ─────────────────────────────────────────────────────────── */
+html.os-win, html.os-win body {
+  font-family: 'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "ss02", "tnum";
+  letter-spacing: -0.005em;
+}
+html.os-win :where(h1, h2, h3, h4, .picker-title, .stat-value, .display) {
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+html.os-win :where(.picker-sub, .stat-label, label, .text-meta, small) {
+  font-weight: 400;
+}
+html.os-win :is(input, textarea, select, button) {
+  font-family: inherit;
+}
+
+/* tabular numbers 전역 적용 — 표/숫자 정렬 */
+.font-mono, [class*="mono"], .cand-score-bar .value, .score-out,
+.mini-score-table td, .uni-metric .value, .uni-breakdown-row .value,
+.uni-diff, .combo-pill .pct, .subject-pill .meta, .gun-count,
+.cand-cuts div span:last-child {
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background 400ms var(--ease), color 400ms var(--ease);
+}
+
+button { font-family: inherit; }
+
+/* 전역 focus-visible — 일관된 포커스 링 (counsel line 132~136) */
+:where(button, input, select, textarea, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* 워터마크 (맥스 로고) — 전 페이지 공통, bootstrap.js 가 body 에 주입 */
+.watermark-bg {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50vw; max-width: 780px;
+  aspect-ratio: 3 / 1;
+  background-image: var(--watermark-url, none);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.04;
+  pointer-events: none;
+  user-select: none;
+  z-index: 88;  /* 카드·topbar 위, 모달/드로어 아래 */
+}
+.dark .watermark-bg { opacity: 0.10; filter: invert(1) grayscale(0.3); }

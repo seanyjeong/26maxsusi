@@ -1,0 +1,140 @@
+/* ============================================================
+ * cut_manager.new.css — 예상컷 관리 (미니멀)
+ * 공용 토큰만 사용. 하드코딩 컬러 금지.
+ * ============================================================ */
+
+.page-content {
+  padding: 18px 32px 56px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+@media (min-width: 1900px) {
+  .page-content { padding: 22px 48px 64px; }
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.page-sub {
+  color: var(--text-3);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.head-meta {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: background 140ms var(--ease), color 140ms var(--ease), border-color 140ms var(--ease);
+}
+.filter-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ---- Card + table ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.data-table th,
+.data-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+.data-table td:nth-child(1),
+.data-table td:nth-child(2),
+.data-table td:nth-child(3) {
+  text-align: left;
+}
+.data-table thead th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tbody tr:hover { background: var(--accent-soft); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table td.placeholder {
+  color: var(--text-3);
+  padding: 24px 14px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.data-table input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease);
+}
+.data-table input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.data-table input[readonly] {
+  background: var(--surface-2);
+  color: var(--text-3);
+  cursor: not-allowed;
+  border-color: var(--border-soft);
+}
+
+@media (max-width: 900px) {
+  .page-content { padding: 14px 16px 40px; }
+  .data-table th, .data-table td { padding: 8px 6px; font-size: 12px; }
+}
