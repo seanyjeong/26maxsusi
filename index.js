@@ -31,7 +31,7 @@
     try {
       var u = new URL(rawHref, location.href);
       if (u.origin !== location.origin) return null;       // 외부 origin 차단
-      var file = u.pathname.split('/').pop() || 'dashboard.html';
+      var file = decodeURIComponent(u.pathname.split('/').pop() || 'dashboard.html');
       if (!ALLOWED_FRAMES.has(file)) return null;          // 화이트리스트 외 거부
       return file + (u.search || '');
     } catch (_) {
