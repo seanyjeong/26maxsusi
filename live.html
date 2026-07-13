@@ -15,15 +15,15 @@
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 
-<link rel="stylesheet" href="assets/css/tokens.css?v=4aa4784">
-<link rel="stylesheet" href="assets/css/base.css?v=4aa4784">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20260714">
+<link rel="stylesheet" href="assets/css/base.css?v=20260714">
 <link rel="stylesheet" href="assets/css/sidebar.css?v=4aa4784">
 <link rel="stylesheet" href="assets/css/topbar.css">
 <link rel="stylesheet" href="assets/css/buttons.css">
 <link rel="stylesheet" href="assets/css/toast.css">
 <link rel="stylesheet" href="assets/css/modal.css">
 <link rel="stylesheet" href="assets/css/combobox.css">
-<link rel="stylesheet" href="live.css">
+<link rel="stylesheet" href="live.css?v=20260714">
 
 <!-- ExcelJS: 전체 수합 엑셀 다운로드 (원본 기능 보존) -->
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -42,6 +42,10 @@
         <span class="current">실시간 현황</span>
       </div>
       <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost privacy-toggle" id="btnPrivacy"
+                aria-pressed="false" aria-controls="privacyPasswordModal">
+          <i class="ph-light ph-eye-slash"></i><span>개인정보 가리기</span>
+        </button>
         <button type="button" class="btn btn-accent" id="btnExcel">
           <i class="ph-light ph-file-xls"></i><span>전체 수합 엑셀</span>
         </button>
@@ -117,6 +121,33 @@
   </div>
 </div>
 
+<!-- 개인정보 모드 비밀번호 재확인 -->
+<div class="modal-backdrop" id="privacyPasswordModal" role="dialog" aria-modal="true"
+     aria-labelledby="privacyPasswordTitle" aria-describedby="privacyPasswordHelp">
+  <form class="modal-card narrow" id="privacyPasswordForm">
+    <div class="modal-head">
+      <h3 class="modal-title" id="privacyPasswordTitle">개인정보 가리기</h3>
+      <button type="button" class="modal-close" data-action="modal-close" aria-label="닫기">
+        <i class="ph-light ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="privacyPasswordHelp">현재 로그인한 원장님의 비밀번호를 입력해 주세요.</p>
+      <label class="privacy-field" for="privacyPassword">
+        <span>비밀번호</span>
+        <input id="privacyPassword" type="password" autocomplete="current-password" required>
+      </label>
+      <div class="privacy-message" id="privacyPasswordMessage" role="status" aria-live="polite"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" data-action="modal-close">취소</button>
+      <button type="submit" class="btn btn-primary" id="privacyPasswordSubmit">
+        <i class="ph-light ph-lock-key"></i><span>확인</span>
+      </button>
+    </div>
+  </form>
+</div>
+
 <!-- 학생 상세 모달 (모바일 카드 클릭) -->
 <div class="modal-backdrop" id="studentDetailModal" role="dialog" aria-modal="true" aria-labelledby="studentDetailTitle">
   <div class="modal-card">
@@ -152,6 +183,8 @@
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/combobox.js"></script>
 <script src="assets/js/bootstrap.js?v=4aa4784"></script>
-<script src="live.js"></script>
+<script src="live-privacy.js"></script>
+<script src="live-excel.js"></script>
+<script src="live-page.js"></script>
 </body>
 </html>

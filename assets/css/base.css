@@ -19,17 +19,14 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
-/* ── Windows 선명도 대응 ─────────────────────────────────────
- * Windows 한글: hinting 잘 된 Noto Sans KR(Google Fonts) 우선.
- * 영문: Geist 유지. antialiased + 자간 살짝 좁혀 픽셀감 완화.
- * ─────────────────────────────────────────────────────────── */
+/* Windows에서는 브라우저·ClearType 기본 렌더링을 보존한다. */
 html.os-win, html.os-win body {
-  font-family: 'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  font-family: 'Pretendard', 'Pretendard Variable', 'Noto Sans KR', 'Malgun Gothic', 'Segoe UI', 'Geist', system-ui, sans-serif;
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: auto;
   font-feature-settings: "ss01", "ss02", "tnum";
-  letter-spacing: -0.005em;
+  letter-spacing: 0;
 }
 html.os-win :where(h1, h2, h3, h4, .picker-title, .stat-value, .display) {
   font-weight: 600;

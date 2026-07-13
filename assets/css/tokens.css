@@ -16,7 +16,7 @@
   --border-soft: #f1f0ee;
   --text: #1c1917;
   --text-2: #57534e;
-  --text-3: #a8a29e;
+  --text-3: #78716c;
 
   /* ── Accent (teal) ── */
   /* accent — deep teal (올드한 emerald 대체) */
@@ -78,7 +78,7 @@
   --border-soft: #1c1c20;
   --text: #fafaf9;
   --text-2: #a8a29e;
-  --text-3: #57534e;
+  --text-3: #a8a29e;
 
   /* ── Accent (teal, dark) ── */
   --accent: #2dd4bf;
