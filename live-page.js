@@ -217,11 +217,20 @@
     indicator.hidden = true;
 
     try {
-      const data = await window.api(`/realtime-rank-by-college?college_id=${encodeURIComponent(currentCollege.대학ID)}`);
+      const collegeId = encodeURIComponent(currentCollege.대학ID);
+      const [data, detailData] = await Promise.all([
+        window.api(`/realtime-rank-by-college?college_id=${collegeId}`),
+        window.api(`/university-details?college_id=${collegeId}`).catch(() => null),
+      ]);
       if (!data || !data.success) throw new Error('invalid_response');
       latestRanking = data.ranking || [];
       currentEvents = data.events || [];
-      title.innerHTML = `<strong>${esc(college)} ${esc(major)} (${esc(type)})</strong> <span class="count-chip">실시간 순위 (총 ${latestRanking.length}명)</span>`;
+      const competition = window.SusiCompetitionRate.render(
+        detailData && detailData.success ? detailData.details : currentCollege,
+        window.SUSI_YEAR || '27',
+        { compact: true }
+      );
+      title.innerHTML = `<strong>${esc(college)} ${esc(major)} (${esc(type)})</strong> <span class="count-chip">실시간 순위 (총 ${latestRanking.length}명)</span> ${competition}`;
       indicator.hidden = false;
       rerenderPersonalData();
     } catch (error) {

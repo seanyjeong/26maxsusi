@@ -8,7 +8,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 test('live page loads privacy behavior before the renderer', () => {
   const html = read('live.html');
-  assert.match(html, /<script src="live-privacy\.js"><\/script>[\s\S]*<script src="live-page\.js"><\/script>/);
+  assert.match(html, /<script src="live-privacy\.js"><\/script>[\s\S]*<script src="live-page\.js(?:\?[^"]+)?"><\/script>/);
   assert.match(html, /id="btnPrivacy"/);
   assert.match(html, /id="privacyPasswordModal"/);
 });

@@ -26,6 +26,11 @@
 
   async function initializePage() {
     try {
+      var competitionHeader = document.getElementById('competitionHeader');
+      var admissionYear = window.SusiCompetitionRate.selectedYear(window.SUSI_YEAR || '27');
+      if (competitionHeader && admissionYear) {
+        competitionHeader.textContent = (admissionYear - 1) + '학년도 경쟁률';
+      }
       var results = await Promise.all([
         window.api('/filter-options/regions'),
         window.api('/filter-options/events'),
@@ -238,7 +243,7 @@
       var message = searchQuery.trim()
         ? '검색어와 일치하는 대학이 없습니다.'
         : '검색 결과가 없습니다.';
-      tbody.innerHTML = '<tr><td colspan="7" class="placeholder">' + message + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="placeholder">' + message + '</td></tr>';
       return;
     }
 
@@ -253,6 +258,7 @@
         + '<td>' + esc(uni.전형명) + '</td>'
         + '<td>' + esc(uni['1단계배수'] || '-') + '</td>'
         + '<td>' + esc(evs) + '</td>'
+        + '<td class="competition-cell">' + window.SusiCompetitionRate.render(uni, window.SUSI_YEAR || '27', { compact: true }) + '</td>'
         + '<td><button type="button" class="btn-mini add-counsel" data-action="add-counsel" data-id="' + esc(uni.대학ID) + '">상담추가</button></td>';
       frag.appendChild(row);
     });

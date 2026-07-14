@@ -20,6 +20,19 @@
     return h;
   }
 
+  function adaptSuccessfulData(path, data) {
+    if (
+      String(path).indexOf('/university-details') === 0 &&
+      data && data.details && window.SusiCompetitionRate
+    ) {
+      data.details = window.SusiCompetitionRate.adaptUniversityDetails(
+        data.details,
+        window.SUSI_YEAR || '27'
+      );
+    }
+    return data;
+  }
+
   window.api = async function (path, opts) {
     opts = opts || {};
     var token = window.getToken();
@@ -50,7 +63,7 @@
     }
     var data = await res.json();
     if (!res.ok) throw new Error(data && data.message ? data.message : 'HTTP ' + res.status);
-    return data;
+    return adaptSuccessfulData(path, data);
   };
 
   window.apiBinary = async function (path, opts) {
