@@ -13,15 +13,6 @@
 
   // ───────── 상수 ─────────
   const MAX_PRACTICAL_EVENTS = 7;
-  // jsPDF API 는 RGB 숫자만 받음 (CSS 토큰 불가). 원본 PDF 룩 보존용 고정값.
-  const PDF_COLORS = {
-    accentLine: [74, 107, 175],
-    title: [44, 62, 80],
-    cardBorder: [224, 224, 224],
-    cardFill: [255, 255, 255],
-    bodyText: [127, 140, 141],
-    footerText: [149, 165, 166],
-  };
   const RISK_LABEL = { stable: '안정', fit: '적정', reach: '소신', risky: '위험', unknown: '—' };
 
   // ───────── 상태 ─────────
@@ -1031,7 +1022,7 @@
     });
   }
 
-  // ───────── PDF 생성 ─────────
+  // ───────── PDF 생성 (정시엔진 스타일 — 서버 Puppeteer 렌더 + 로컬 html2canvas 폴백) ─────────
   function toBase64(url) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -1046,13 +1037,360 @@
       xhr.send();
     });
   }
-  function getImageDimensions(base64) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = function () { resolve({ width: this.naturalWidth, height: this.naturalHeight }); };
-      img.onerror = reject;
-      img.src = base64;
+
+  const PDF_ROWS_PER_PAGE = 14;
+
+  const PDF_CSS = `
+    /* ── Font metric override — glyph 를 line-box 중앙으로 (정시엔진과 동일) ── */
+    @font-face {
+      font-family: 'PretendardFit';
+      font-weight: 100 900;
+      font-style: normal;
+      src: local('Pretendard Variable'), local('Pretendard'), url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
+      ascent-override: 86%;
+      descent-override: 22%;
+      line-gap-override: 0%;
+    }
+    @font-face {
+      font-family: 'GeistFit';
+      font-weight: 100 900;
+      font-style: normal;
+      src: local('Geist'), local('GeistVariable');
+      ascent-override: 88%;
+      descent-override: 22%;
+      line-gap-override: 0%;
+    }
+    @font-face {
+      font-family: 'GeistMonoFit';
+      font-weight: 100 900;
+      font-style: normal;
+      src: local('Geist Mono'), local('GeistMono-Regular');
+      ascent-override: 86%;
+      descent-override: 22%;
+      line-gap-override: 0%;
+    }
+    :root {
+      --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-500:#10b981; --emerald-600:#059669; --emerald-700:#047857;
+      --blue-500:#0ea5e9; --blue-600:#0284c7; --blue-50:#f0f9ff; --blue-700:#0369a1;
+      --amber-500:#eab308; --amber-600:#ca8a04; --amber-50:#fefce8; --amber-700:#a16207;
+      --red-50:#fef2f2; --red-600:#dc2626; --red-700:#b91c1c;
+      --zinc-50:#fafafa; --zinc-100:#f4f4f5; --zinc-200:#e4e4e7; --zinc-300:#d4d4d8;
+      --zinc-400:#a1a1aa; --zinc-500:#71717a; --zinc-600:#52525b; --zinc-700:#3f3f46;
+      --zinc-800:#27272a; --zinc-900:#18181b;
+      --pdf-font-ko:'PretendardFit','Pretendard',-apple-system,sans-serif;
+      --pdf-font-en:'GeistFit','Geist','Pretendard',sans-serif;
+      --pdf-font-mono:'GeistMonoFit','Geist Mono',ui-monospace,monospace;
+      --hairline:#e4e4e7;
+    }
+    .pdf-stage * { box-sizing:border-box; margin:0; padding:0; }
+    .pdf-stage img { max-width:none; height:auto; }
+    .pdf-stage { font-family:var(--pdf-font-ko); color:var(--zinc-900); font-feature-settings:"tnum" 1,"ss01" 1; letter-spacing:-0.01em; -webkit-font-smoothing:antialiased; line-height:1.4; }
+    .pdf-stage .page { width:297mm; height:210mm; background:#fff; position:relative; overflow:hidden; padding:11mm 14mm 10mm; display:flex; flex-direction:column; }
+    .pdf-stage .watermark-img { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:70%; max-width:200mm; aspect-ratio:3/1; opacity:0.06; pointer-events:none; user-select:none; z-index:100; object-fit:contain; }
+    .pdf-stage .page:not(.cover-page) > *:not(.watermark-img) { position:relative; z-index:1; }
+
+    /* ── 페이지 상단 헤더 ─────────────────── */
+    .pdf-stage .page-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--hairline); margin-bottom:14px; flex:0 0 auto; }
+    .pdf-stage .brand { display:flex; align-items:center; gap:12px; }
+    .pdf-stage .logo-img { height:32px; width:auto; object-fit:contain; flex-shrink:0; display:block; }
+    .pdf-stage .brand-text .title { font-size:13px; font-weight:600; color:var(--zinc-900); letter-spacing:-0.02em; line-height:1.3; }
+    .pdf-stage .brand-text .subtitle { font-size:10.5px; color:var(--zinc-500); margin-top:3px; letter-spacing:-0.01em; line-height:1.3; }
+    .pdf-stage .brand-text .subtitle .dot { display:inline-block; width:2px; height:2px; border-radius:50%; background:var(--zinc-300); vertical-align:middle; margin:0 6px 2px; }
+    .pdf-stage .student { text-align:right; }
+    .pdf-stage .student .name { font-size:20px; font-weight:700; color:var(--zinc-900); letter-spacing:-0.03em; line-height:1.15; }
+    .pdf-stage .student .meta { font-size:10.5px; color:var(--zinc-500); margin-top:4px; letter-spacing:-0.01em; line-height:1.3; }
+    .pdf-stage .student .meta .sep { display:inline-block; width:2px; height:2px; border-radius:50%; background:var(--zinc-300); vertical-align:middle; margin:0 6px 2px; }
+
+    /* ── 섹션 헤더 (지원 대학) ─────────────────── */
+    .pdf-stage .group-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; margin-top:2px; min-height:22px; flex:0 0 auto; }
+    .pdf-stage .group-title { display:flex; align-items:center; gap:10px; color:var(--emerald-600); }
+    .pdf-stage .group-dot { flex:0 0 auto; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; position:relative; }
+    .pdf-stage .group-dot::before { content:""; width:10px; height:10px; border-radius:50%; background:currentColor; display:block; }
+    .pdf-stage .group-dot::after { content:""; position:absolute; top:50%; left:50%; width:18px; height:18px; margin-top:-9px; margin-left:-9px; border-radius:50%; border:1px solid currentColor; opacity:0.25; }
+    .pdf-stage .group-name { font-size:15px; font-weight:700; color:var(--zinc-900); letter-spacing:-0.02em; line-height:1.15; display:inline-flex; align-items:center; }
+    .pdf-stage .group-count { font-size:11px; color:var(--zinc-500); font-family:var(--pdf-font-mono); letter-spacing:-0.01em; line-height:1.15; display:inline-flex; align-items:center; }
+    .pdf-stage .group-count::before { content:"·"; margin:0 6px; color:var(--zinc-300); font-family:var(--pdf-font-ko); line-height:1; font-size:14px; }
+    .pdf-stage .group-range { font-family:var(--pdf-font-mono); font-size:10px; color:var(--zinc-400); letter-spacing:0.02em; }
+
+    /* ── 지원 대학 테이블 ─────────────────── */
+    .pdf-stage .apply-wrap { border:1px solid var(--hairline); border-radius:10px; overflow:hidden; background:#fff; flex:0 0 auto; }
+    .pdf-stage .apply-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    .pdf-stage .apply-table col.c-num { width:30px; }
+    .pdf-stage .apply-table col.c-univ { width:130px; }
+    .pdf-stage .apply-table col.c-grade { width:62px; }
+    .pdf-stage .apply-table col.c-score { width:70px; }
+    .pdf-stage .apply-table col.c-risk { width:64px; }
+    .pdf-stage .apply-table th, .pdf-stage .apply-table td { padding:0 8px; text-align:center; vertical-align:middle; font-size:11px; border-bottom:1px solid var(--hairline); line-height:1.2; height:34px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pdf-stage .apply-table thead th { background:var(--zinc-50); color:var(--zinc-600); font-weight:600; font-size:10.5px; height:36px; letter-spacing:-0.01em; }
+    .pdf-stage .apply-table th.l, .pdf-stage .apply-table td.l { text-align:left; }
+    .pdf-stage .apply-table tbody tr:last-child td { border-bottom:0; }
+    .pdf-stage .apply-table td.num { font-family:var(--pdf-font-mono); font-size:9.5px; color:var(--zinc-400); }
+    .pdf-stage .apply-table td.univ { font-weight:700; color:var(--zinc-900); font-size:11.5px; letter-spacing:-0.02em; }
+    .pdf-stage .apply-table td.dept, .pdf-stage .apply-table td.type { color:var(--zinc-700); letter-spacing:-0.015em; }
+    .pdf-stage .apply-table td.v { font-family:var(--pdf-font-mono); font-variant-numeric:tabular-nums; font-size:11.5px; font-weight:500; color:var(--zinc-800); }
+    .pdf-stage .apply-table td.v.empty { color:var(--zinc-300); }
+    .pdf-stage .apply-table td.v.total { font-weight:700; color:var(--emerald-600); font-size:12.5px; }
+    .pdf-stage .apply-table td.risk .pill { display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:21px; padding:0 9px; border-radius:6px; font-size:10.5px; font-weight:600; line-height:1; letter-spacing:-0.01em; }
+    .pdf-stage .pill.stable { background:var(--emerald-50); color:var(--emerald-700); }
+    .pdf-stage .pill.fit { background:var(--blue-50); color:var(--blue-700); }
+    .pdf-stage .pill.reach { background:var(--amber-50); color:var(--amber-700); }
+    .pdf-stage .pill.risky { background:var(--red-50); color:var(--red-700); }
+    .pdf-stage .pill.unknown { background:var(--zinc-100); color:var(--zinc-400); font-weight:400; }
+
+    .pdf-stage .page-footer { display:flex; justify-content:space-between; align-items:center; padding-top:10px; margin-top:auto; border-top:1px solid var(--hairline); font-size:9.5px; color:var(--zinc-400); letter-spacing:-0.005em; line-height:1.3; flex:0 0 auto; }
+    .pdf-stage .page-footer .right { font-family:var(--pdf-font-mono); font-size:9px; letter-spacing:0.02em; }
+
+    /* ── 표지 페이지 (정시엔진과 동일 골격) ─────────────────── */
+    .pdf-stage .cover-page { width:297mm; height:210mm; background:#fcfcfb; padding:0; display:block; position:relative; overflow:hidden; }
+    .pdf-stage .cover-page .cover-wm { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:100; }
+    .pdf-stage .cover-page .cover-wm-img { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:720px; height:240px; opacity:0.06; object-fit:contain; }
+    .pdf-stage .cover-page .cover-rule-top { position:absolute; left:56px; right:56px; top:56px; height:1px; background:var(--zinc-200); z-index:2; }
+    .pdf-stage .cover-page .cover-rule-bot { position:absolute; left:56px; right:56px; bottom:56px; height:1px; background:var(--zinc-200); z-index:2; }
+    .pdf-stage .cover-page .cover-header { position:absolute; top:32px; left:56px; right:56px; display:flex; align-items:center; justify-content:space-between; z-index:3; height:28px; }
+    .pdf-stage .cover-page .cover-brand-lock { display:flex; align-items:center; gap:10px; }
+    .pdf-stage .cover-page .cover-logo-img { height:24px; width:auto; object-fit:contain; }
+    .pdf-stage .cover-page .cover-brand-wm { font-family:var(--pdf-font-en); font-weight:600; font-size:13px; letter-spacing:-0.01em; color:var(--zinc-900); }
+    .pdf-stage .cover-page .cover-meta { font-family:var(--pdf-font-mono); font-size:10.5px; color:var(--zinc-500); letter-spacing:0.02em; display:flex; gap:12px; align-items:center; white-space:nowrap; }
+    .pdf-stage .cover-page .cover-meta .sep { color:var(--zinc-300); }
+    .pdf-stage .cover-page .cover-footer { position:absolute; bottom:32px; left:56px; right:56px; display:flex; align-items:center; justify-content:space-between; z-index:3; font-family:var(--pdf-font-mono); font-size:10.5px; color:var(--zinc-500); letter-spacing:0.02em; white-space:nowrap; }
+    .pdf-stage .cover-page .cover-footer .page-num { color:var(--zinc-400); }
+    .pdf-stage .cover-page .cover-grid { position:absolute; top:110px; bottom:110px; left:56px; right:56px; display:grid; grid-template-columns:1fr 1fr; gap:40px; z-index:2; }
+    .pdf-stage .cover-page .cover-left { display:flex; flex-direction:column; justify-content:space-between; padding-right:12px; min-width:0; }
+    .pdf-stage .cover-page .cover-eyebrow { font-family:var(--pdf-font-mono); font-size:10.5px; color:var(--emerald-600); letter-spacing:0.22em; text-transform:uppercase; font-weight:500; display:flex; align-items:center; gap:10px; }
+    .pdf-stage .cover-page .cover-eyebrow::before { content:""; width:18px; height:1.5px; background:var(--emerald-600); display:inline-block; }
+    .pdf-stage .cover-page .cover-title-block { margin-top:28px; }
+    .pdf-stage .cover-page .cover-doc-title { font-family:var(--pdf-font-ko); font-size:60px; font-weight:700; line-height:1.08; letter-spacing:-0.035em; color:#0a0a0a; padding-top:0.06em; }
+    .pdf-stage .cover-page .cover-doc-title .stroke { color:var(--emerald-600); font-weight:700; }
+    .pdf-stage .cover-page .cover-doc-sub { margin-top:22px; font-family:var(--pdf-font-ko); font-size:14px; line-height:1.6; color:var(--zinc-700); letter-spacing:-0.015em; max-width:100%; font-weight:400; word-break:keep-all; }
+    .pdf-stage .cover-page .cover-doc-sub .q { color:var(--emerald-700); font-weight:500; }
+    .pdf-stage .cover-page .cover-slogan { margin-top:28px; padding-left:14px; border-left:2px solid var(--emerald-600); font-family:var(--pdf-font-ko); font-size:13px; color:var(--zinc-800); letter-spacing:-0.01em; line-height:1.5; word-break:keep-all; }
+    .pdf-stage .cover-page .cover-left-bottom { display:grid; grid-template-columns:1fr 1fr; gap:28px; padding-top:20px; border-top:1px solid var(--zinc-200); }
+    .pdf-stage .cover-page .cover-lb-item .label { font-family:var(--pdf-font-mono); font-size:9.5px; color:var(--zinc-500); letter-spacing:0.18em; text-transform:uppercase; margin-bottom:8px; }
+    .pdf-stage .cover-page .cover-lb-item .value { font-family:var(--pdf-font-ko); font-size:15px; color:#0a0a0a; font-weight:600; letter-spacing:-0.01em; }
+    .pdf-stage .cover-page .cover-lb-item .value .en { font-family:var(--pdf-font-en); font-weight:500; }
+    .pdf-stage .cover-page .cover-lb-item .value .tag { display:inline-block; font-family:var(--pdf-font-mono); font-size:9.5px; color:var(--emerald-700); background:var(--emerald-50); padding:2px 6px; border-radius:3px; margin-left:6px; vertical-align:middle; font-weight:500; letter-spacing:0.04em; }
+    .pdf-stage .cover-page .cover-right { display:flex; flex-direction:column; justify-content:center; padding-left:32px; border-left:1px solid var(--zinc-200); position:relative; min-width:0; }
+    .pdf-stage .cover-page .cover-cert-eyebrow { font-family:var(--pdf-font-mono); font-size:10.5px; color:var(--zinc-500); letter-spacing:0.22em; text-transform:uppercase; font-weight:500; margin-bottom:18px; white-space:nowrap; }
+    .pdf-stage .cover-page .cover-student-name-wrap { padding:2px 0 14px; }
+    .pdf-stage .cover-page .cover-student-name { font-family:var(--pdf-font-ko); font-size:88px; font-weight:700; line-height:1.08; letter-spacing:-0.06em; color:#0a0a0a; padding-top:0.04em; padding-bottom:4px; }
+    .pdf-stage .cover-page .cover-student-row { display:flex; gap:16px; margin-top:18px; padding-top:18px; border-top:1px solid var(--zinc-200); flex-wrap:wrap; }
+    .pdf-stage .cover-page .cover-chip { font-family:var(--pdf-font-ko); font-size:13px; color:var(--zinc-800); letter-spacing:-0.005em; font-weight:500; }
+    .pdf-stage .cover-page .cover-chip .lbl { display:block; font-family:var(--pdf-font-mono); font-size:9px; color:var(--zinc-500); letter-spacing:0.16em; text-transform:uppercase; margin-bottom:4px; font-weight:500; }
+    .pdf-stage .cover-page .cover-divider-dot { width:3px; height:3px; border-radius:50%; background:var(--zinc-300); align-self:center; margin-top:14px; }
+    .pdf-stage .cover-page .cover-exam { margin-top:22px; padding:14px 16px; background:var(--zinc-50); border:1px solid var(--zinc-200); border-radius:4px; display:flex; align-items:center; gap:16px; position:relative; }
+    .pdf-stage .cover-page .cover-exam::before { content:""; position:absolute; left:0; top:10px; bottom:10px; width:2px; background:var(--emerald-600); border-radius:2px; }
+    .pdf-stage .cover-page .cover-exam .exam-label { font-family:var(--pdf-font-mono); font-size:9.5px; color:var(--zinc-500); letter-spacing:0.18em; text-transform:uppercase; min-width:60px; font-weight:500; }
+    .pdf-stage .cover-page .cover-exam .exam-value { display:flex; align-items:baseline; gap:8px; }
+    .pdf-stage .cover-page .cover-exam .year { font-family:var(--pdf-font-en); font-size:20px; font-weight:600; color:#0a0a0a; letter-spacing:-0.02em; }
+    .pdf-stage .cover-page .cover-exam .year-ko { font-family:var(--pdf-font-ko); font-size:13px; color:var(--zinc-700); font-weight:500; }
+    .pdf-stage .cover-page .cover-exam .pipe { color:var(--zinc-300); }
+    .pdf-stage .cover-page .cover-exam .mock { font-family:var(--pdf-font-ko); font-size:13px; color:var(--zinc-800); font-weight:500; }
+    .pdf-stage .cover-page .cover-apps { margin-top:18px; display:grid; grid-template-columns:repeat(5,1fr); border:1px solid var(--zinc-200); border-radius:4px; overflow:hidden; }
+    .pdf-stage .cover-page .cover-apps .col { padding:12px 8px; border-right:1px solid var(--zinc-200); text-align:center; background:#fff; }
+    .pdf-stage .cover-page .cover-apps .col:last-child { border-right:none; }
+    .pdf-stage .cover-page .cover-apps .col.total { background:var(--zinc-900); }
+    .pdf-stage .cover-page .cover-apps .col.total .n { color:#fff; }
+    .pdf-stage .cover-page .cover-apps .col.total .k { color:var(--zinc-400); }
+    .pdf-stage .cover-page .cover-apps .col .k { font-family:var(--pdf-font-mono); font-size:9px; color:var(--zinc-500); letter-spacing:0.14em; text-transform:uppercase; font-weight:500; margin-bottom:5px; }
+    .pdf-stage .cover-page .cover-apps .col .n { font-family:var(--pdf-font-en); font-size:24px; font-weight:600; color:#0a0a0a; letter-spacing:-0.02em; line-height:1; }
+    .pdf-stage .cover-page .cover-apps .col .n sub { font-family:var(--pdf-font-en); font-size:11px; color:var(--zinc-400); font-weight:400; letter-spacing:0; margin-left:1px; vertical-align:baseline; }
+    .pdf-stage .cover-page .cover-apps .col .u { font-family:var(--pdf-font-ko); font-size:10px; color:var(--zinc-500); margin-top:4px; font-weight:500; }
+  `;
+
+  // ── DOM 행 → PDF 데이터 수집 (대학/학과/전형 3콤보 완성 행만) ──
+  function pdfCollectRows() {
+    const rows = [];
+    document.querySelectorAll('#collegeTable tbody.row-group').forEach(g => {
+      const 대학명 = g._colCombo?.value || '';
+      const 학과명 = g._majorCombo?.value || '';
+      const 전형명 = g._typeCombo?.value || '';
+      if (!대학명 || !학과명 || !전형명) return;
+      const 합산점수 = g.querySelector('.합산점수')?.textContent?.trim() || '—';
+      const 맥스컷 = g.querySelector('.max-cut')?.textContent?.trim() || '—';
+      const 지점컷 = g.querySelector('.branch-cut')?.textContent?.trim() || '—';
+      rows.push({
+        대학명, 학과명, 전형명,
+        내신등급: g.querySelector('.input-grade')?.value?.trim() || '',
+        내신점수: g.querySelector('.input-score')?.value?.trim() || '',
+        실기총점: g.querySelector('.input-total-score')?.textContent?.trim() || '—',
+        합산점수, 맥스컷, 지점컷,
+        risk: classifyRisk(합산점수, 맥스컷, 지점컷),
+      });
     });
+    return rows;
+  }
+
+  function pdfCell(v, cls) {
+    const t = String(v == null ? '' : v).trim();
+    const isEmpty = !t || t === '—';
+    return `<td class="${cls}${isEmpty ? ' empty' : ''}">${isEmpty ? '—' : esc(t)}</td>`;
+  }
+
+  function pdfRenderCoverPage(student, stats, logoData, today) {
+    const yearNum = window.SUSI_YEAR || '';
+    const academyName = `맥스체대입시 ${student.branch || ''} 교육원`.trim();
+    const wmHtml = logoData ? `<img class="cover-wm-img" src="${logoData}" alt="">` : '';
+    const logoHtml = logoData ? `<img class="cover-logo-img" src="${logoData}" alt="맥스체대입시">` : '';
+    return `
+      <div class="page cover-page">
+        <div class="cover-wm" aria-hidden="true">${wmHtml}</div>
+        <div class="cover-rule-top"></div>
+        <div class="cover-rule-bot"></div>
+        <div class="cover-header">
+          <div class="cover-brand-lock">
+            ${logoHtml}
+            <div class="cover-brand-wm">${esc(academyName)}</div>
+          </div>
+          <div class="cover-meta">
+            <span>수시 상담 보고서</span>
+            <span class="sep">/</span>
+            <span>CONFIDENTIAL</span>
+          </div>
+        </div>
+        <div class="cover-grid">
+          <div class="cover-left">
+            <div>
+              <div class="cover-eyebrow">수시 상담 보고서 · ${esc(yearNum)}</div>
+              <div class="cover-title-block">
+                <h1 class="cover-doc-title">
+                  체대 입시 합격,<br>
+                  <span class="stroke">맥스</span>에서<br>
+                  시작됩니다.
+                </h1>
+                <p class="cover-doc-sub">
+                  학생 개인의 내신 성적과 실기 기록을 바탕으로
+                  <span class="q">수시 지원 전략</span>을 수립한 1:1 맞춤 상담 자료입니다.
+                </p>
+              </div>
+              <div class="cover-slogan">${esc(academyName)}</div>
+            </div>
+            <div class="cover-left-bottom">
+              <div class="cover-lb-item">
+                <div class="label">상담일</div>
+                <div class="value"><span class="en">${today}</span></div>
+              </div>
+              <div class="cover-lb-item">
+                <div class="label">대상 학년도</div>
+                <div class="value">${esc(yearNum)}학년도 <span class="tag">수시</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="cover-right">
+            <div class="cover-cert-eyebrow"><span>상담 대상</span></div>
+            <div class="cover-student-name-wrap">
+              <div class="cover-student-name">${esc(student.name)}</div>
+            </div>
+            <div class="cover-student-row">
+              <div class="cover-chip"><span class="lbl">지점</span>${esc(student.branch || '—')}</div>
+              <div class="cover-divider-dot"></div>
+              <div class="cover-chip"><span class="lbl">학년</span>${esc(student.grade)}</div>
+              <div class="cover-divider-dot"></div>
+              <div class="cover-chip"><span class="lbl">성별</span>${esc(student.gender)}</div>
+              <div class="cover-divider-dot"></div>
+              <div class="cover-chip"><span class="lbl">계열</span>수시</div>
+            </div>
+            <div class="cover-exam">
+              <div class="exam-label">상담 기준</div>
+              <div class="exam-value">
+                <span class="year">${esc(yearNum)}</span>
+                <span class="year-ko">학년도</span>
+                <span class="pipe">│</span>
+                <span class="mock">수시 지원 ${stats.total}개 전형</span>
+              </div>
+            </div>
+            <div class="cover-apps">
+              <div class="col"><div class="k">안정</div><div class="n">${stats.stable}</div><div class="u">개 전형</div></div>
+              <div class="col"><div class="k">적정</div><div class="n">${stats.fit}</div><div class="u">개 전형</div></div>
+              <div class="col"><div class="k">소신</div><div class="n">${stats.reach}</div><div class="u">개 전형</div></div>
+              <div class="col"><div class="k">위험</div><div class="n">${stats.risky}</div><div class="u">개 전형</div></div>
+              <div class="col total"><div class="k">합계</div><div class="n">${stats.total}<sub>개</sub></div><div class="u">총 지원</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="cover-footer">
+          <div>${esc(academyName)}</div>
+          <div class="page-num">표지 — 01 / 01</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function pdfRenderHeader(student, logoData) {
+    const logoHtml = logoData ? `<img class="logo-img" src="${logoData}" alt="맥스수시">` : '';
+    return `
+      <div class="page-header">
+        <div class="brand">
+          ${logoHtml}
+          <div class="brand-text">
+            <div class="title">맥스수시 · 수시 상담 자료</div>
+            <div class="subtitle">
+              <span>${esc(student.year)}</span><span class="dot"></span><span>${esc(student.branch || '')} 교육원</span>
+            </div>
+          </div>
+        </div>
+        <div class="student">
+          <div class="name">${esc(student.name)}</div>
+          <div class="meta">
+            <span>${esc(student.grade)}</span>
+            <span class="sep"></span><span>${esc(student.gender)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function pdfRenderTablePage(rows, startIdx, totalRows, pageIdx, totalPages, student, logoData, dateStr) {
+    const watermark = logoData ? `<img class="watermark-img" src="${logoData}" alt="">` : '';
+    const bodyRows = rows.map((r, i) => `
+      <tr>
+        <td class="num">${String(startIdx + i + 1).padStart(2, '0')}</td>
+        <td class="univ l">${esc(r.대학명)}</td>
+        <td class="dept l">${esc(r.학과명)}</td>
+        <td class="type l">${esc(r.전형명)}</td>
+        ${pdfCell(r.내신등급, 'v')}
+        ${pdfCell(r.내신점수, 'v')}
+        ${pdfCell(r.실기총점, 'v')}
+        ${pdfCell(r.합산점수, 'v total')}
+        ${pdfCell(r.맥스컷, 'v')}
+        ${pdfCell(r.지점컷, 'v')}
+        <td class="risk"><span class="pill ${r.risk}">${RISK_LABEL[r.risk] || '—'}</span></td>
+      </tr>
+    `).join('');
+    return `
+      <div class="page">
+        ${watermark}
+        ${pdfRenderHeader(student, logoData)}
+        <div class="group-header">
+          <div class="group-title">
+            <div class="group-dot"></div>
+            <div class="group-name">지원 대학</div>
+            <div class="group-count">${totalRows}개 전형</div>
+          </div>
+          <div class="group-range">${startIdx + 1}–${startIdx + rows.length} / ${totalRows}</div>
+        </div>
+        <div class="apply-wrap">
+          <table class="apply-table">
+            <colgroup>
+              <col class="c-num"><col class="c-univ"><col><col>
+              <col class="c-grade"><col class="c-score"><col class="c-score"><col class="c-score">
+              <col class="c-score"><col class="c-score"><col class="c-risk">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>#</th><th class="l">대학명</th><th class="l">학과명</th><th class="l">전형명</th>
+                <th>내신등급</th><th>내신점수</th><th>실기총점</th><th>합산점수</th>
+                <th>맥스컷</th><th>지점컷</th><th>판정</th>
+              </tr>
+            </thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </div>
+        <div class="page-footer">
+          <div class="left">맥스수시 · 본 상담 자료는 참고용이며, 실제 합격 여부는 당해 입시 결과에 따라 달라질 수 있습니다.</div>
+          <div class="right">${pageIdx}/${totalPages} · 생성일 ${dateStr}</div>
+        </div>
+      </div>
+    `;
   }
 
   async function downloadPDF() {
@@ -1061,91 +1399,114 @@
       window.showToast('먼저 학생을 선택해주세요', 'warn');
       return;
     }
+    const rows = pdfCollectRows();
+    if (!rows.length) {
+      window.showToast('지원 대학을 먼저 추가해주세요', 'warn');
+      return;
+    }
+    const btn = document.getElementById('btnPdf');
+    if (btn) btn.disabled = true;
     showLoading('PDF 문서를 만들고 있어요');
     try {
-      const student = studentMap[studentId];
-      const branch = branchName || 'OO';
-      const formatPhoneNumber = phone =>
-        String(phone || '').replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
-      const formattedPhone = formatPhoneNumber(directorPhone);
+      const s = studentMap[studentId];
+      const student = {
+        name: s.이름 || '-',
+        grade: s.학년 ? `고${s.학년}` : '—',
+        gender: s.성별 || '—',
+        branch: s.지점명 || branchName || '',
+        year: `${window.SUSI_YEAR}학년도`,
+      };
+      const stats = { stable: 0, fit: 0, reach: 0, risky: 0, unknown: 0, total: rows.length };
+      rows.forEach(r => { stats[r.risk] = (stats[r.risk] || 0) + 1; });
 
-      const logoUrl = '25max.png';
-      const logoBase64 = await toBase64(logoUrl);
-      const logoOriginalSize = await getImageDimensions(logoBase64);
-      const logoAspectRatio = logoOriginalSize.width / logoOriginalSize.height;
+      let logoData = null;
+      try { logoData = await toBase64('25max.png'); } catch (_) {}
+
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+
+      const totalPages = Math.ceil(rows.length / PDF_ROWS_PER_PAGE);
+      let pagesHtml = pdfRenderCoverPage(student, stats, logoData, dateStr);
+      for (let p = 0; p < totalPages; p++) {
+        pagesHtml += pdfRenderTablePage(
+          rows.slice(p * PDF_ROWS_PER_PAGE, (p + 1) * PDF_ROWS_PER_PAGE),
+          p * PDF_ROWS_PER_PAGE, rows.length, p + 1, totalPages, student, logoData, dateStr
+        );
+      }
+      const fileBase = `맥스수시_상담지_${student.name}_${window.SUSI_YEAR}학년도`;
+
+      /* ─── 1) 서버 사이드 Puppeteer 렌더 시도 (고품질) ─── */
+      try {
+        const fullHtml = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>${PDF_CSS}</style>
+<style>html,body{margin:0;padding:0;background:#fff;}
+.pdf-stage{display:block;}
+.pdf-stage .page{page-break-after:always;break-after:page;}
+.pdf-stage .page:last-child{page-break-after:auto;break-after:auto;}
+@page{size:A4 landscape;margin:0;}</style>
+</head><body><div class="pdf-stage">${pagesHtml}</div></body></html>`;
+
+        const blob = await window.apiBinary('/counseling/render-pdf', {
+          method: 'POST',
+          body: JSON.stringify({ html: fullHtml, filename: fileBase }),
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileBase + '.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        window.showToast(`PDF 저장 완료 (${totalPages + 1}페이지)`, 'success');
+        return;
+      } catch (serverErr) {
+        console.warn('[PDF] 서버 렌더 실패, 로컬 폴백:', serverErr && serverErr.message);
+        window.showToast('서버 렌더 실패, 로컬 생성 중…', 'info');
+      }
+
+      /* ─── 2) Fallback: 로컬 html2canvas + jsPDF (서버 장애 대비) ─── */
+      const stage = document.createElement('div');
+      stage.className = 'pdf-stage';
+      stage.style.cssText = 'position:absolute; left:-99999px; top:0; background:#ffffff; overflow:visible;';
+      stage.innerHTML = `<style>${PDF_CSS}</style>` + pagesHtml;
+      document.body.appendChild(stage);
+
+      await document.fonts.ready.catch(() => {});
+      const imgs = stage.querySelectorAll('img');
+      await Promise.all([...imgs].map(img => new Promise(r => {
+        if (img.complete && img.naturalWidth > 0) r();
+        else { img.onload = r; img.onerror = r; setTimeout(r, 3000); }
+      })));
+      await new Promise(r => setTimeout(r, 200));
 
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const A4_WIDTH = 210, A4_HEIGHT = 297;
-
-      doc.setFont('NanumGothic', 'normal');
-
-      doc.setDrawColor(...PDF_COLORS.accentLine);
-      doc.setLineWidth(1.5);
-      doc.line(20, 20, A4_WIDTH - 20, 20);
-
-      doc.setFontSize(28);
-      doc.setTextColor(...PDF_COLORS.title);
-      doc.text(`맥스체대입시 ${branch} 교육원`, A4_WIDTH / 2, 50, { align: 'center' });
-
-      doc.setFontSize(20);
-      doc.text(`20${window.SUSI_YEAR}학년도 수시 상담자료`, A4_WIDTH / 2, 65, { align: 'center' });
-
-      const logoWidth = A4_WIDTH;
-      const logoHeight = logoWidth / logoAspectRatio;
-      const logoX = (A4_WIDTH - logoWidth) / 2;
-      const logoY = 80;
-      doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-
-      doc.setDrawColor(...PDF_COLORS.cardBorder);
-      doc.setFillColor(...PDF_COLORS.cardFill);
-      doc.roundedRect(40, A4_HEIGHT - 80, A4_WIDTH - 80, 60, 3, 3, 'FD');
-
-      doc.setFontSize(16);
-      doc.setTextColor(...PDF_COLORS.title);
-      doc.text('상담 학생 정보', A4_WIDTH / 2, A4_HEIGHT - 65, { align: 'center' });
-
-      doc.setFontSize(14);
-      doc.setTextColor(...PDF_COLORS.bodyText);
-      doc.text(`이    름 : ${student.이름}`, 50, A4_HEIGHT - 50);
-      doc.text(`상담문의 : ${formattedPhone}`, 50, A4_HEIGHT - 35);
-
-      doc.setDrawColor(...PDF_COLORS.accentLine);
-      doc.setLineWidth(1);
-      doc.line(20, A4_HEIGHT - 15, A4_WIDTH - 20, A4_HEIGHT - 15);
-
-      doc.setFontSize(10);
-      doc.setTextColor(...PDF_COLORS.footerText);
-      doc.text('맥스체대입시 - 체대입시 진학의 메카', A4_WIDTH / 2, A4_HEIGHT - 10, { align: 'center' });
-
-      doc.addPage();
-      const element = document.getElementById('captureArea');
-      element.classList.add('pdf-export-mode');
-      const canvas = await html2canvas(element, {
-        scale: 2, useCORS: true, logging: false, allowTaint: false,
-      });
-      element.classList.remove('pdf-export-mode');
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-      const MARGIN = 15;
-      const availableWidth = A4_WIDTH - (2 * MARGIN);
-      const availableHeight = A4_HEIGHT - (2 * MARGIN);
-      const imgRatio = canvas.width / canvas.height;
-      let pdfImgWidth = availableWidth, pdfImgHeight = pdfImgWidth / imgRatio;
-      if (pdfImgHeight > availableHeight) {
-        pdfImgHeight = availableHeight;
-        pdfImgWidth = pdfImgHeight * imgRatio;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pages = stage.querySelectorAll('.page');
+      for (let i = 0; i < pages.length; i++) {
+        const el = pages[i];
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        const canvas = await html2canvas(el, {
+          scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+          width: w, height: h, windowWidth: w, windowHeight: h,
+          scrollX: 0, scrollY: 0, x: 0, y: 0,
+        });
+        const imgData = canvas.toDataURL('image/png');
+        if (i > 0) pdf.addPage('a4', 'landscape');
+        pdf.addImage(imgData, 'PNG', 0, 0, 297, 210, undefined, 'FAST');
       }
-      const xPos = (A4_WIDTH - pdfImgWidth) / 2;
-      doc.addImage(imgData, 'JPEG', xPos, MARGIN, pdfImgWidth, pdfImgHeight);
-
-      doc.save(`${student.이름}_상담요약.pdf`);
-      window.showToast('PDF 생성 완료!', 'success');
+      stage.remove();
+      pdf.save(fileBase + '.pdf');
+      window.showToast(`PDF 저장 완료 (${totalPages + 1}페이지, 로컬)`, 'success');
     } catch (error) {
       console.error('PDF 생성 오류:', error);
       window.showToast('PDF 생성 중 문제가 발생했습니다: ' + error.message, 'error');
     } finally {
       hideLoading();
+      if (btn) btn.disabled = false;
     }
   }
 
