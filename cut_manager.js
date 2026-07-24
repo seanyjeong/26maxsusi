@@ -56,11 +56,14 @@
   }
 
   // 검색어로 행 표시 토글 — rerender 없이 display 만 바꿔 입력 중 값 보존
+  // "서원대 체육교육" 처럼 띄어쓴 검색어는 단어별 AND 매칭 (대학/학과/전형 통합)
   function applySearch() {
+    var tokens = currentQuery.split(/\s+/).filter(Boolean);
     var rows = document.querySelectorAll('#cutTbody tr[data-college-id]');
     rows.forEach(function (row) {
-      var hay = (row.cells[0].textContent + ' ' + row.cells[1].textContent).toLowerCase();
-      row.style.display = (!currentQuery || hay.indexOf(currentQuery) !== -1) ? '' : 'none';
+      var hay = (row.cells[0].textContent + ' ' + row.cells[1].textContent + ' ' + row.cells[2].textContent).toLowerCase();
+      var show = tokens.every(function (t) { return hay.indexOf(t) !== -1; });
+      row.style.display = show ? '' : 'none';
     });
   }
 
