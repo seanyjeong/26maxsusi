@@ -60,6 +60,26 @@
   background: var(--surface-2);
   color: var(--text);
 }
+.filter-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  color: var(--text-2);
+}
+.filter-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: var(--text-1);
+  width: 160px;
+  padding: 6px 0;
+}
 .filter-btn.active {
   background: var(--accent);
   color: #fff;

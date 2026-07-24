@@ -14,6 +14,7 @@
   var initialData = [];
   var currentUser = {};
   var currentFilter = 'all';
+  var currentQuery = '';
 
   // 연도별 컬럼명 (DB: 26susi → 26맥스예상컷, 27susi → 27맥스예상컷)
   var YEAR_KEY = (window.SUSI_YEAR || '27') + '맥스예상컷';
@@ -47,6 +48,20 @@
     var btnPractical = document.getElementById('btnPractical');
     if (btnAll) btnAll.addEventListener('click', function () { filterAndRender('all'); });
     if (btnPractical) btnPractical.addEventListener('click', function () { filterAndRender('practical'); });
+    var search = document.getElementById('cutSearch');
+    if (search) search.addEventListener('input', function () {
+      currentQuery = search.value.trim().toLowerCase();
+      applySearch();
+    });
+  }
+
+  // 검색어로 행 표시 토글 — rerender 없이 display 만 바꿔 입력 중 값 보존
+  function applySearch() {
+    var rows = document.querySelectorAll('#cutTbody tr[data-college-id]');
+    rows.forEach(function (row) {
+      var hay = (row.cells[0].textContent + ' ' + row.cells[1].textContent).toLowerCase();
+      row.style.display = (!currentQuery || hay.indexOf(currentQuery) !== -1) ? '' : 'none';
+    });
   }
 
   function bindSave() {
@@ -90,6 +105,7 @@
       if (btnAll) btnAll.classList.add('active');
     }
     renderTable(data, currentUser);
+    applySearch();
   }
 
   function renderTable(cuts, user) {
