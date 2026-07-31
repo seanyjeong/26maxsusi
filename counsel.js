@@ -177,6 +177,114 @@
     return 'risky';
   }
 
+  // ───────── 실기일정 중복 감지 ─────────
+  // 실기일정: [["YYYY-MM-DD","YYYY-MM-DD"], ...] (단일=시작==종료, 택1=복수 구간)
+  function parseSchedule(raw) {
+    if (!raw) return [];
+    try {
+      const v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return Array.isArray(v)
+        ? v.filter(p => Array.isArray(p) && p.length === 2 && p[0] && p[1])
+        : [];
+    } catch (_) { return []; }
+  }
+
+  function rangesOverlap(a, b) {
+    return a[0] <= b[1] && b[0] <= a[1];
+  }
+
+  function overlapLabel(a, b) {
+    const s = a[0] > b[0] ? a[0] : b[0];
+    const e = a[1] < b[1] ? a[1] : b[1];
+    const fmt = d => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
+    return s === e ? fmt(s) : `${fmt(s)}~${fmt(e)}`;
+  }
+
+  // 담긴 전형들 간 실기일 충돌 계산 → 행 뱃지 + 상단 배너 갱신
+  function refreshScheduleConflicts() {
+    const groups = Array.from(document.querySelectorAll('#collegeTable tbody.row-group'));
+    const items = groups.map(g => {
+      const cid = getCollegeIDByTbody(g);
+      const c = cid ? colleges.find(x => x.대학ID === cid) : null;
+      return { g, c, sch: parseSchedule(c && c.실기일정) };
+    });
+
+    // 초기화
+    items.forEach(it => {
+      it.g.querySelectorAll('.sched-warn').forEach(el => el.remove());
+      it.g.querySelector('.row-main')?.classList.remove('has-conflict');
+    });
+
+    const conflicts = new Map();   // key: 겹치는 날짜 라벨 → Set(index)
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const A = items[i], B = items[j];
+        if (!A.sch.length || !B.sch.length) continue;
+        for (const ra of A.sch) {
+          for (const rb of B.sch) {
+            if (!rangesOverlap(ra, rb)) continue;
+            const key = overlapLabel(ra, rb);
+            if (!conflicts.has(key)) conflicts.set(key, new Set());
+            conflicts.get(key).add(i);
+            conflicts.get(key).add(j);
+          }
+        }
+      }
+    }
+
+    // 행 뱃지
+    const rowLabels = new Map();
+    conflicts.forEach((idxSet, label) => {
+      idxSet.forEach(i => {
+        if (!rowLabels.has(i)) rowLabels.set(i, new Set());
+        rowLabels.get(i).add(label);
+      });
+    });
+    rowLabels.forEach((labels, i) => {
+      const it = items[i];
+      const main = it.g.querySelector('.row-main');
+      const cell = it.g.querySelector('.uni-cell');
+      if (!main || !cell) return;
+      main.classList.add('has-conflict');
+      const badge = document.createElement('span');
+      badge.className = 'sched-warn';
+      badge.title = `실기일 중복: ${Array.from(labels).join(', ')}`;
+      badge.innerHTML = `<i class="ph-fill ph-warning"></i>${Array.from(labels).join(' · ')}`;
+      cell.appendChild(badge);
+    });
+
+    renderScheduleBanner(conflicts, items);
+  }
+
+  function renderScheduleBanner(conflicts, items) {
+    let host = document.getElementById('schedBanner');
+    if (!host) {
+      const panel = document.getElementById('collegePanel');
+      if (!panel) return;
+      host = document.createElement('div');
+      host.id = 'schedBanner';
+      host.className = 'sched-banner';
+      const head = panel.querySelector('.tp-head');
+      if (head && head.parentNode) head.parentNode.insertBefore(host, head.nextSibling);
+      else panel.insertBefore(host, panel.firstChild);
+    }
+    if (!conflicts.size) { host.hidden = true; host.innerHTML = ''; return; }
+    const lines = [];
+    conflicts.forEach((idxSet, label) => {
+      const names = Array.from(idxSet).map(i => {
+        const c = items[i].c;
+        return c ? `${c.대학명} ${c.학과명}` : '(미선택)';
+      });
+      lines.push(`<div class="sb-row"><span class="sb-date">${esc(label)}</span><span class="sb-list">${esc(names.join(' · '))}</span></div>`);
+    });
+    host.hidden = false;
+    host.innerHTML =
+      `<div class="sb-head"><i class="ph-fill ph-warning-circle"></i>` +
+      `<strong>실기일정 중복 ${conflicts.size}건</strong>` +
+      `<span class="sb-note">같은 날짜에 겹치는 전형은 동시 응시가 불가합니다</span></div>` +
+      `<div class="sb-body">${lines.join('')}</div>`;
+  }
+
   // ───────── 요약 KPI + 위험도 bar 렌더 ─────────
   function renderSummaryKPI() {
     const groups = document.querySelectorAll('#collegeTable tbody.row-group');
@@ -219,6 +327,7 @@
     if (tpCount) tpCount.textContent = `${totalCount}개`;
 
     updateRiskBar(counts, totalCount);
+    refreshScheduleConflicts();
   }
 
   function updateRiskBar(counts, totalCount) {
@@ -1128,6 +1237,19 @@
     .pdf-stage .uc-dept { font-size:9.5px; color:var(--zinc-500); letter-spacing:-.015em; line-height:1.25; word-break:keep-all; }
     .pdf-stage .uc-type { flex:0 0 auto; font-size:8px; color:var(--accent-fg); background:var(--accent-bg); border-radius:3px; padding:1px 5px; line-height:1.35; white-space:nowrap; }
 
+    .pdf-stage .uc-date { display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-family:var(--pdf-font-mono); font-size:8px; color:var(--zinc-500); background:var(--zinc-50); border:1px solid var(--hairline); border-radius:4px; padding:1.5px 6px; letter-spacing:.01em; }
+    .pdf-stage .uc-date.warn { color:var(--red-700); background:var(--red-50); border-color:#fecaca; font-weight:700; }
+    .pdf-stage .uc-date .ic { display:inline-flex; align-items:center; justify-content:center; width:9px; height:9px; border-radius:50%; background:var(--red-600); color:#fff; font-size:7px; font-weight:700; line-height:1; }
+
+    /* 실기일정 중복 경고 배너 */
+    .pdf-stage .sched-alert { border:1px solid #fecaca; background:#fff5f5; border-radius:9px; padding:7px 11px 8px; margin-bottom:9px; flex:0 0 auto; }
+    .pdf-stage .sched-alert .h { display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700; color:var(--red-700); margin-bottom:4px; }
+    .pdf-stage .sched-alert .h .ic { display:inline-flex; align-items:center; justify-content:center; width:12px; height:12px; border-radius:50%; background:var(--red-600); color:#fff; font-size:9px; line-height:1; }
+    .pdf-stage .sched-alert .h .note { font-weight:400; font-size:9px; color:#9a3412; }
+    .pdf-stage .sched-alert .r { display:flex; gap:7px; font-size:9.5px; line-height:1.5; }
+    .pdf-stage .sched-alert .d { flex:0 0 auto; font-family:var(--pdf-font-mono); font-weight:700; color:var(--red-700); background:#fee2e2; border-radius:4px; padding:0 6px; }
+    .pdf-stage .sched-alert .l { color:var(--zinc-700); letter-spacing:-.01em; }
+
     /* 히어로: 합산점수 + 판정 */
     .pdf-stage .uc-hero { display:flex; align-items:center; justify-content:space-between; gap:6px; margin:7px 0 6px; padding-bottom:6px; border-bottom:1px solid var(--hairline); }
     .pdf-stage .uc-hero .v { font-family:var(--pdf-font-mono); font-size:20px; font-weight:700; color:var(--accent); letter-spacing:-.035em; line-height:1; font-variant-numeric:tabular-nums; }
@@ -1277,8 +1399,12 @@
         종목.push({ name, rec: rec || '—', score: sc || '—', gam });
       });
 
+      const cid = getCollegeIDByTbody(g);
+      const cinfo = cid ? colleges.find(x => x.대학ID === cid) : null;
       rows.push({
         대학명, 학과명, 전형명,
+        실기일정: parseSchedule(cinfo && cinfo.실기일정),
+        실기일_원문: (cinfo && cinfo.실기일) || '',
         내신등급: g.querySelector('.input-grade')?.value?.trim() || '',
         내신점수: g.querySelector('.input-score')?.value?.trim() || '',
         실기총점: g.querySelector('.input-total-score')?.textContent?.trim().replace(/\(.*$/, '').trim() || '—',
@@ -1412,6 +1538,49 @@
 
   const PDF_CARDS_PER_PAGE = 6;
 
+  // PDF용: 전체 전형 간 실기일 중복 계산 → 각 row 에 _schedTxt/_conflict, 배너용 목록 반환
+  function pdfMarkConflicts(rows) {
+    const fmt = d => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
+    rows.forEach(r => {
+      const s = r.실기일정 || [];
+      r._schedTxt = s.length
+        ? s.map(p => (p[0] === p[1] ? fmt(p[0]) : `${fmt(p[0])}~${fmt(p[1])}`)).join(', ')
+        : '';
+      r._conflict = false;
+    });
+    const conflicts = new Map();
+    for (let i = 0; i < rows.length; i++) {
+      for (let j = i + 1; j < rows.length; j++) {
+        const A = rows[i].실기일정 || [], B = rows[j].실기일정 || [];
+        for (const ra of A) {
+          for (const rb of B) {
+            if (!(ra[0] <= rb[1] && rb[0] <= ra[1])) continue;
+            const s = ra[0] > rb[0] ? ra[0] : rb[0];
+            const e = ra[1] < rb[1] ? ra[1] : rb[1];
+            const key = s === e ? fmt(s) : `${fmt(s)}~${fmt(e)}`;
+            if (!conflicts.has(key)) conflicts.set(key, new Set());
+            conflicts.get(key).add(i); conflicts.get(key).add(j);
+            rows[i]._conflict = true; rows[j]._conflict = true;
+          }
+        }
+      }
+    }
+    return Array.from(conflicts.entries()).map(([label, idxSet]) => ({
+      label,
+      names: Array.from(idxSet).map(i => `${rows[i].대학명} ${rows[i].학과명}`),
+    }));
+  }
+
+  function pdfRenderSchedAlert(list) {
+    if (!list.length) return '';
+    return `
+      <div class="sched-alert">
+        <div class="h"><span class="ic">!</span>실기일정 중복 ${list.length}건
+          <span class="note">같은 날짜에 겹치는 전형은 동시 응시가 불가합니다</span></div>
+        ${list.map(c => `<div class="r"><span class="d">${esc(c.label)}</span><span class="l">${esc(c.names.join(' · '))}</span></div>`).join('')}
+      </div>`;
+  }
+
   function pdfDelta(total, cut) {
     const t = parseFloat(total), c = parseFloat(cut);
     if (!isFinite(t) || !isFinite(c)) return { txt: '', cls: 'neu' };
@@ -1439,6 +1608,7 @@
             <span class="uc-dept">${esc(r.학과명)}</span>
             <span class="uc-type">${esc(r.전형명)}</span>
           </div>
+          ${r._schedTxt ? `<div class="uc-date${r._conflict ? ' warn' : ''}">${r._conflict ? '<span class="ic">!</span>' : ''}실기 ${esc(r._schedTxt)}${r._conflict ? ' · 중복' : ''}</div>` : ''}
         </div>
         <div class="uc-hero">
           <div>
@@ -1460,7 +1630,7 @@
       </div>`;
   }
 
-  function pdfRenderCardPage(rows, startIdx, totalRows, pageIdx, totalPages, student, logoData, dateStr) {
+  function pdfRenderCardPage(rows, startIdx, totalRows, pageIdx, totalPages, student, logoData, dateStr, schedAlert) {
     const watermark = logoData ? `<img class="watermark-img" src="${logoData}" alt="">` : '';
     const slots = [];
     for (let i = 0; i < PDF_CARDS_PER_PAGE; i++) {
@@ -1478,6 +1648,7 @@
           </div>
           <div class="group-range">${startIdx + 1}–${startIdx + rows.length} / ${totalRows}</div>
         </div>
+        ${schedAlert || ''}
         <div class="cards">${slots.filter(s => s !== '').join('')}</div>
         <div class="page-footer">
           <div class="left">맥스수시 · 본 상담 자료는 참고용이며, 실제 합격 여부는 당해 입시 결과에 따라 달라질 수 있습니다.</div>
@@ -1519,12 +1690,14 @@
       const now = new Date();
       const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
 
+      const schedConflicts = pdfMarkConflicts(rows);
       const totalPages = Math.ceil(rows.length / PDF_CARDS_PER_PAGE);
       let pagesHtml = pdfRenderCoverPage(student, stats, logoData, dateStr);
       for (let p = 0; p < totalPages; p++) {
         pagesHtml += pdfRenderCardPage(
           rows.slice(p * PDF_CARDS_PER_PAGE, (p + 1) * PDF_CARDS_PER_PAGE),
-          p * PDF_CARDS_PER_PAGE, rows.length, p + 1, totalPages, student, logoData, dateStr
+          p * PDF_CARDS_PER_PAGE, rows.length, p + 1, totalPages, student, logoData, dateStr,
+          p === 0 ? pdfRenderSchedAlert(schedConflicts) : ''
         );
       }
       const fileBase = `맥스수시_상담지_${student.name}_${window.SUSI_YEAR}학년도`;

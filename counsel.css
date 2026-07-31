@@ -1141,3 +1141,51 @@ html.dark {
   .profile-meta { gap: 10px; }
   .tp-search { min-width: 120px; }
 }
+
+/* ───────── 실기일정 중복 경고 ───────── */
+.sched-banner {
+  margin: 0 0 10px;
+  border: 1px solid #fecaca;
+  background: linear-gradient(180deg, #fff5f5, #fffafa);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.sched-banner .sb-head {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; color: #b91c1c; margin-bottom: 7px;
+}
+.sched-banner .sb-head i { font-size: 15px; }
+.sched-banner .sb-head strong { font-weight: 700; }
+.sched-banner .sb-note { font-size: 11.5px; color: #9a3412; font-weight: 400; margin-left: 2px; }
+.sched-banner .sb-body { display: flex; flex-direction: column; gap: 4px; }
+.sched-banner .sb-row { display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
+.sched-banner .sb-date {
+  flex: 0 0 auto; font-weight: 700; color: #b91c1c;
+  background: #fee2e2; border-radius: 5px; padding: 1px 7px;
+  font-variant-numeric: tabular-nums;
+}
+.sched-banner .sb-list { color: var(--text-2); line-height: 1.45; }
+
+/* 행 뱃지 */
+.sched-warn {
+  display: inline-flex; align-items: center; gap: 3px;
+  margin-left: 6px; padding: 1px 6px; border-radius: 5px;
+  background: #fee2e2; color: #b91c1c;
+  font-size: 10.5px; font-weight: 700; white-space: nowrap;
+  font-variant-numeric: tabular-nums; vertical-align: middle;
+}
+.sched-warn i { font-size: 11px; }
+.row-main.has-conflict .cell-uni { position: relative; }
+.row-main.has-conflict > td:first-child::after {
+  content: ""; position: absolute; left: 0; top: 4px; bottom: 4px;
+  width: 3px; border-radius: 2px; background: #ef4444;
+}
+.row-main.has-conflict > td:first-child { position: relative; }
+
+@media (prefers-color-scheme: dark) {
+  .sched-banner { border-color: #7f1d1d; background: linear-gradient(180deg, #1f1416, #191113); }
+  .sched-banner .sb-head { color: #fca5a5; }
+  .sched-banner .sb-note { color: #fdba74; }
+  .sched-banner .sb-date { background: #450a0a; color: #fca5a5; }
+  .sched-warn { background: #450a0a; color: #fca5a5; }
+}
