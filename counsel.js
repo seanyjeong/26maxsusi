@@ -1038,7 +1038,6 @@
     });
   }
 
-  const PDF_ROWS_PER_PAGE = 14;
 
   const PDF_CSS = `
     /* ── Font metric override — glyph 를 line-box 중앙으로 (정시엔진과 동일) ── */
@@ -1111,6 +1110,60 @@
     .pdf-stage .group-count { font-size:11px; color:var(--zinc-500); font-family:var(--pdf-font-mono); letter-spacing:-0.01em; line-height:1.15; display:inline-flex; align-items:center; }
     .pdf-stage .group-count::before { content:"·"; margin:0 6px; color:var(--zinc-300); font-family:var(--pdf-font-ko); line-height:1; font-size:14px; }
     .pdf-stage .group-range { font-family:var(--pdf-font-mono); font-size:10px; color:var(--zinc-400); letter-spacing:0.02em; }
+
+    /* ── 전형 카드 (v3 — 컴팩트) ─────────────────── */
+    .pdf-stage .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:6mm 5mm; flex:1 1 auto; align-content:start; min-height:0; }
+    .pdf-stage .ucard { position:relative; align-self:start; border:1px solid var(--hairline); border-radius:10px; background:#fff; padding:9px 11px 10px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.05); }
+    .pdf-stage .ucard::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent, var(--zinc-300)); }
+    .pdf-stage .ucard.stable { --accent:var(--emerald-600); --accent-bg:var(--emerald-50); --accent-fg:var(--emerald-700); }
+    .pdf-stage .ucard.fit    { --accent:var(--blue-600);    --accent-bg:var(--blue-50);    --accent-fg:var(--blue-700); }
+    .pdf-stage .ucard.reach  { --accent:var(--amber-600);   --accent-bg:var(--amber-50);   --accent-fg:var(--amber-700); }
+    .pdf-stage .ucard.risky  { --accent:var(--red-600);     --accent-bg:var(--red-50);     --accent-fg:var(--red-700); }
+    .pdf-stage .ucard.unknown{ --accent:var(--zinc-300);    --accent-bg:var(--zinc-100);   --accent-fg:var(--zinc-500); }
+
+    .pdf-stage .uc-idx { position:absolute; top:7px; right:10px; font-family:var(--pdf-font-mono); font-size:8px; color:var(--zinc-300); }
+    .pdf-stage .uc-head { padding-right:18px; }
+    .pdf-stage .uc-univ { font-size:12.5px; font-weight:700; color:var(--zinc-900); letter-spacing:-.03em; line-height:1.2; word-break:keep-all; }
+    .pdf-stage .uc-sub { display:flex; align-items:center; gap:5px; margin-top:2px; }
+    .pdf-stage .uc-dept { font-size:9.5px; color:var(--zinc-500); letter-spacing:-.015em; line-height:1.25; word-break:keep-all; }
+    .pdf-stage .uc-type { flex:0 0 auto; font-size:8px; color:var(--accent-fg); background:var(--accent-bg); border-radius:3px; padding:1px 5px; line-height:1.35; white-space:nowrap; }
+
+    /* 히어로: 합산점수 + 판정 */
+    .pdf-stage .uc-hero { display:flex; align-items:center; justify-content:space-between; gap:6px; margin:7px 0 6px; padding-bottom:6px; border-bottom:1px solid var(--hairline); }
+    .pdf-stage .uc-hero .v { font-family:var(--pdf-font-mono); font-size:20px; font-weight:700; color:var(--accent); letter-spacing:-.035em; line-height:1; font-variant-numeric:tabular-nums; }
+    .pdf-stage .uc-hero .k { font-family:var(--pdf-font-mono); font-size:7px; color:var(--zinc-400); letter-spacing:.1em; text-transform:uppercase; line-height:1; margin-bottom:3px; }
+    .pdf-stage .uc-badge { font-size:9.5px; font-weight:700; color:#fff; background:var(--accent); border-radius:999px; padding:2px 9px; line-height:1.4; }
+    .pdf-stage .uc-badge.unknown { color:var(--zinc-500); background:var(--zinc-200); }
+
+    /* 지표 4칸 1줄 */
+    .pdf-stage .uc-m { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--hairline); border-radius:7px; overflow:hidden; margin-bottom:6px; }
+    .pdf-stage .uc-m .c { padding:4px 3px 5px; text-align:center; position:relative; background:#fff; }
+    .pdf-stage .uc-m .c + .c::before { content:""; position:absolute; left:0; top:5px; bottom:5px; width:1px; background:var(--hairline); }
+    .pdf-stage .uc-m .k { font-family:var(--pdf-font-mono); font-size:6.5px; color:var(--zinc-400); letter-spacing:.06em; text-transform:uppercase; line-height:1; }
+    .pdf-stage .uc-m .v { font-family:var(--pdf-font-mono); font-size:10.5px; font-weight:600; color:var(--zinc-800); font-variant-numeric:tabular-nums; line-height:1; margin-top:3px; }
+    .pdf-stage .uc-m .d { font-family:var(--pdf-font-mono); font-size:7.5px; font-weight:600; line-height:1; margin-top:2px; }
+    .pdf-stage .uc-m .d.pos { color:var(--emerald-600); }
+    .pdf-stage .uc-m .d.neg { color:var(--red-600); }
+    .pdf-stage .uc-m .d.neu { color:var(--zinc-400); }
+    .pdf-stage .uc-m .c.hl { background:var(--zinc-50); }
+
+    /* 실기 종목 */
+    .pdf-stage .uc-ev { margin-top:2px; }
+    .pdf-stage .uc-ev .cap { display:flex; align-items:center; justify-content:space-between; margin-bottom:3px; }
+    .pdf-stage .uc-ev .cap .t { font-size:8.5px; font-weight:600; color:var(--zinc-500); letter-spacing:-.01em; }
+    .pdf-stage .uc-ev .cap .n { font-family:var(--pdf-font-mono); font-size:7px; color:var(--zinc-400); }
+    .pdf-stage .uc-ev table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    .pdf-stage .uc-ev td { font-size:8.5px; padding:1.4px 0; border-bottom:1px solid var(--zinc-100); line-height:1.25; vertical-align:middle; }
+    .pdf-stage .uc-ev tr:last-child td { border-bottom:0; }
+    .pdf-stage .uc-ev td.nm { color:var(--zinc-700); letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:50%; }
+    .pdf-stage .uc-ev td.rc { font-family:var(--pdf-font-mono); color:var(--zinc-500); text-align:right; width:25%; font-variant-numeric:tabular-nums; }
+    .pdf-stage .uc-ev td.sc { font-family:var(--pdf-font-mono); color:var(--zinc-900); font-weight:700; text-align:right; width:25%; font-variant-numeric:tabular-nums; }
+    .pdf-stage .uc-ev td.sc .gam { font-weight:500; font-size:7px; color:var(--red-600); margin-left:1px; }
+    .pdf-stage .uc-ev .none { font-size:8px; color:var(--zinc-300); text-align:center; padding:5px 0; }
+
+    .pdf-stage .ucard.empty { border-style:dashed; border-color:var(--zinc-200); background:repeating-linear-gradient(135deg,var(--zinc-50),var(--zinc-50) 8px,#fff 8px,#fff 16px); align-items:center; justify-content:center; min-height:120px; box-shadow:none; }
+    .pdf-stage .ucard.empty::before { display:none; }
+    .pdf-stage .ucard.empty .t { font-family:var(--pdf-font-mono); font-size:9px; color:var(--zinc-300); letter-spacing:.08em; text-transform:uppercase; }
 
     /* ── 지원 대학 테이블 ─────────────────── */
     .pdf-stage .apply-wrap { border:1px solid var(--hairline); border-radius:10px; overflow:hidden; background:#fff; flex:0 0 auto; }
@@ -1208,12 +1261,30 @@
       const 합산점수 = g.querySelector('.합산점수')?.textContent?.trim() || '—';
       const 맥스컷 = g.querySelector('.max-cut')?.textContent?.trim() || '—';
       const 지점컷 = g.querySelector('.branch-cut')?.textContent?.trim() || '—';
+
+      // 실기 종목별 기록·점수 (drawer 접혀 있어도 DOM 에 존재)
+      const 종목 = [];
+      g.querySelectorAll('.practical-group').forEach(pg => {
+        const label = pg.querySelector('.practical-label');
+        if (!label) return;
+        const name = label.childNodes[0]?.textContent?.trim()
+          || label.textContent.split('(')[0].trim();
+        const rec = pg.querySelector('.input-record')?.value?.trim() || '';
+        const sc = pg.querySelector('.input-score-only')?.value?.trim() || '';
+        const gamText = pg.querySelector('.gam-span')?.textContent || '';
+        const gam = (gamText.match(/(\d+)/) || [])[1] || '';
+        if (!rec && !sc) return;   // 미입력 종목은 제외
+        종목.push({ name, rec: rec || '—', score: sc || '—', gam });
+      });
+
       rows.push({
         대학명, 학과명, 전형명,
         내신등급: g.querySelector('.input-grade')?.value?.trim() || '',
         내신점수: g.querySelector('.input-score')?.value?.trim() || '',
-        실기총점: g.querySelector('.input-total-score')?.textContent?.trim() || '—',
+        실기총점: g.querySelector('.input-total-score')?.textContent?.trim().replace(/\(.*$/, '').trim() || '—',
+        총감수: (g.querySelector('.total-gam-span')?.textContent?.match(/(\d+)/) || [])[1] || '',
         합산점수, 맥스컷, 지점컷,
+        종목,
         risk: classifyRisk(합산점수, 맥스컷, 지점컷),
       });
     });
@@ -1339,23 +1410,62 @@
     `;
   }
 
-  function pdfRenderTablePage(rows, startIdx, totalRows, pageIdx, totalPages, student, logoData, dateStr) {
-    const watermark = logoData ? `<img class="watermark-img" src="${logoData}" alt="">` : '';
-    const bodyRows = rows.map((r, i) => `
+  const PDF_CARDS_PER_PAGE = 6;
+
+  function pdfDelta(total, cut) {
+    const t = parseFloat(total), c = parseFloat(cut);
+    if (!isFinite(t) || !isFinite(c)) return { txt: '', cls: 'neu' };
+    const d = t - c;
+    return { txt: (d >= 0 ? '+' : '') + d.toFixed(1), cls: d >= 5 ? 'pos' : d >= -5 ? 'neu' : 'neg' };
+  }
+
+  function pdfRenderCard(r, idx) {
+    if (!r) return '<div class="ucard empty"><div class="t">빈 슬롯</div></div>';
+    const dMax = pdfDelta(r.합산점수, r.맥스컷);
+    const dBr  = pdfDelta(r.합산점수, r.지점컷);
+    const ev = r.종목 || [];
+    const evRows = ev.map(e => `
       <tr>
-        <td class="num">${String(startIdx + i + 1).padStart(2, '0')}</td>
-        <td class="univ l">${esc(r.대학명)}</td>
-        <td class="dept l">${esc(r.학과명)}</td>
-        <td class="type l">${esc(r.전형명)}</td>
-        ${pdfCell(r.내신등급, 'v')}
-        ${pdfCell(r.내신점수, 'v')}
-        ${pdfCell(r.실기총점, 'v')}
-        ${pdfCell(r.합산점수, 'v total')}
-        ${pdfCell(r.맥스컷, 'v')}
-        ${pdfCell(r.지점컷, 'v')}
-        <td class="risk"><span class="pill ${r.risk}">${RISK_LABEL[r.risk] || '—'}</span></td>
-      </tr>
-    `).join('');
+        <td class="nm">${esc(e.name)}</td>
+        <td class="rc">${esc(e.rec)}</td>
+        <td class="sc">${esc(e.score)}${e.gam ? `<span class="gam">-${esc(e.gam)}</span>` : ''}</td>
+      </tr>`).join('');
+    return `
+      <div class="ucard ${r.risk}">
+        <div class="uc-idx">${String(idx + 1).padStart(2, '0')}</div>
+        <div class="uc-head">
+          <div class="uc-univ">${esc(r.대학명)}</div>
+          <div class="uc-sub">
+            <span class="uc-dept">${esc(r.학과명)}</span>
+            <span class="uc-type">${esc(r.전형명)}</span>
+          </div>
+        </div>
+        <div class="uc-hero">
+          <div>
+            <div class="k">합산점수</div>
+            <div class="v">${esc(r.합산점수)}</div>
+          </div>
+          <div class="uc-badge ${r.risk}">${RISK_LABEL[r.risk] || '—'}</div>
+        </div>
+        <div class="uc-m">
+          <div class="c"><div class="k">내신</div><div class="v">${esc(r.내신점수 || '—')}</div><div class="d neu">${r.내신등급 ? esc(r.내신등급) + '등급' : ''}</div></div>
+          <div class="c hl"><div class="k">실기</div><div class="v">${esc(r.실기총점)}</div><div class="d neg">${r.총감수 ? '-' + esc(r.총감수) : ''}</div></div>
+          <div class="c"><div class="k">맥스컷</div><div class="v">${esc(r.맥스컷)}</div><div class="d ${dMax.cls}">${dMax.txt}</div></div>
+          <div class="c"><div class="k">지점컷</div><div class="v">${esc(r.지점컷)}</div><div class="d ${dBr.cls}">${dBr.txt}</div></div>
+        </div>
+        <div class="uc-ev">
+          <div class="cap"><span class="t">실기 기록</span><span class="n">${ev.length ? ev.length + '종목' : ''}</span></div>
+          ${evRows ? `<table>${evRows}</table>` : '<div class="none">실기 기록 미입력</div>'}
+        </div>
+      </div>`;
+  }
+
+  function pdfRenderCardPage(rows, startIdx, totalRows, pageIdx, totalPages, student, logoData, dateStr) {
+    const watermark = logoData ? `<img class="watermark-img" src="${logoData}" alt="">` : '';
+    const slots = [];
+    for (let i = 0; i < PDF_CARDS_PER_PAGE; i++) {
+      slots.push(rows[i] ? pdfRenderCard(rows[i], startIdx + i) : (i < rows.length ? '' : ''));
+    }
     return `
       <div class="page">
         ${watermark}
@@ -1368,23 +1478,7 @@
           </div>
           <div class="group-range">${startIdx + 1}–${startIdx + rows.length} / ${totalRows}</div>
         </div>
-        <div class="apply-wrap">
-          <table class="apply-table">
-            <colgroup>
-              <col class="c-num"><col class="c-univ"><col><col>
-              <col class="c-grade"><col class="c-score"><col class="c-score"><col class="c-score">
-              <col class="c-score"><col class="c-score"><col class="c-risk">
-            </colgroup>
-            <thead>
-              <tr>
-                <th>#</th><th class="l">대학명</th><th class="l">학과명</th><th class="l">전형명</th>
-                <th>내신등급</th><th>내신점수</th><th>실기총점</th><th>합산점수</th>
-                <th>맥스컷</th><th>지점컷</th><th>판정</th>
-              </tr>
-            </thead>
-            <tbody>${bodyRows}</tbody>
-          </table>
-        </div>
+        <div class="cards">${slots.filter(s => s !== '').join('')}</div>
         <div class="page-footer">
           <div class="left">맥스수시 · 본 상담 자료는 참고용이며, 실제 합격 여부는 당해 입시 결과에 따라 달라질 수 있습니다.</div>
           <div class="right">${pageIdx}/${totalPages} · 생성일 ${dateStr}</div>
@@ -1425,12 +1519,12 @@
       const now = new Date();
       const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
 
-      const totalPages = Math.ceil(rows.length / PDF_ROWS_PER_PAGE);
+      const totalPages = Math.ceil(rows.length / PDF_CARDS_PER_PAGE);
       let pagesHtml = pdfRenderCoverPage(student, stats, logoData, dateStr);
       for (let p = 0; p < totalPages; p++) {
-        pagesHtml += pdfRenderTablePage(
-          rows.slice(p * PDF_ROWS_PER_PAGE, (p + 1) * PDF_ROWS_PER_PAGE),
-          p * PDF_ROWS_PER_PAGE, rows.length, p + 1, totalPages, student, logoData, dateStr
+        pagesHtml += pdfRenderCardPage(
+          rows.slice(p * PDF_CARDS_PER_PAGE, (p + 1) * PDF_CARDS_PER_PAGE),
+          p * PDF_CARDS_PER_PAGE, rows.length, p + 1, totalPages, student, logoData, dateStr
         );
       }
       const fileBase = `맥스수시_상담지_${student.name}_${window.SUSI_YEAR}학년도`;
