@@ -1142,50 +1142,70 @@ html.dark {
   .tp-search { min-width: 120px; }
 }
 
-/* ───────── 실기일정 중복 경고 ───────── */
+/* ───────── 실기일정 표시 · 중복 경고 ───────── */
+/* 행: 대학명 아래 줄 */
+.sched-line {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  margin: 3px 0 0 14px; font-size: 10.5px; line-height: 1.5;
+  color: var(--text-3, #78716c); font-variant-numeric: tabular-nums;
+}
+.sched-line .d { color: var(--text-3, #78716c); }
+.sched-line .k {
+  font-size: 9.5px; padding: 0 4px; border-radius: 3px;
+  background: var(--surface-2, #f5f5f4); color: var(--text-3, #78716c);
+}
+.sched-line .c { font-weight: 700; padding: 0 5px; border-radius: 4px; }
+.sched-line.danger .c { color: #b91c1c; background: #fee2e2; }
+.sched-line.warn   .c { color: #a16207; background: #fef3c7; }
+.sched-line.danger .d { color: #b91c1c; }
+
+.row-main.has-conflict > td:first-child,
+.row-main.has-warn > td:first-child { position: relative; }
+.row-main.has-conflict > td:first-child::after,
+.row-main.has-warn > td:first-child::after {
+  content: ""; position: absolute; left: 0; top: 4px; bottom: 4px;
+  width: 3px; border-radius: 2px;
+}
+.row-main.has-conflict > td:first-child::after { background: #ef4444; }
+.row-main.has-warn > td:first-child::after { background: #f59e0b; }
+
+/* 상단 배너 */
 .sched-banner {
-  margin: 0 0 10px;
-  border: 1px solid #fecaca;
-  background: linear-gradient(180deg, #fff5f5, #fffafa);
-  border-radius: 10px;
-  padding: 10px 12px;
+  margin: 0 0 10px; border: 1px solid #fecaca; border-radius: 10px;
+  padding: 10px 12px; background: linear-gradient(180deg, #fff5f5, #fffafa);
 }
 .sched-banner .sb-head {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 13px; color: #b91c1c; margin-bottom: 7px;
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  font-size: 13px; color: #b91c1c; margin-bottom: 8px;
 }
 .sched-banner .sb-head i { font-size: 15px; }
 .sched-banner .sb-head strong { font-weight: 700; }
-.sched-banner .sb-note { font-size: 11.5px; color: #9a3412; font-weight: 400; margin-left: 2px; }
-.sched-banner .sb-body { display: flex; flex-direction: column; gap: 4px; }
-.sched-banner .sb-row { display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
+.sched-banner .sb-tag {
+  font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+}
+.sched-banner .sb-tag.danger { color: #b91c1c; background: #fee2e2; }
+.sched-banner .sb-tag.warn { color: #a16207; background: #fef3c7; }
+.sched-banner .sb-body { display: flex; flex-direction: column; gap: 5px; }
+.sched-banner .sb-row {
+  display: flex; align-items: baseline; gap: 8px; font-size: 12px; line-height: 1.5;
+}
 .sched-banner .sb-date {
-  flex: 0 0 auto; font-weight: 700; color: #b91c1c;
-  background: #fee2e2; border-radius: 5px; padding: 1px 7px;
+  flex: 0 0 auto; font-weight: 700; border-radius: 5px; padding: 1px 7px;
   font-variant-numeric: tabular-nums;
 }
-.sched-banner .sb-list { color: var(--text-2); line-height: 1.45; }
-
-/* 행 뱃지 */
-.sched-warn {
-  display: inline-flex; align-items: center; gap: 3px;
-  margin-left: 6px; padding: 1px 6px; border-radius: 5px;
-  background: #fee2e2; color: #b91c1c;
-  font-size: 10.5px; font-weight: 700; white-space: nowrap;
-  font-variant-numeric: tabular-nums; vertical-align: middle;
-}
-.sched-warn i { font-size: 11px; }
-.row-main.has-conflict .cell-uni { position: relative; }
-.row-main.has-conflict > td:first-child::after {
-  content: ""; position: absolute; left: 0; top: 4px; bottom: 4px;
-  width: 3px; border-radius: 2px; background: #ef4444;
-}
-.row-main.has-conflict > td:first-child { position: relative; }
+.sched-banner .sb-row.danger .sb-date { color: #b91c1c; background: #fee2e2; }
+.sched-banner .sb-row.warn .sb-date { color: #a16207; background: #fef3c7; }
+.sched-banner .sb-list { color: var(--text-2); }
+.sched-banner .sb-list b { font-weight: 600; color: var(--text); }
+.sched-banner .sb-s { font-size: 11px; color: var(--text-3, #78716c); font-variant-numeric: tabular-nums; }
+.sched-banner .sb-x { color: var(--text-3, #a8a29e); margin: 0 2px; }
 
 @media (prefers-color-scheme: dark) {
   .sched-banner { border-color: #7f1d1d; background: linear-gradient(180deg, #1f1416, #191113); }
   .sched-banner .sb-head { color: #fca5a5; }
-  .sched-banner .sb-note { color: #fdba74; }
-  .sched-banner .sb-date { background: #450a0a; color: #fca5a5; }
-  .sched-warn { background: #450a0a; color: #fca5a5; }
+  .sched-banner .sb-row.danger .sb-date, .sched-banner .sb-tag.danger { background: #450a0a; color: #fca5a5; }
+  .sched-banner .sb-row.warn .sb-date, .sched-banner .sb-tag.warn { background: #422006; color: #fcd34d; }
+  .sched-line.danger .c { background: #450a0a; color: #fca5a5; }
+  .sched-line.warn .c { background: #422006; color: #fcd34d; }
+  .sched-line .k { background: #292524; }
 }
