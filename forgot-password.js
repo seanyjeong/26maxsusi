@@ -11,7 +11,7 @@
  *   - Step1: 아이디 + 전화번호 모두 입력 필수
  *   - Step2: 인증 성공 시 새 비번 단계 이동
  *   - Step3: 비번 4자 이상 + 확인 일치 검사
- *   - 성공 후 login.new.html 이동
+ *   - 성공 후 login.html 이동
  * ============================================================ */
 
 (function () {
@@ -191,7 +191,7 @@
       if (r.ok) {
         window.showToast('비밀번호가 성공적으로 변경되었습니다.', 'success');
         setMsg('비밀번호가 변경되었습니다. 로그인 페이지로 이동합니다…', 'success');
-        setTimeout(function () { window.location.href = 'login.new.html'; }, 1200);
+        setTimeout(function () { window.location.href = 'login.html'; }, 1200);
       } else {
         var msg = (r.data && r.data.message) || '비밀번호 변경에 실패했습니다.';
         window.showToast(msg, 'error');

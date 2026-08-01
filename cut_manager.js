@@ -30,7 +30,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     var token = window.getToken();
     if (!token) {
-      location.href = 'login.html?next=cut_manager.new.html';
+      location.href = 'login.html?next=cut_manager.html';
       return;
     }
 

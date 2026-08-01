@@ -251,7 +251,7 @@
       if (json.success) {
         window.showToast('가입 신청 완료! 관리자 승인 후 로그인 가능합니다.', 'success');
         setRegisterMsg('가입 신청이 완료되었습니다. 로그인 페이지로 이동합니다…', 'success');
-        setTimeout(function () { window.location.href = 'login.new.html'; }, 1200);
+        setTimeout(function () { window.location.href = 'login.html'; }, 1200);
       } else {
         var msg = json.message || '가입 신청 실패';
         setRegisterMsg(msg, 'error');
