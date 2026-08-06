@@ -23,13 +23,6 @@
     if (typeof window.showToast === 'function') window.showToast(msg, type || 'success');
   }
 
-  // 단순 confirm (원본의 confirm 모달 대체 — 브라우저 기본 confirm)
-  // 공용 모달 사용 시 신규 DOM 추가가 필요해 "신규 모달 금지" 규칙에 부딪힘 →
-  // 브라우저 native confirm 으로 동일한 "확인/취소" UX 보존.
-  function confirmDelete(text) {
-    return window.confirm(text);
-  }
-
   // ── 지점 표시 ────────────────────────────────────────────────
   function renderBranch() {
     var info = (window.getCounselorFromToken && window.getCounselorFromToken()) || {};
@@ -248,7 +241,16 @@
       var sid = btn.getAttribute('data-sid');
       var action = btn.getAttribute('data-action');
       if (action === 'save') saveEdit(sid, btn);
-      else if (action === 'delete') delStudent(sid);
+      else if (action === 'delete') {
+        var row = document.getElementById('row_' + sid);
+        var nameInput = row && row.querySelector('input[data-field="name"]');
+        window.StudentDeletion.deleteStudent({
+          studentId: sid,
+          studentName: nameInput ? nameInput.value.trim() : '선택한',
+          button: btn,
+          onDeleted: function () { window.StudentDeletion.removeStudentRow(sid); },
+        });
+      }
     });
   }
 
@@ -279,25 +281,6 @@
     } catch (err) {
       toast(err && err.message ? err.message : '수정 실패', 'error');
       if (btn) btn.disabled = false;
-    }
-  }
-
-  async function delStudent(sid) {
-    var ok = confirmDelete('정말 삭제하시겠습니까?\n\n삭제된 학생 정보는 복구할 수 없습니다.');
-    if (!ok) return;
-    try {
-      var json = await window.api('_student_delete', {
-        method: 'POST',
-        body: JSON.stringify({ student_id: Number(sid) }),
-      });
-      if (json && json.success) {
-        toast('학생 정보가 삭제되었습니다.', 'success');
-        loadStudents();
-      } else {
-        toast((json && json.message) || '서버 오류', 'error');
-      }
-    } catch (err) {
-      toast(err && err.message ? err.message : '삭제 실패', 'error');
     }
   }
 
