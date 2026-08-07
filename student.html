@@ -107,6 +107,24 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="studentDeleteConfirmModal" role="dialog" aria-modal="true" aria-labelledby="studentDeleteConfirmTitle" aria-describedby="studentDeleteConfirmMessage">
+  <div class="modal-card narrow">
+    <div class="modal-head">
+      <h2 class="modal-title" id="studentDeleteConfirmTitle">학생 삭제</h2>
+      <button type="button" class="modal-close" id="studentDeleteConfirmClose" aria-label="닫기">
+        <i class="ph-light ph-x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="studentDeleteConfirmMessage"></p>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" id="studentDeleteConfirmCancel">취소</button>
+      <button type="button" class="btn btn-primary" id="studentDeleteConfirmSubmit">삭제</button>
+    </div>
+  </div>
+</div>
+
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/api.js"></script>
 <script src="assets/js/toast.js"></script>
@@ -114,7 +132,7 @@
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/combobox.js"></script>
 <script src="assets/js/bootstrap.js?v=4aa4784"></script>
-<script src="student-delete.js"></script>
+<script src="student-delete.js?v=confirm-modal-1"></script>
 <script src="student.js"></script>
 
 </body>
