@@ -1,0 +1,81 @@
+/* The app theme is explicit; the operating-system theme must not recolor this UI. */
+html:not(.dark) .sched-banner {
+  border-color: #fecaca;
+  background: linear-gradient(180deg, #fff5f5, #fffafa);
+}
+
+html:not(.dark) .sched-banner .sb-head {
+  color: #991b1b;
+}
+
+html:not(.dark) .sched-banner .sb-list {
+  color: #44403c;
+}
+
+html:not(.dark) .sched-banner .sb-row.danger .sb-date,
+html:not(.dark) .sched-banner .sb-tag.danger {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+html:not(.dark) .sched-banner .sb-row.warn .sb-date,
+html:not(.dark) .sched-banner .sb-tag.warn {
+  color: #854d0e;
+  background: #fef3c7;
+}
+
+html:not(.dark) .sched-line .k {
+  color: #44403c;
+  background: #e7e5e4;
+}
+
+html:not(.dark) .sched-line.danger .c {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+html:not(.dark) .sched-line.warn .c {
+  color: #854d0e;
+  background: #fef3c7;
+}
+
+html.dark .sched-banner {
+  border-color: #7f1d1d;
+  background: linear-gradient(180deg, #1f1416, #191113);
+}
+
+html.dark .sched-banner .sb-head,
+html.dark .sched-banner .sb-row.danger .sb-date,
+html.dark .sched-banner .sb-tag.danger {
+  color: #fecaca;
+}
+
+html.dark .sched-banner .sb-row.danger .sb-date,
+html.dark .sched-banner .sb-tag.danger {
+  background: #450a0a;
+}
+
+html.dark .sched-banner .sb-row.warn .sb-date,
+html.dark .sched-banner .sb-tag.warn {
+  color: #fde68a;
+  background: #422006;
+}
+
+html.dark .sched-banner .sb-list {
+  color: #e7e5e4;
+}
+
+html.dark .sched-line .k {
+  color: #fafaf9;
+  background: #292524;
+}
+
+html.dark .sched-line.danger .c {
+  color: #fecaca;
+  background: #450a0a;
+}
+
+html.dark .sched-line.warn .c {
+  color: #fde68a;
+  background: #422006;
+}
