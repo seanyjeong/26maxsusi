@@ -154,7 +154,6 @@
     var rowsHtml = (universityData.학생들 || []).map(function (student) {
       var firstPass = parsePass(student.최초합여부);
       var finalPass = parsePass(student.최종합여부);
-      var scheduleDate = student.실기일정 ? String(student.실기일정).split(' ')[0] : '';
       var eventsHtml = events.map(function (eventName, i) {
         var rec = student['기록' + (i + 1)] || '';
         var sc = student['점수' + (i + 1)] || '';
@@ -183,7 +182,7 @@
         + eventsHtml
         + '  <td class="total-score-cell">' + totalScore + '</td>'
         + '  <td class="total-sum-cell">' + totalSum + '</td>'
-        + '  <td><input class="input-date" type="date" value="' + esc(scheduleDate) + '"></td>'
+        + '  <td>' + window.StudentPracticalSchedule.renderInputs(student.실기일정, student.이름) + '</td>'
         + '  <td>' + passSelect(firstPass.status, firstPass.number, '최초합') + '</td>'
         + '  <td>' + passSelect(finalPass.status, finalPass.number, '최종합') + '</td>'
         + '</tr>';
@@ -246,6 +245,13 @@
       return;
     }
 
+    var scheduleError = window.StudentPracticalSchedule.validate(detailsElement);
+    if (scheduleError) {
+      window.showToast(scheduleError.message, 'error');
+      scheduleError.input.focus();
+      return;
+    }
+
     button.disabled = true;
     var payload = [];
     detailsElement.querySelectorAll('tbody tr[data-student-id]').forEach(function (row) {
@@ -266,7 +272,7 @@
         내신점수: row.querySelector('.input-score').value,
         실기총점: parseFloat(totalCell.textContent) || null,
         합산점수: parseFloat(sumCell.textContent) || null,
-        실기일정: row.querySelector('.input-date').value || null,
+        실기일정: window.StudentPracticalSchedule.readRow(row),
         최초합여부: passVal(containers[0]),
         최종합여부: passVal(containers[1]),
       };
@@ -298,7 +304,7 @@
       }
     } catch (e) {
       console.error('[saveUniversityData]', e);
-      window.showToast('저장 실패: ' + (e && e.message ? e.message : ''), 'error');
+      window.showToast('학생 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.', 'error');
     } finally {
       button.disabled = false;
     }

@@ -1,15 +1,4 @@
-/* ============================================================
- * final_confirm.new.js — 최종 수합 관리 (데스크톱)
- * 원본 final_confirm.html (308줄) 기능 100% 보존.
- * API: /profile · _college_list · _student_list ·
- *      _events_by_practical_id · _final_list ·
- *      _counsel_candidates · _student_grade · _final_save
- * 규칙:
- *   - fetch / susicFetch / localStorage.token 금지 → window.api()
- *   - 구 알림 라이브러리 금지 → window.showToast / 공용 모달
- *   - 하드코딩 컬러 금지 (CSS 토큰만)
- * N+1 학생 성적 로드 (Promise.all) 원본과 동일 패턴 유지.
- * ============================================================ */
+/* Final collection page: college selection, student imports, and saving. */
 
 (function () {
   'use strict';
@@ -35,6 +24,12 @@
 
   // confirm 모달 상태: { type: 'delete'|'saveEmpty', studentId? }
   let confirmState = { type: null, studentId: null, onConfirm: null };
+
+  const { renderTable, addStudentRow } = window.createFinalConfirmTable({
+    studentMap: currentStudentMap,
+    getPracticalEvents: () => practicalEvents,
+    onDelete: askDeleteRow,
+  });
 
   // ───────── 로딩 오버레이 ─────────
   function showLoading(text) {
@@ -249,65 +244,6 @@
     }
   }
 
-  // ───────── 테이블 렌더 ─────────
-  function renderTable(students) {
-    const thead = document.getElementById('resultThead');
-    const tbody = document.getElementById('resultTbody');
-    thead.innerHTML = '';
-    tbody.innerHTML = '';
-    currentStudentMap.clear();
-    students.forEach(s => currentStudentMap.set(s.학생ID, s));
-
-    thead.innerHTML =
-      '<tr>' +
-      '<th>이름</th><th>학년</th><th>성별</th>' +
-      '<th>등급</th><th>내신점수</th>' +
-      '<th>실기종목</th><th>실기일정</th><th>합산점수</th><th>관리</th>' +
-      '</tr>';
-
-    if (students.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="placeholder">해당 전형으로 수합된 학생이 없습니다.</td></tr>';
-      return;
-    }
-    students.forEach(s => addStudentRow(s, false));
-  }
-
-  function addStudentRow(student, isNew) {
-    if (!student) return;
-    if (isNew === undefined) isNew = true;
-    if (isNew && currentStudentMap.has(student.학생ID)) return;
-
-    const tbody = document.getElementById('resultTbody');
-    if (tbody.querySelector('td.placeholder')) tbody.innerHTML = '';
-    currentStudentMap.set(student.학생ID, student);
-
-    const row = document.createElement('tr');
-    row.dataset.studentId = String(student.학생ID);
-
-    const scheduleDate = student.실기일정 ? String(student.실기일정).split(' ')[0] : '';
-    const eventsLabel = practicalEvents.length > 0 ? practicalEvents.join(', ') : '비실기';
-    const total = student.합산점수 != null ? parseFloat(student.합산점수).toFixed(2) : '-';
-
-    row.innerHTML =
-      `<td>${esc(student.이름 || '-')}</td>` +
-      `<td>${esc(student.학년 || '-')}</td>` +
-      `<td>${esc(student.성별 || '-')}</td>` +
-      `<td><input class="input-grade" type="text" value="${esc(student.내신등급 || '')}"></td>` +
-      `<td><input class="input-score" type="text" value="${esc(student.내신점수 != null ? student.내신점수 : '')}"></td>` +
-      `<td>${esc(eventsLabel)}</td>` +
-      `<td><input class="input-date" type="date" value="${esc(scheduleDate)}"></td>` +
-      `<td>${esc(total)}</td>` +
-      `<td><button type="button" class="fc-delete-btn" data-action="delete">삭제</button></td>`;
-
-    tbody.appendChild(row);
-
-    // 삭제 버튼 이벤트
-    const delBtn = row.querySelector('[data-action="delete"]');
-    if (delBtn) {
-      delBtn.addEventListener('click', () => askDeleteRow(row));
-    }
-  }
-
   // ───────── 행 삭제 확인 ─────────
   function askDeleteRow(row) {
     confirmState = {
@@ -465,12 +401,18 @@
     }
 
     const rows = Array.from(document.querySelectorAll('#resultTbody tr[data-student-id]'));
+    const scheduleError = window.StudentPracticalSchedule.validate(document.getElementById('resultTbody'));
+    if (scheduleError) {
+      window.showToast(scheduleError.message, 'error');
+      scheduleError.input.focus();
+      return;
+    }
     const payload = rows.map(row => ({
       학생ID: parseInt(row.dataset.studentId, 10),
       실기ID: currentCollege.실기ID,
       내신등급: row.querySelector('.input-grade').value,
       내신점수: row.querySelector('.input-score').value,
-      실기일정: row.querySelector('.input-date').value || null,
+      실기일정: window.StudentPracticalSchedule.readRow(row),
     }));
 
     if (payload.length === 0) {
@@ -506,11 +448,11 @@
         window.showToast('저장 완료!', 'success');
         searchFinalConfirmations();
       } else {
-        window.showToast((result && result.message) || '저장 실패', 'error');
+        window.showToast('학생 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.', 'error');
       }
     } catch (e) {
       console.error('[saveFinal]', e);
-      window.showToast('저장 실패: ' + e.message, 'error');
+      window.showToast('학생 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.', 'error');
     } finally {
       hideLoading();
     }

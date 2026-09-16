@@ -129,13 +129,18 @@
         return;
       }
       list.innerHTML = '';
-      schedule.forEach(function (item) {
+      schedule.slice().sort(function (a, b) {
+        return window.StudentPracticalSchedule.compare(a.date, b.date);
+      }).forEach(function (item) {
         var li = document.createElement('li');
+        var examSchedule = window.StudentPracticalSchedule.split(item.date);
+        var scheduleLabel = formatDate(examSchedule.date || item.date);
+        if (examSchedule.time) scheduleLabel += ' ' + examSchedule.time;
         var students = Array.isArray(item.students) ? item.students : [];
         var studentNames = students.map(function (s) { return escape(s); }).join(', ');
-        if (isDateInCurrentWeek(item.date)) li.classList.add('this-week');
+        if (isDateInCurrentWeek(examSchedule.date || item.date)) li.classList.add('this-week');
         li.innerHTML =
-          '<div class="date">' + escape(formatDate(item.date)) + '</div>' +
+          '<div class="date">' + escape(scheduleLabel) + '</div>' +
           '<div class="desc">' + escape(item.university || '') + ' ' + escape(item.department || '') + ' - <strong>' + studentNames + '</strong> 학생</div>';
         list.appendChild(li);
       });

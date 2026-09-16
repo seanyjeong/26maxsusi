@@ -147,6 +147,7 @@ details.uni-card summary:hover { background: var(--surface-2); }
 .summary-table input[type="text"],
 .summary-table input[type="number"],
 .summary-table input[type="date"],
+.summary-table input[type="time"],
 .summary-table select {
   width: 100%;
   box-sizing: border-box;

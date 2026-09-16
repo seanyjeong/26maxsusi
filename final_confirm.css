@@ -150,7 +150,8 @@
 }
 
 .data-table input[type="text"],
-.data-table input[type="date"] {
+.data-table input[type="date"],
+.data-table input[type="time"] {
   width: 100%;
   max-width: 120px;
   box-sizing: border-box;

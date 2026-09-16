@@ -1,0 +1,30 @@
+.practical-schedule {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+}
+
+.practical-schedule label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.practical-schedule label > span {
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.practical-schedule small { font-size: inherit; }
+
+.practical-schedule .input-date {
+  min-width: 138px;
+  max-width: none;
+}
+
+.practical-schedule .input-time {
+  min-width: 110px;
+  max-width: none;
+}
