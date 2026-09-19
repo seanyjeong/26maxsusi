@@ -19,7 +19,7 @@
 
   // 허용된 iframe 대상 (사이드바 17 페이지 + 한글 4) — defense-in-depth 화이트리스트
   var ALLOWED_FRAMES = new Set([
-    'dashboard.html', 'live.html', 'branch_summary.html', 'explore.html',
+    'dashboard.html', 'live.html', 'branch_summary.html', 'explore.html', 'silgi_review.html',
     'student.html', 'college-grade.html', 'counsel.html', 'counsel_group.html',
     'final_confirm.html', '26mobile.html', 'announcement_manager.html',
     'admin.html', 'cut_manager.html',
