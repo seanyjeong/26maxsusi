@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko" class="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>실기장 후기 — 맥스수시엔진</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+<!-- 공용 자산 CSS -->
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/sidebar.css">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="assets/css/modal.css">
+<link rel="stylesheet" href="assets/css/combobox.css">
+<link rel="stylesheet" href="silgi_review.css">
+</head>
+
+<body data-page="silgi_review" data-title="실기장 후기" data-category="인사이트">
+
+<div class="app-shell" id="appShell">
+  <div id="sidebar-slot"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="page-path">
+        <span>인사이트</span>
+        <span class="sep">/</span>
+        <span class="current">실기장 후기</span>
+      </div>
+      <div class="topbar-actions">
+        <span class="sync-meta" id="syncMeta"></span>
+        <button type="button" class="btn btn-ghost" id="btnSync" hidden>
+          <i class="ph-light ph-arrows-clockwise"></i><span>지금 동기화</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">실기장 후기</h1>
+          <div class="page-sub">구글 시트 「맥스 후기」 자동 동기화 · 10분 주기 · 학년도별 수시/정시</div>
+        </div>
+        <div class="head-meta" id="headMeta"></div>
+      </div>
+
+      <div class="card filter-card">
+        <div class="filter-section">
+          <div class="horizontal-filters">
+            <div class="filter-group filter-group-year">
+              <div class="filter-title">학년도</div>
+              <div class="filter-buttons" id="yearButtons"></div>
+            </div>
+            <div class="filter-group filter-group-type">
+              <div class="filter-title">전형</div>
+              <div class="filter-buttons" id="typeButtons">
+                <button type="button" class="filter-btn" data-value="수시">수시</button>
+                <button type="button" class="filter-btn" data-value="정시">정시</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="filter-section filter-section-search">
+          <div class="search-row">
+            <div class="search-field">
+              <div class="filter-title">대학</div>
+              <div id="univCombo"></div>
+            </div>
+            <div class="search-field search-field-text">
+              <div class="filter-title">검색</div>
+              <div class="search-input-wrap">
+                <i class="ph-light ph-magnifying-glass"></i>
+                <input type="search" id="searchInput" class="search-input" placeholder="후기 · 조언 · 학과 내용 검색" autocomplete="off">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="reviewList" class="review-list">
+        <div class="placeholder">로딩중...</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 공용 JS -->
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/modal.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/combobox.js"></script>
+<script src="assets/js/bootstrap.js"></script>
+<script src="silgi_review.js"></script>
+</body>
+</html>
