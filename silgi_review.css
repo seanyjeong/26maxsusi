@@ -54,7 +54,7 @@
   overflow: hidden;
   margin-bottom: 14px;
 }
-.filter-card { padding: 6px 4px; }
+.filter-card { padding: 6px 4px; overflow: visible; } /* 대학 콤보 드롭다운이 카드 밖으로 펼쳐져야 함 */
 .filter-section {
   padding: 14px 18px;
   border-bottom: 1px solid var(--border-soft);
