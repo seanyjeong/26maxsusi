@@ -37,6 +37,42 @@
   font-size: 12px;
   color: var(--text-3);
 }
+.head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* ---- 후기 참여 링크 (학생에게 전달용) ---- */
+.share-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+}
+.share-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.share-label i { font-size: 14px; color: var(--accent); }
+.share-url {
+  font-family: 'Geist', sans-serif;
+  font-size: 12.5px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.share-url:hover { text-decoration: underline; }
 
 /* ---- Topbar sync meta ---- */
 .sync-meta {

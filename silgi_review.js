@@ -212,6 +212,30 @@
     }
   }
 
+  /* ---------- 후기 참여 링크 복사 ---------- */
+  async function copyShareLink() {
+    var url = document.getElementById('shareUrl').href;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      window.showToast('후기 참여 링크가 복사되었습니다', 'success');
+    } catch (e) {
+      console.error('[copyShareLink]', e);
+      window.showToast('복사에 실패했습니다. 링크를 직접 선택해 복사해 주세요.', 'error');
+    }
+  }
+
   /* ---------- 초기화 ---------- */
   async function loadYears() {
     var data = await window.api('/silgi-reviews/years');
@@ -238,6 +262,7 @@
     document.querySelectorAll('#typeButtons .filter-btn').forEach(function (btn) {
       btn.addEventListener('click', function () { selectType(btn.dataset.value); });
     });
+    document.getElementById('btnCopyLink').addEventListener('click', copyShareLink);
     if (isAdminUser()) {
       var btn = document.getElementById('btnSync');
       btn.hidden = false;
