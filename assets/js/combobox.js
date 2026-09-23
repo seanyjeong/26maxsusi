@@ -10,6 +10,7 @@
  *     placeholder: '선택…',
  *     searchable: true,        // false 면 검색 input 숨김 (옵션 적은 select 용)
  *     searchPlaceholder: '검색…',
+ *     floating: true,          // 스크롤/overflow 컨테이너 안에서 메뉴가 잘릴 때 — 열릴 때 fixed 로 띄움
  *     onChange: (newValue, opt) => {},
  *   });
  *   combo.setOptions([...]);
@@ -41,6 +42,7 @@
     opts = opts || {};
     const id = container.id || nextId();
     const searchable = opts.searchable !== false;
+    const floating = !!opts.floating;
     const placeholder = opts.placeholder || '선택…';
     const searchPlaceholder = opts.searchPlaceholder || '검색…';
 
@@ -50,6 +52,7 @@
 
     container.classList.add('combobox');
     if (!searchable) container.classList.add('no-search');
+    if (floating) container.classList.add('floating');
     if (!container.id) container.id = id;
     container.innerHTML = `
       <button type="button" class="combo-display" ${disabled ? 'disabled' : ''}>
@@ -70,6 +73,21 @@
     const labelEl = container.querySelector('.label');
     const search = container.querySelector('.combo-search input');
     const listEl = container.querySelector('.combo-list');
+    const menu = container.querySelector('.combo-menu');
+
+    // floating: 버튼 기준 viewport 좌표로 배치, 아래 공간이 모자라면 위로 연다
+    function placeMenu() {
+      const r = display.getBoundingClientRect();
+      menu.style.left = r.left + 'px';
+      menu.style.width = r.width + 'px';
+      const h = menu.offsetHeight;
+      const below = window.innerHeight - r.bottom;
+      const top = (below < h + 8 && r.top > below) ? Math.max(4, r.top - 4 - h) : r.bottom + 4;
+      menu.style.top = top + 'px';
+    }
+    function onOutsideScroll(e) {
+      if (!menu.contains(e.target)) close();
+    }
 
     function findOpt(v) { return options.find(o => String(o.value) === String(v)); }
     function renderLabel() {
@@ -105,6 +123,11 @@
       if (disabled) return;
       container.classList.add('open');
       renderList('');
+      if (floating) {
+        placeMenu();
+        window.addEventListener('scroll', onOutsideScroll, true);
+        window.addEventListener('resize', close);
+      }
       if (search) {
         search.value = '';
         setTimeout(() => search.focus(), 30);
@@ -113,6 +136,10 @@
     function close() {
       container.classList.remove('open');
       if (search) search.value = '';
+      if (floating) {
+        window.removeEventListener('scroll', onOutsideScroll, true);
+        window.removeEventListener('resize', close);
+      }
     }
     function pick(v) {
       const opt = findOpt(v);
@@ -166,7 +193,7 @@
       enable() { disabled = false; display.disabled = false; },
       open, close,
       refresh() { renderLabel(); if (container.classList.contains('open')) renderList(search ? search.value : ''); },
-      destroy() { container.innerHTML = ''; container.classList.remove('combobox', 'no-search', 'open'); },
+      destroy() { close(); container.innerHTML = ''; container.classList.remove('combobox', 'no-search', 'open', 'floating'); },
     };
   };
 })();

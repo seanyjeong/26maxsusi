@@ -437,6 +437,7 @@
     const colCombo = window.createCombobox(group.querySelector('.sel-college'), {
       options: sortedCollegeNames.map(c => ({ value: c, label: c })),
       placeholder: '대학명',
+      floating: true,
       searchable: true,
       searchPlaceholder: '대학명 검색',
       onChange: () => onCollegeNameChange(group),
@@ -444,6 +445,7 @@
     const majorCombo = window.createCombobox(group.querySelector('.sel-major'), {
       options: [],
       placeholder: '대학 먼저',
+      floating: true,
       searchable: true,
       searchPlaceholder: '학과 검색',
       disabled: true,
@@ -452,6 +454,7 @@
     const typeCombo = window.createCombobox(group.querySelector('.sel-type'), {
       options: [],
       placeholder: '학과 먼저',
+      floating: true,
       searchable: false,
       disabled: true,
       onChange: () => onTypeChange(group),

@@ -42,6 +42,8 @@
   min-width: 280px;
 }
 .combobox.open .combo-menu { display: block; }
+/* floating: overflow 컨테이너 밖으로 띄움 — 좌표는 combobox.js placeMenu() 가 지정 */
+.combobox.floating .combo-menu { position: fixed; right: auto; }
 
 .combo-search {
   position: relative;
