@@ -29,7 +29,7 @@
       var competitionHeader = document.getElementById('competitionHeader');
       var admissionYear = window.SusiCompetitionRate.selectedYear(window.SUSI_YEAR || '27');
       if (competitionHeader && admissionYear) {
-        competitionHeader.textContent = (admissionYear - 1) + '학년도 경쟁률';
+        competitionHeader.textContent = String(admissionYear).slice(-2) + '·' + String(admissionYear - 1).slice(-2) + ' 경쟁률';
       }
       var results = await Promise.all([
         window.api('/filter-options/regions'),

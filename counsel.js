@@ -702,6 +702,7 @@
 
     const rows = [
       ['모집정원',      esc(details.정원 || '-')],
+      [`20${window.SUSI_YEAR}학년도 경쟁률`, esc(details._currentCompetition || '자료없음')],
       ['25학년도 정원',  esc(details['25정원'] || '자료없음')],
       ['25학년도 경쟁률', esc(details['25경쟁률'] || '자료없음')],
       ['25학년도 추가합격', esc(details['25추가합격'] || '자료없음')],

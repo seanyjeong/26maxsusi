@@ -87,6 +87,10 @@ def test_explore_renders_only_the_selected_years_previous_competition(
                     "전년도지원자수": applicants,
                     "전년도경쟁률": rate,
                     "전년도경쟁률범위": None,
+                    "27모집인원": 19,
+                    "27지원자": 698,
+                    "27경쟁률": "36.74",
+                    "27경쟁률상태": "최종",
                 }],
             }
         else:
@@ -106,7 +110,8 @@ def test_explore_renders_only_the_selected_years_previous_competition(
     assert f"{str(previous_year)[-2:]} 경쟁률" in text
     assert f"{float(rate):.2f}:1" in text
     assert f"모집 {quota:,}명 · 지원 {applicants:,}명" in text
-    assert page.locator("#competitionHeader").inner_text() == f"{previous_year}학년도 경쟁률"
+    assert ("27 경쟁률" in text) == (selected_year == "27")
+    assert page.locator("#competitionHeader").inner_text() == f"{selected_year}·{str(previous_year)[-2:]} 경쟁률"
     assert captured_headers[0]["authorization"] == "Bearer jwt-token"
     assert captured_headers[0]["x-susi-year"] == selected_year
     page.close()

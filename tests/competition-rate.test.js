@@ -57,6 +57,31 @@ test('legacy counsel adapter replaces stale values without mutating API data', (
   assert.equal(missing['25경쟁률'], null);
 });
 
+test('current admission year competition renders before the previous year', () => {
+  const record = {
+    ...details(2026),
+    '27모집인원': 19,
+    '27지원자': 698,
+    '27경쟁률': '36.74',
+    '27경쟁률상태': '미확인',
+  };
+  assert.deepEqual(competition.getCurrentCompetition(record, '27'), {
+    year: 2027,
+    quota: 19,
+    applicants: 698,
+    rate: 36.74,
+    scope: '잠정',
+  });
+  assert.equal(competition.getCurrentCompetition(record, '26'), null);
+
+  const rendered = competition.render(record, '27', { compact: true });
+  assert.match(rendered, /27 경쟁률.*36\.74:1.*모집 19명 · 지원 698명.*잠정.*26 경쟁률.*59\.10:1/);
+
+  const adapted = competition.adaptUniversityDetails(record, '27');
+  assert.equal(adapted._currentCompetition, '36.74:1 · 지원 698명 · 잠정');
+  assert.equal(competition.adaptUniversityDetails(details(2026), '27')._currentCompetition, null);
+});
+
 test('page contracts expose competition data on every Susi school-info path', () => {
   const livePage = fs.readFileSync(path.join(ROOT, 'live-page.js'), 'utf8');
   assert.match(livePage, /\/university-details\?college_id=/);

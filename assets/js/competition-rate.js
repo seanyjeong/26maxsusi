@@ -55,24 +55,47 @@
     return Number(value).toFixed(2) + ':1';
   }
 
-  function summary(record, admissionYear) {
-    var data = getPreviousCompetition(record, admissionYear);
-    if (!data) return null;
+  // 올해 경쟁률 — 학년도 접두 컬럼 (예: 27모집인원 · 27지원자 · 27경쟁률 · 27경쟁률상태)
+  function getCurrentCompetition(record, admissionYear) {
+    if (!record || typeof record !== 'object') return null;
+    var year = selectedYear(admissionYear);
+    if (!year) return null;
+    var prefix = String(year).slice(-2);
+    var rate = numberValue(record[prefix + '경쟁률']);
+    if (rate == null || rate < 0) return null;
+    return {
+      year: year,
+      quota: numberValue(record[prefix + '모집인원']),
+      applicants: numberValue(record[prefix + '지원자']),
+      rate: rate,
+      scope: record[prefix + '경쟁률상태'] === '미확인' ? '잠정' : null,
+    };
+  }
+
+  function toSummary(data) {
+    var meta = [];
+    if (Number.isInteger(data.quota)) meta.push('모집 ' + formatCount(data.quota) + '명');
+    if (Number.isInteger(data.applicants)) meta.push('지원 ' + formatCount(data.applicants) + '명');
     return {
       label: data.year + '학년도 경쟁률',
       compactLabel: String(data.year).slice(-2) + ' 경쟁률',
       value: formatRate(data.rate),
-      meta: '모집 ' + formatCount(data.quota) + '명 · 지원 ' + formatCount(data.applicants) + '명',
+      meta: meta.join(' · '),
       scope: data.scope,
     };
   }
 
-  function render(record, admissionYear, options) {
-    options = options || {};
-    var data = summary(record, admissionYear);
-    if (!data) {
-      return '<span class="competition-rate-empty">전년도 경쟁률 자료 없음</span>';
-    }
+  function summary(record, admissionYear) {
+    var data = getPreviousCompetition(record, admissionYear);
+    return data ? toSummary(data) : null;
+  }
+
+  function currentSummary(record, admissionYear) {
+    var data = getCurrentCompetition(record, admissionYear);
+    return data ? toSummary(data) : null;
+  }
+
+  function renderSummary(data, options) {
     var label = options.compact ? data.compactLabel : data.label;
     var scope = data.scope
       ? '<span class="competition-rate-scope">' + escapeHtml(data.scope) + '</span>'
@@ -80,9 +103,20 @@
     return '<span class="competition-rate" title="' + escapeHtml(data.label + ' · ' + data.meta) + '">'
       + '<span class="competition-rate-label">' + escapeHtml(label) + '</span>'
       + '<strong>' + escapeHtml(data.value) + '</strong>'
-      + (options.hideMeta ? '' : '<small>' + escapeHtml(data.meta) + '</small>')
+      + (options.hideMeta || !data.meta ? '' : '<small>' + escapeHtml(data.meta) + '</small>')
       + scope
       + '</span>';
+  }
+
+  function render(record, admissionYear, options) {
+    options = options || {};
+    var current = currentSummary(record, admissionYear);
+    var previous = summary(record, admissionYear);
+    if (!current && !previous) {
+      return '<span class="competition-rate-empty">전년도 경쟁률 자료 없음</span>';
+    }
+    return (current ? renderSummary(current, options) : '')
+      + (previous ? renderSummary(previous, options) : '');
   }
 
   function adaptUniversityDetails(details, admissionYear) {
@@ -93,6 +127,12 @@
       ? formatRate(data.rate) + ' · 지원 ' + formatCount(data.applicants) + '명'
       : null;
     adapted._previousCompetitionYear = data ? data.year : null;
+    var current = getCurrentCompetition(adapted, admissionYear);
+    adapted._currentCompetition = current
+      ? formatRate(current.rate)
+        + (Number.isInteger(current.applicants) ? ' · 지원 ' + formatCount(current.applicants) + '명' : '')
+        + (current.scope ? ' · ' + current.scope : '')
+      : null;
     return adapted;
   }
 
@@ -134,7 +174,9 @@
 
   return {
     adaptUniversityDetails: adaptUniversityDetails,
+    currentSummary: currentSummary,
     formatRate: formatRate,
+    getCurrentCompetition: getCurrentCompetition,
     getPreviousCompetition: getPreviousCompetition,
     relabelLegacy: relabelLegacy,
     render: render,
