@@ -1138,8 +1138,11 @@ html.dark {
 .mobile-view-link { display: none; }
 @media (max-width: 640px) {
   .page-head .mobile-view-link { display: inline-flex; flex-shrink: 0; white-space: nowrap; border: 1px solid var(--border); }
+  /* 휴대폰: 상단 버튼(대학 추가·저장·PDF)이 화면 밖으로 밀리던 문제 — 경로 표시는 제목과 중복이라 숨기고 학생 선택 칸을 줄인다 */
+  .topbar .page-path { display: none; }
+  .topbar-actions { min-width: 0; flex: 1; justify-content: flex-end; }
   .topbar-actions .btn span { display: none; }
-  .ct-student { min-width: 160px; }
+  .ct-student { min-width: 0; flex: 1 1 auto; }
   .profile-meta { gap: 10px; }
   .tp-search { min-width: 120px; }
 }
