@@ -47,6 +47,8 @@ try {
       if (active) active.classList.add('active');
     }
 
+    ensureMobileNav(host);
+
     var toggle = host.querySelector('#toggleSidebar');
     if (toggle) {
       toggle.addEventListener('click', function () {
@@ -118,6 +120,30 @@ try {
         if (tooltipHost) tooltipHost.setAttribute('data-tooltip', '연도 전환 · 현재 ' + currentYear);
       }
     } catch (e) { console.warn('[sidebar user inject]', e); }
+  }
+
+  // 휴대폰(≤640px)은 사이드바가 숨겨져 어떤 메뉴로도 갈 수 없었음 → 왼쪽 아래 '메뉴' 버튼으로 서랍처럼 연다
+  function ensureMobileNav(host) {
+    var shell = document.getElementById('appShell') || document.querySelector('.app-shell');
+    if (!shell || document.getElementById('mobileNavBtn')) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'mobileNavBtn';
+    btn.className = 'm-nav-btn';
+    btn.setAttribute('aria-label', '메뉴 열기');
+    btn.innerHTML = '<i class="ph-light ph-list"></i><span>메뉴</span>';
+    var backdrop = document.createElement('div');
+    backdrop.className = 'm-nav-backdrop';
+    document.body.appendChild(btn);
+    document.body.appendChild(backdrop);
+    function setOpen(open) {
+      shell.classList.toggle('m-nav-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    btn.addEventListener('click', function () { setOpen(!shell.classList.contains('m-nav-open')); });
+    backdrop.addEventListener('click', function () { setOpen(false); });
+    host.addEventListener('click', function (e) { if (e.target.closest('.nav-item')) setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
   }
 
   function applyThemeIcon(icon, isDark) {

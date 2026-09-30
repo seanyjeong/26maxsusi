@@ -236,9 +236,34 @@
   .app-shell .sidebar-foot-user { opacity: 0; pointer-events: none; }
   .app-shell .nav-item { justify-content: center; padding: 10px; }
 }
+/* 휴대폰 메뉴 버튼·서랍 (bootstrap.js ensureMobileNav) */
+.m-nav-btn, .m-nav-backdrop { display: none; }
 @media (max-width: 640px) {
   .app-shell { grid-template-columns: 0 1fr; }
-  .sidebar { display: none; }
+  /* 사이드바를 숨기는 대신 왼쪽 서랍으로 — '메뉴' 버튼으로 연다 */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 70;
+    width: min(280px, 84vw); height: 100dvh;
+    transform: translateX(-105%); transition: transform 260ms var(--ease);
+    box-shadow: var(--shadow-hover);
+  }
+  .app-shell.m-nav-open .sidebar { transform: none; }
+  /* 1024px 이하 아이콘 전용(접힘) 규칙을 서랍 안에서는 되돌려 글자까지 보이게 */
+  .app-shell .sidebar-head .brand-text,
+  .app-shell .nav-group-label,
+  .app-shell .nav-item span,
+  .app-shell .sidebar-foot-user { opacity: 1; pointer-events: auto; }
+  .app-shell .nav-item { justify-content: flex-start; padding: 9px 12px; }
+  .app-shell .sidebar-toggle { display: none; }
+  .m-nav-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    position: fixed; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 60;
+    height: 44px; padding: 0 16px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    font: inherit; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-hover); cursor: pointer;
+  }
+  .m-nav-btn i { font-size: 18px; }
+  .app-shell.m-nav-open ~ .m-nav-backdrop { display: block; position: fixed; inset: 0; z-index: 65; background: rgba(0, 0, 0, 0.35); }
 }
 /* ── Footer actions (theme toggle + logout buttons) ── */
 .sidebar-foot-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 8px; }
