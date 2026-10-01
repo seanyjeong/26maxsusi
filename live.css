@@ -169,6 +169,11 @@
   z-index: 5;
 }
 .rank-table thead tr:nth-child(2) th { top: 36px; }
+.rank-table th.sortable { cursor: pointer; user-select: none; }
+.rank-table th.sortable:hover { color: var(--accent); }
+.rank-table th.sortable .sort-caret { margin-left: 3px; font-size: 11px; opacity: 0.35; vertical-align: middle; }
+.rank-table th.sort-active { color: var(--accent); }
+.rank-table th.sort-active .sort-caret { opacity: 1; }
 .rank-table .col-record, .rank-table .col-score { min-width: 60px; }
 .rank-table .rank-top3 { font-weight: 700; color: var(--accent); }
 .rank-table .my-branch-row { background: var(--accent-soft); }

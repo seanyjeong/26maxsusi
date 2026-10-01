@@ -10,6 +10,9 @@
   let studentDataMap = new Map();
   let currentEvents = [];
   let latestRanking = [];
+  // 머리글 클릭 정렬 (null = 서버 순위 순서)
+  let sortKey = null;
+  const SORTABLE = ['내신점수', '실기총점', '합산점수'];
   let scoreTableMap = {};
   let collegeCombo = null;
   let majorCombo = null;
@@ -42,9 +45,29 @@
     button.querySelector('span').textContent = enabled ? '개인정보 원문 보기' : '개인정보 가리기';
   }
 
+  // 선택한 점수 높은 순, 점수 없으면 아래로, 같으면 원래 순위 순
+  function sortedRanking() {
+    if (!sortKey) return latestRanking;
+    const value = s => { const n = parseFloat(s[sortKey]); return Number.isNaN(n) ? -Infinity : n; };
+    return latestRanking.slice().sort((a, b) => value(b) - value(a) || (a.순위 || 0) - (b.순위 || 0));
+  }
+
+  function sortHeader(key, label) {
+    const active = sortKey === key;
+    return `<th rowspan="2" class="sortable${active ? ' sort-active' : ''}" data-sort="${key}" title="${active ? '원래 순위 순서로' : '높은 순 정렬'}">${label}<i class="ph-light ph-caret-down sort-caret"></i></th>`;
+  }
+
+  function onHeaderClick(event) {
+    const th = event.target.closest('th[data-sort]');
+    if (!th || !SORTABLE.includes(th.dataset.sort)) return;
+    sortKey = sortKey === th.dataset.sort ? null : th.dataset.sort;
+    renderDesktopTable(sortedRanking(), currentEvents);
+    renderMobileList(sortedRanking());
+  }
+
   function rerenderPersonalData() {
-    renderDesktopTable(latestRanking, currentEvents);
-    renderMobileList(latestRanking);
+    renderDesktopTable(sortedRanking(), currentEvents);
+    renderMobileList(sortedRanking());
     window.closeModal('studentDetailModal');
     document.getElementById('studentDetailTitle').textContent = '학생 상세';
     document.getElementById('studentDetailBody').replaceChildren();
@@ -125,6 +148,7 @@
 
     document.getElementById('btnExcel').addEventListener('click', () => window.downloadLiveExcel(colleges));
     document.getElementById('btnScoreTable').addEventListener('click', showScoreTable);
+    document.querySelector('#resultTable thead').addEventListener('click', onHeaderClick);
     initPrivacyControls();
 
     try {
@@ -248,7 +272,7 @@
     const tbody = table.querySelector('tbody');
     let firstHeader = '<tr><th rowspan="2">순위</th><th rowspan="2">지점</th><th rowspan="2">이름</th><th rowspan="2">고교</th><th rowspan="2">성별</th>';
     events.forEach(event => { firstHeader += `<th colspan="2">${esc(event)}</th>`; });
-    firstHeader += '<th rowspan="2">내신등급</th><th rowspan="2">내신점수</th><th rowspan="2">실기총점</th><th rowspan="2">합산점수</th><th rowspan="2">최초합</th><th rowspan="2">최종합</th></tr>';
+    firstHeader += '<th rowspan="2">내신등급</th>' + sortHeader('내신점수', '내신점수') + sortHeader('실기총점', '실기총점') + sortHeader('합산점수', '합산점수') + '<th rowspan="2">최초합</th><th rowspan="2">최종합</th></tr>';
     let secondHeader = '<tr>';
     events.forEach(() => { secondHeader += '<th class="col-record">기록</th><th class="col-score">점수</th>'; });
     thead.innerHTML = firstHeader + secondHeader + '</tr>';
