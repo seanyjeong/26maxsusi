@@ -1,6 +1,6 @@
 /* ============================================================
  * pass_result.js — 합불 결과 입력 (지점 현황에서 최초합/최종합만 분리)
- * API: /branch_summary_by_university · /profile · _pass_save
+ * API: _college_list · /branch_summary_by_university · /profile · _pass_save
  * _pass_save 는 최초합여부·최종합여부만 UPDATE 하는 전용 API —
  * 실기기록·점수·내신·합산은 서버에서 쓸 수 없다.
  * ============================================================ */
@@ -28,9 +28,11 @@
       var results = await Promise.all([
         window.api('/branch_summary_by_university'),
         window.api('/profile'),
+        window.api('_college_list'),
       ]);
       var summaryData = results[0];
       var profileData = results[1];
+      var catalogData = results[2];
 
       if (profileData && profileData.success && profileData.user) {
         var title = document.getElementById('mainTitle');
@@ -40,7 +42,12 @@
       if (!summaryData || !summaryData.success) {
         throw new Error((summaryData && summaryData.message) || '데이터 조회에 실패했습니다.');
       }
-      allUniversityData = summaryData.universities || [];
+      if (!catalogData || !catalogData.success || !Array.isArray(catalogData.colleges)) {
+        throw new Error('대학 목록을 불러오지 못했습니다.');
+      }
+      allUniversityData = window.mergePassResultCatalog(
+        catalogData.colleges, summaryData.universities || []
+      );
       renderAccordions(allUniversityData);
     } catch (e) {
       console.error('[loadSummary]', e);
@@ -54,8 +61,8 @@
     var meta = document.getElementById('headMeta');
     container.innerHTML = '';
     if (!universities.length) {
-      container.innerHTML = '<div class="placeholder">아직 수합된 대학 정보가 없습니다.</div>';
-      if (meta) meta.textContent = '총 0개 대학';
+      container.innerHTML = '<div class="placeholder">등록된 모집단위가 없습니다.</div>';
+      if (meta) meta.textContent = '총 0개 모집단위';
       return;
     }
 
@@ -84,7 +91,7 @@
       });
     });
 
-    if (meta) meta.textContent = '총 ' + universities.length + '개 대학';
+    if (meta) meta.textContent = '총 ' + universities.length + '개 모집단위';
   }
 
   function passCountText(students) {
@@ -143,10 +150,10 @@
       + '  <thead><tr>'
       + '    <th>이름</th><th>학년</th><th>성별</th><th>합산점수</th><th>최초합</th><th>최종합</th>'
       + '  </tr></thead>'
-      + '  <tbody>' + (rowsHtml || '<tr><td colspan="6">등록된 학생이 없습니다.</td></tr>') + '</tbody>'
+      + '  <tbody>' + (rowsHtml || '<tr><td colspan="6">수합된 학생이 없습니다. <a href="final_confirm.html">원서 수합</a>에서 학생을 추가하고 저장한 뒤 합불을 입력하세요.</td></tr>') + '</tbody>'
       + '</table>'
       + '<div class="save-row">'
-      + '  <button type="button" class="btn btn-primary" data-action="save-uni">'
+      + '  <button type="button" class="btn btn-primary" data-action="save-uni"' + (rowsHtml ? '' : ' disabled') + '>'
       + '    <i class="ph-light ph-floppy-disk"></i><span>' + esc(universityData.대학명) + ' 합불 저장</span>'
       + '  </button>'
       + '</div>';
@@ -169,6 +176,7 @@
       window.showToast('저장할 대학 정보를 찾지 못했습니다.', 'error');
       return;
     }
+    if (!universityData.학생들 || !universityData.학생들.length) return;
 
     // 예비 번호 검증
     var incompleteReserve = false;

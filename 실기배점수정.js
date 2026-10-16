@@ -1,21 +1,22 @@
 /* ============================================================
  * 실기배점수정.new.js — 실기 배점표 수정 (silgi_score_edit)
- * API: /profile, _get_practical_colleges, _get_score_table, _update_score_table
- * 기능 diff 0: 원본 실기배점수정.html 의 로직 (admin 체크, 대학 목록,
- *   배점표 렌더, contenteditable 저장) 그대로 보존.
+ * API: /profile, _college_list, _get_score_table, _update_score_table
+ * 전체 모집단위를 표시하고 실기ID가 있는 경우에만 배점표를 조회·저장한다.
  * 사용자 상호작용: alert/Swal → showToast + 공용 모달 확인.
  * ============================================================ */
 
 (function () {
   'use strict';
 
-  var COLLEGES_PATH = '_get_practical_colleges';
+  var COLLEGES_PATH = '_college_list';
   var SCORE_GET_PATH = '_get_score_table';
   var SCORE_UPDATE_PATH = '_update_score_table';
   var PROFILE_PATH = '/profile';
 
   var collegeCombo = null;
   var currentSilgiId = '';
+  var collegesById = new Map();
+  var scoreRequest = 0;
 
   var esc = window.escapeHtml;
 
@@ -54,11 +55,15 @@
   async function loadColleges() {
     try {
       var data = await window.api(COLLEGES_PATH);
-      var rows = Array.isArray(data) ? data : (data && Array.isArray(data.data) ? data.data : []);
+      if (!data || !data.success || !Array.isArray(data.colleges)) {
+        throw new Error('대학 목록 조회 실패');
+      }
+      var rows = data.colleges;
+      collegesById = new Map(rows.map(function (r) { return [String(r.대학ID), r]; }));
       var options = [{ value: '', label: '대학/학과를 선택하세요' }].concat(
         rows.map(function (r) {
           return {
-            value: String(r.실기ID),
+            value: String(r.대학ID),
             label: r.대학명 + ' - ' + r.학과명 + ' (' + r.전형명 + ')',
           };
         })
@@ -78,15 +83,23 @@
   }
 
   async function onCollegeChange(val) {
-    currentSilgiId = val || '';
-    if (!currentSilgiId) {
+    var request = ++scoreRequest;
+    var college = collegesById.get(val);
+    currentSilgiId = college && college.실기ID != null ? String(college.실기ID) : '';
+    showSaveBtn(false);
+    if (!college) {
       setMessage('대학을 선택하면 배점표가 표시됩니다.');
       showSaveBtn(false);
+      return;
+    }
+    if (!currentSilgiId) {
+      setMessage('배점표가 등록되지 않은 모집단위입니다.');
       return;
     }
     setMessage('배점표를 불러오는 중…');
     try {
       var json = await window.api(SCORE_GET_PATH + '?실기ID=' + encodeURIComponent(currentSilgiId));
+      if (request !== scoreRequest) return;
       if (!json.success || !json.events || Object.keys(json.events).length === 0) {
         setMessage('해당 대학의 배점표 데이터가 없습니다.');
         showSaveBtn(false);
@@ -95,6 +108,7 @@
       renderSeparateTables(json.events);
       showSaveBtn(true);
     } catch (err) {
+      if (request !== scoreRequest) return;
       console.error('[배점수정] score-table', err);
       setMessage('배점표 로딩 중 오류가 발생했습니다.', { error: true });
       showSaveBtn(false);

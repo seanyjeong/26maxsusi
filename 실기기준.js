@@ -1,7 +1,7 @@
 /* ============================================================
  * 실기기준.new.js — 실기 총점 설정 (silgi_standard)
- * API: _get_practical_colleges_with_scores, _save_practical_total_config
- * 기능 diff 0: 원본 실기기준.html 의 목록 로드 + 편집 + 저장 로직 보존.
+ * API: _college_list, _get_practical_colleges_with_scores, _save_practical_total_config
+ * 전체 모집단위를 표시하되 배점 미등록 항목에는 설정값을 만들지 않는다.
  * ============================================================ */
 
 (function () {
@@ -17,8 +17,18 @@
     var wrap = document.getElementById('collegeList');
     wrap.innerHTML = '<div class="empty-msg">불러오는 중…</div>';
     try {
-      var data = await window.api(LIST_PATH);
-      var list = Array.isArray(data) ? data : (data && Array.isArray(data.data) ? data.data : []);
+      var results = await Promise.all([window.api('_college_list'), window.api(LIST_PATH)]);
+      var catalog = results[0];
+      var data = results[1];
+      if (!catalog || !catalog.success || !Array.isArray(catalog.colleges)) {
+        throw new Error('대학 목록 조회 실패');
+      }
+      var scores = Array.isArray(data) ? data : (data && Array.isArray(data.data) ? data.data : null);
+      if (!scores) throw new Error('실기 총점 설정 조회 실패');
+      var byId = new Map(scores.map(function (row) { return [String(row.대학ID), row]; }));
+      var list = catalog.colleges.map(function (row) {
+        return Object.assign({}, row, byId.get(String(row.대학ID)));
+      });
       renderCollegeList(list);
     } catch (err) {
       console.error('[실기기준] list', err);
@@ -39,6 +49,14 @@
     list.forEach(function (item) {
       var box = document.createElement('div');
       box.className = 'college-box';
+
+      if (item.실기ID == null) {
+        box.innerHTML = '<div class="col-main"><div class="college-title">'
+          + esc(item.대학명) + ' ' + esc(item.학과명) + ' ' + esc(item.전형명)
+          + '</div><p>실기 배점이 등록되지 않은 모집단위입니다.</p></div>';
+        wrap.appendChild(box);
+        return;
+      }
 
       var totalScore = item.실기반영총점 != null ? item.실기반영총점 : '';
       var baseScore = item.기준총점 != null ? item.기준총점 : (item.기본만점총합 != null ? item.기본만점총합 : '');
