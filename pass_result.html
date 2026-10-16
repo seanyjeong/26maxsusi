@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko" class="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>합불 입력 — 맥스수시엔진</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
+<!-- 공용 자산 CSS -->
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/sidebar.css">
+<link rel="stylesheet" href="assets/css/topbar.css">
+<link rel="stylesheet" href="assets/css/buttons.css">
+<link rel="stylesheet" href="assets/css/toast.css">
+<link rel="stylesheet" href="pass_result.css">
+</head>
+
+<body data-page="pass_result" data-title="합불 입력" data-category="최종 확정">
+
+<div class="app-shell" id="appShell">
+  <div id="sidebar-slot"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="page-path">
+        <span>최종 확정</span>
+        <span class="sep">/</span>
+        <span class="current">합불 입력</span>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title" id="mainTitle">합불 결과 입력</h1>
+          <div class="page-sub">대학별 최초합 · 최종합 결과 입력 및 저장 (실기기록 · 내신은 지점 현황에서)</div>
+        </div>
+        <div class="head-meta" id="headMeta"></div>
+      </div>
+
+      <div id="universityAccordion" class="university-accordion">
+        <div class="placeholder">로딩중...</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 공용 JS -->
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/bootstrap.js"></script>
+<script src="pass_result.js"></script>
+</body>
+</html>
