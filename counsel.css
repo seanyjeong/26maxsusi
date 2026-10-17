@@ -1070,6 +1070,14 @@ html.dark {
 .practical-hint.is-error { color: var(--danger); }
 .practical-hint.is-muted { color: var(--text-3); }
 
+/* 실기 평가 안내 (배점표 없는 정성평가·입상실적 전형) — event-card 그리드 안에서 표·안내는 한 줄 전체 */
+/* .ct tbody td 의 nowrap·높이 42px 가 펼침 영역 안까지 내려오므로 여기서 되돌린다 */
+.events .guide-block { grid-column: 1 / -1; margin-bottom: 0; white-space: normal; }
+.event-desc { font-size: 12px; line-height: 1.45; color: var(--text-2); word-break: keep-all; white-space: normal; margin: 0; }
+.event-desc.is-muted { color: var(--text-3); }
+.guide-block .score-table-wrap { overflow-x: auto; margin-bottom: 6px; }
+.guide-block .score-table-wrap td { height: auto; padding: 6px 10px; }
+
 /* ===== 로딩 오버레이 ===== */
 .loading-overlay {
   position: fixed;

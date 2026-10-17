@@ -604,8 +604,7 @@
       practicalContainer.innerHTML =
         '<span class="practical-hint is-error">학생을 먼저 선택하세요.</span>';
     } else if (!practical_id) {
-      practicalContainer.innerHTML =
-        '<span class="practical-hint is-muted">실기 종목이 없습니다.</span>';
+      await renderDrawerGuide(group, collegeID);
     } else {
       try {
         const json = await window.api(
@@ -664,6 +663,74 @@
     container.querySelectorAll('.input-record').forEach(inp => {
       inp.addEventListener('input', () => onRecordInputChange(inp));
     });
+  }
+
+  // ───────── drawer 탭1: 실기 평가 안내 (배점표 없는 정성평가·입상실적 전형, 읽기 전용) ─────────
+  async function renderDrawerGuide(group, collegeID) {
+    const container = group.querySelector('.practical-fields');
+    if (!container) return;
+    const cache = drawerCache[collegeID] = drawerCache[collegeID] || {};
+    if (!('practicalGuide' in cache)) {
+      try {
+        const data = await window.api(`/practical-guide?college_id=${encodeURIComponent(collegeID)}`);
+        cache.practicalGuide = data && data.success ? data.guide : null;
+      } catch (e) {
+        console.error('실기 평가 안내 로드 실패', e);
+        window.showToast('실기 평가 안내 로드 실패', 'error');
+      }
+    }
+    container.innerHTML = cache.practicalGuide
+      ? buildGuideHTML(cache.practicalGuide)
+      : '<span class="practical-hint is-muted">실기 종목이 없습니다.</span>';
+  }
+
+  function buildGuideHTML(guide) {
+    const parts = [];
+    const p = guide.practical;
+    if (p) {
+      parts.push(
+        `<div class="guide-block practical-hint">평가위원 채점(정성평가) · 실기 만점 ${esc(p.total)}점 · 자동 계산하지 않습니다.` +
+        `${p.equipment ? `<br>준비물: ${esc(p.equipment)}` : ''}</div>`
+      );
+      parts.push(...p.items.map(it => `
+      <div class="event-card">
+        <div class="event-name"><span class="nm">${esc(it.name)}</span></div>
+        <div class="event-desc">${esc(it.content)}</div>
+        <div class="event-desc is-muted">평가: ${esc(it.criteria)}</div>
+        <div class="score-pill"><span class="plbl">배점</span><span>${esc(it.min)}~${esc(it.max)}</span></div>
+      </div>`));
+    }
+    const a = guide.award;
+    if (a) {
+      const head = a.grades.map(g => `<th>${esc(g)}급</th>`).join('');
+      const rows = a.rows.map(r =>
+        `<tr><td>${r.ranks.map(v => esc(v ?? '–')).join(' / ')}</td>${r.scores.map(s => `<td>${esc(s)}</td>`).join('')}</tr>`
+      ).join('');
+      parts.push(`
+      <div class="guide-block score-event-block">
+        <h4 class="score-event-title"><i class="ph-light ph-medal"></i>입상실적 배점표 (만점 ${esc(a.max)})</h4>
+        <div class="score-table-wrap"><table>
+          <thead><tr><th>순위</th>${head}</tr></thead><tbody>${rows}</tbody>
+        </table></div>
+        ${a.rule ? `<p class="event-desc is-muted">${esc(a.rule)}</p>` : ''}
+      </div>`);
+    }
+    const at = guide.attendance;
+    if (at) {
+      parts.push(`
+      <div class="guide-block score-event-block">
+        <h4 class="score-event-title"><i class="ph-light ph-calendar-x"></i>출결 배점표 (${esc(at.applies_to)})</h4>
+        <div class="score-table-wrap"><table>
+          <thead><tr><th>미인정 결석</th>${at.unexcused_absence_days.map(d => `<th>${esc(d)}</th>`).join('')}</tr></thead>
+          <tbody><tr><td>점수</td>${at.scores.map(s => `<td>${esc(s)}</td>`).join('')}</tr></tbody>
+        </table></div>
+      </div>`);
+    }
+    if (guide.note) parts.push(`<div class="guide-block practical-hint">${esc(guide.note)}</div>`);
+    if (guide.source) {
+      parts.push(`<div class="guide-block practical-hint">근거: <a href="${esc(guide.source.url)}" target="_blank" rel="noopener">${esc(guide.source.title)}</a></div>`);
+    }
+    return parts.join('');
   }
 
   // ───────── drawer 탭2: 간단 요강 렌더 ─────────
